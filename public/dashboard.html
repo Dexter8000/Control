@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Ejecutivo | Control de Equipos</title>
+    <link rel="stylesheet" href="/dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Estilos principales -->
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="shared-components.css">
+    <link rel="stylesheet" href="vacaciones-styles.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo-container">
+                <img src="/attached_assets/company_logo_new.svg" alt="Logo Empresa" class="logo">
+                <h2>Control<span>Equipos</span></h2>
+            </div>
+
+            <nav class="menu">
+                <div class="menu-section">
+                    <h3>Gestión Principal</h3>
+                    <a href="#dashboard" class="menu-item active" data-section="dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#analytics" class="menu-item" data-section="analytics">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Analíticas</span>
+                    </a>
+                </div>
+
+                <div class="menu-section">
+                    <h3>Operaciones</h3>
+                    <a href="#usuarios" class="menu-item" data-section="usuarios">
+                        <i class="fas fa-users"></i>
+                        <span>Usuarios</span>
+                    </a>
+                    <a href="#empleados" class="menu-item" data-section="empleados">
+                        <i class="fas fa-user-tie"></i>
+                        <span>Empleados Premium</span>
+                    </a>
+                    <a href="#inventarios" class="menu-item" data-section="inventarios">
+                        <i class="fas fa-boxes"></i>
+                        <span>Inventarios</span>
+                    </a>
+                </div>
+
+                <div class="menu-section">
+                    <h3>Transacciones</h3>
+                    <a href="/prestamos.html" class="menu-item">
+                        <i class="fas fa-hand-holding"></i>
+                        <span>Préstamos</span>
+                    </a>
+                    <a href="#devoluciones" class="menu-item" data-section="devoluciones">
+                        <i class="fas fa-undo-alt"></i>
+                        <span>Devoluciones</span>
+                    </a>
+                    <a href="#registros" class="menu-item" data-section="registros">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Historial</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="user-panel">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle" style="font-size: 2.5rem; color: #4361ee;"></i>
+                </div>
+                <div class="user-info">
+                    <span class="user-name" id="current-user-name">Usuario</span>
+                    <span class="user-role" id="current-user-role">Administrador</span>
+                </div>
+                <a href="#" class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="top-bar">
+                <div class="header-title">
+                    <h1>Sistema de Control de Equipos</h1>
+                </div>
+                <div class="header-actions">
+                    <div class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema">
+                        <i class="fas fa-moon" id="theme-icon"></i>
+                        <span id="theme-text">Oscuro</span>
+                    </div>
+                    <div class="notifications" onclick="showNotifications()">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge" id="notification-count">0</span>
+                    </div>
+
+                <div class="time-display" id="current-time">
+                    --:--:--
+                </div>
+            </div>
+        </header>
+
+            <div class="content-wrapper">
+                <!-- Dashboard Section -->
+                <div id="dashboard-section" class="content-section active">
+                    <h1 class="page-title">Dashboard Ejecutivo</h1>
+
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon blue">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="total-empleados">0</span>
+                                <span class="stat-label">Empleados Registrados</span>
+                            </div>
+                            <div class="stat-trend up">
+                                <i class="fas fa-arrow-up"></i> <span id="empleados-trend">0%</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon green">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="equipos-disponibles">0</span>
+                                <span class="stat-label">Rangos Únicos</span>
+                            </div>
+                            <div class="stat-trend up">
+                                <i class="fas fa-arrow-up"></i> <span id="equipos-trend">100%</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon orange">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="prestamos-activos">0</span>
+                                <span class="stat-label">Departamentos</span>
+                            </div>
+                            <div class="stat-trend up">
+                                <i class="fas fa-arrow-up"></i> <span id="prestamos-trend">0%</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon purple">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="pendientes-devolucion">0</span>
+                                <span class="stat-label">Rango Dominante</span>
+                            </div>
+                            <div class="stat-trend up">
+                                <i class="fas fa-arrow-up"></i> <span id="pendientes-trend">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                            <button class="action-card" onclick="navigateToSection('usuarios')">
+                                <div class="action-icon">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div class="action-info">
+                                    <h3>Gestionar Usuarios</h3>
+                                    <p>Añadir, editar o eliminar usuarios del sistema</p>
+                                </div>
+                            </button>
+
+                            <button class="action-card empleados-premium" onclick="window.location.href='/empleados.html'">
+                                <div class="action-icon empleados-icon">
+                                    <i class="fas fa-users-cog"></i>
+                                </div>
+                                <div class="action-info">
+                                    <h3>Gestión Moderna de Empleados</h3>
+                                    <p>Sistema completo con análisis, filtros y estadísticas</p>
+                                </div>
+                                <div class="premium-badge">MODERNO</div>
+                            </button>
+                        <div class="actions-grid">
+                            <button class="action-btn" onclick="navigateToSection('usuarios')">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Gestionar Usuarios</span>
+                            </button>
+                            <button class="action-btn" onclick="navigateToSection('inventarios')">
+                                <i class="fas fa-box"></i>
+                                <span>Ver Inventarios</span>
+                            </button>
+                            <button class="action-btn" onclick="window.open('/prestamos.html', '_blank')">
+                                <i class="fas fa-hand-holding"></i>
+                                <span>Nuevo Préstamo</span>
+                            </button>
+                            <button class="action-btn" onclick="navigateToSection('devoluciones')">
+                                <i class="fas fa-undo-alt"></i>
+                                <span>Procesar Devolución</span>
+                            </button>
+                            <button class="action-btn" onclick="generateReport()">
+                                <i class="fas fa-file-export"></i>
+                                <span>Generar Reporte</span>
+                            </button>
+                            <button class="action-btn" onclick="showSystemConfig()">
+                                <i class="fas fa-cog"></i>
+                                <span>Configuración</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity & Charts -->
+                    <div class="content-grid">
+                        <div class="recent-activity">
+                            <h2>Actividad Reciente</h2>
+                            <div class="activity-list" id="recent-activity-list">
+                                <div class="loading-placeholder">Cargando actividad reciente...</div>
+                            </div>
+                            <a href="#" class="view-all" onclick="navigateToSection('registros')">Ver toda la actividad →</a>
+                        </div>
+
+                        <div class="charts-section">
+                            <div class="chart-container">
+                                <h2>Préstamos Mensuales</h2>
+                                <canvas id="prestamos-chart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inventarios Section -->
+                <div id="inventarios-section" class="content-section">
+                    <h1 class="page-title">Gestión de Inventarios</h1>
+
+                    <div class="inventory-tabs">
+                        <button class="tab-btn active" onclick="showInventoryTab('principal')">Inventario Principal</button>
+                        <button class="tab-btn" onclick="showInventoryTab('periferico')">Periféricos</button>
+                    </div>
+
+                    <div id="inventario-principal" class="inventory-content active">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nombre</th>
+                                        <th>Tipo</th>
+                                        <th>Estado</th>
+                                        <th>Empleado Asignado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventario-principal-body">
+                                    <tr><td colspan="6" class="loading-placeholder">Cargando inventario principal...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="inventario-periferico" class="inventory-content">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nombre</th>
+                                        <th>Tipo</th>
+                                        <th>Estado</th>
+                                        <th>Empleado Asignado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventario-periferico-body">
+                                    <tr><td colspan="6" class="loading-placeholder">Cargando inventario periférico...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empleados Section - Redirige directamente a la versión moderna -->
+                <div id="empleados-section" class="content-section">
+                    <div class="empleados-header-dashboard">
+                        <h1 class="page-title">
+                            <i class="fas fa-users-cog"></i> 
+                            Gestión Completa de Empleados
+                            <span class="premium-badge-title">MODERNO</span>
+                        </h1>
+                        <div class="empleados-redirect-card">
+                            <div class="redirect-content">
+                                <div class="redirect-icon">
+                                    <i class="fas fa-rocket"></i>
+                                </div>
+                                <h2>Panel de Gestión Moderno</h2>
+                                <p>Accede al sistema completo de gestión de empleados con funcionalidades avanzadas, filtros inteligentes y análisis detallados.</p>
+                                
+                                <div class="features-grid">
+                                    <div class="feature-item">
+                                        <i class="fas fa-chart-bar"></i>
+                                        <span>Análisis de Rangos y Departamentos</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <i class="fas fa-filter"></i>
+                                        <span>Filtros Avanzados</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <i class="fas fa-edit"></i>
+                                        <span>Edición Completa</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <i class="fas fa-upload"></i>
+                                        <span>Carga Masiva</span>
+                                    </div>
+                                </div>
+
+                                <div class="redirect-actions">
+                                    <button class="btn-primary btn-large" onclick="window.location.href='/empleados.html'">
+                                        <i class="fas fa-users-cog"></i>
+                                        Ir a Gestión Moderna
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Other sections placeholder -->
+                <div id="usuarios-section" class="content-section">
+                    <div class="users-header">
+                        <h1 class="page-title">Gestión de Usuarios</h1>
+                        <button class="btn-primary" onclick="showNewUserModal()">
+                            <i class="fas fa-plus"></i> Nuevo Usuario
+                        </button>
+                    </div>
+
+                    <div class="users-controls">
+                        <div class="users-search">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="users-search" placeholder="Buscar usuarios..." onkeyup="filterUsers()">
+                        </div>
+
+                        <div class="users-filter">
+                            <select id="users-role-filter" onchange="filterUsers()">
+                                <option value="">Todos los roles</option>
+                                <option value="administrador">Administrador</option>
+                                <option value="no administrador">No Administrador</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="users-table-container">
+                        <table class="users-table">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortUsers('id')" class="sortable">
+                                        ID <i class="fas fa-sort sort-icon"></i>
+                                    </th>
+                                    <th onclick="sortUsers('usuario')" class="sortable">
+                                        Usuario <i class="fas fa-sort sort-icon"></i>
+                                    </th>
+                                    <th onclick="sortUsers('rol')" class="sortable">
+                                        Rol <i class="fas fa-sort sort-icon"></i>
+                                    </th>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-tbody">
+                                <tr><td colspan="6" class="loading-placeholder">Cargando usuarios...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="users-pagination">
+                        <button class="pagination-btn" id="prev-page" onclick="changePage(-1)" disabled>
+                            <i class="fas fa-chevron-left"></i> Anterior
+                        </button>
+                        <span class="pagination-info" id="pagination-info">Página 1 de 1</span>
+                        <button class="pagination-btn" id="next-page" onclick="changePage(1)" disabled>
+                            Siguiente <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Modal para Nuevo/Editar Usuario -->
+                <div id="user-modal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 id="user-modal-title">Nuevo Usuario</h2>
+                            <span class="close" onclick="closeUserModal()">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <form id="user-form" onsubmit="saveUser(event)">
+                                <!-- Campos Obligatorios -->
+                                <div class="form-section">
+                                    <h3 class="section-title">Datos Obligatorios</h3>
+                                    <div class="form-group">
+                                        <label for="user-username">Usuario</label>
+                                        <input type="text" id="user-username" name="username" required 
+                                               placeholder="Ingrese nombre de usuario" pattern="[a-zA-Z0-9_]+" 
+                                               title="Solo letras, números y guiones bajos">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="user-password">Contraseña</label>
+                                        <input type="password" id="user-password" name="password" required 
+                                               placeholder="Ingrese contraseña" minlength="6">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="user-role">Rol</label>
+                                        <select id="user-role" name="role" required>
+                                            <option value="">Seleccione un rol</option>
+                                            <option value="administrador">Administrador</option>
+                                            <option value="no administrador">No Administrador</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Campos Opcionales -->
+                                <div class="form-section">
+                                    <h3 class="section-title">Información Adicional</h3>
+                                    <div class="form-group">
+                                        <label for="user-name">Nombre Completo</label>
+                                        <input type="text" id="user-name" name="name" placeholder="Nombre completo">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="user-email">Correo Electrónico</label>
+                                        <input type="email" id="user-email" name="email" placeholder="correo@ejemplo.com">
+                                    </div>
+                                </div>
+
+                                <input type="hidden" id="user-id" name="id">
+                            </form>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn-secondary" onclick="closeUserModal()">Cancelar</button>
+                            <button type="submit" form="user-form" class="btn-primary">
+                                <i class="fas fa-save"></i> Guardar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal de Confirmación -->
+                <div id="confirm-modal" class="modal" style="display: none;">
+                    <div class="modal-content confirm-modal">
+                        <div class="modal-header">
+                            <h2><i class="fas fa-exclamation-triangle text-warning"></i> Confirmar Eliminación</h2>
+                        </div>
+                        <div class="modal-body">
+                            <div id="confirm-message">
+                                <p>¿Está seguro de que desea eliminar este usuario?</p>
+                                <p><strong>Esta acción no se puede deshacer.</strong></p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn-secondary" onclick="closeConfirmModal()">Cancelar</button>
+                            <button type="button" class="btn-danger" onclick="confirmDeleteUser()">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="analytics-section" class="content-section">
+                    <h1 class="page-title">Analíticas del Sistema</h1>
+                    <p>Gráficos y reportes detallados del uso del sistema.</p>
+                </div>
+
+                <div id="devoluciones-section" class="content-section">
+                    <h1 class="page-title">Gestión de Devoluciones</h1>
+                    <p>Interfaz para procesar devoluciones de equipos.</p>
+                </div>
+
+                <div id="registros-section" class="content-section">
+                    <h1 class="page-title">Historial Completo</h1>
+                    <p>Registro completo de todas las transacciones del sistema.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts principales -->
+    <script src="/dashboard.js"></script>
+    <script src="vacaciones-manager.js"></script>
+</body>
+</html>

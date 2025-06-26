@@ -1,0 +1,1089 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Personal | Panel Moderno</title>
+    
+    <!-- Fuentes Modernas -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Feather Icons (Alternativa moderna a Lucide) -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <style>
+        /* Variables CSS Modernas */
+        :root {
+            /* Paleta de Colores Profesional */
+            --primary-blue: #1a73e8;
+            --primary-blue-dark: #1e88e5;
+            --secondary-gray: #607d8b;
+            --success-green: #4caf50;
+            --error-red: #f44336;
+            --warning-orange: #ff9800;
+            --warning-yellow: #ffc107;
+            
+            /* Fondos y Superficies */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --bg-card: #ffffff;
+            --bg-hover: #f8f9fa;
+            
+            /* Textos */
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --text-muted: #999999;
+            
+            /* Bordes y Sombras */
+            --border-light: #e0e0e0;
+            --border-medium: #cccccc;
+            --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.12);
+            --shadow-strong: 0 8px 32px rgba(0, 0, 0, 0.16);
+            
+            /* Espaciado */
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 3rem;
+            
+            /* Transiciones */
+            --transition-fast: 0.2s ease-in-out;
+            --transition-medium: 0.3s ease-in-out;
+            
+            /* Radios */
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+        }
+
+        /* Reset y Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        /* Header Moderno */
+        .modern-header {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-light);
+            padding: var(--spacing-md) var(--spacing-lg);
+            box-shadow: var(--shadow-soft);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: var(--spacing-lg);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .header-left h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .header-left p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        /* Botones Modernos */
+        .btn-modern {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            padding: 0.625rem 1rem;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-blue-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .btn-secondary {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-light);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-medium);
+        }
+
+        /* Botones de Modal con Colores Específicos */
+        .btn-save {
+            background: linear-gradient(135deg, var(--success-green), #45a049);
+            color: white;
+            font-weight: 600;
+        }
+
+        .btn-save:hover {
+            background: linear-gradient(135deg, #45a049, #388e3c);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-cancel {
+            background: linear-gradient(135deg, #6c757d, #5a6268);
+            color: white;
+            font-weight: 500;
+        }
+
+        .btn-cancel:hover {
+            background: linear-gradient(135deg, #5a6268, #495057);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+        }
+
+        .btn-delete-modal {
+            background: linear-gradient(135deg, var(--error-red), #d32f2f);
+            color: white;
+            font-weight: 600;
+        }
+
+        .btn-delete-modal:hover {
+            background: linear-gradient(135deg, #d32f2f, #c62828);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(244, 67, 54, 0.3);
+        }
+
+        .btn-ir-gestion {
+            background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+            color: white;
+            font-weight: 600;
+        }
+
+        .btn-ir-gestion:hover {
+            background: linear-gradient(135deg, #7b1fa2, #6a1b9a);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(156, 39, 176, 0.3);
+        }
+
+        /* Contenedor Principal */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--spacing-lg);
+        }
+
+        /* KPIs Modernos */
+        .kpis-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-light);
+            transition: all var(--transition-medium);
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .kpi-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .kpi-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .kpi-icon.blue { background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark)); }
+        .kpi-icon.green { background: linear-gradient(135deg, var(--success-green), #45a049); }
+        .kpi-icon.orange { background: linear-gradient(135deg, var(--warning-orange), #f57c00); }
+        .kpi-icon.purple { background: linear-gradient(135deg, #9c27b0, #7b1fa2); }
+        .kpi-icon.red { background: linear-gradient(135deg, var(--error-red), #d32f2f); }
+
+        .kpi-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0.5rem 0;
+        }
+
+        .kpi-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* Panel de Controles */
+        .controls-panel {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-light);
+        }
+
+        .controls-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .controls-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-sm);
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .filter-input, .filter-select {
+            padding: 0.625rem;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            background: var(--bg-primary);
+            transition: all var(--transition-fast);
+        }
+
+        .filter-input:focus, .filter-select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+        }
+
+        /* Tabla Moderna */
+        .table-container {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-light);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .employees-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .employees-table th {
+            background: var(--bg-hover);
+            padding: var(--spacing-sm);
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer;
+            transition: background-color var(--transition-fast);
+        }
+
+        .employees-table th:hover {
+            background: #f0f0f0;
+        }
+
+        .employees-table td {
+            padding: var(--spacing-sm);
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.875rem;
+        }
+
+        .employees-table tbody tr {
+            transition: background-color var(--transition-fast);
+        }
+
+        .employees-table tbody tr:hover {
+            background: var(--bg-hover);
+        }
+
+        .employee-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-placa {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .badge-rango {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .badge-departamento {
+            background: #e8f5e8;
+            color: #388e3c;
+        }
+
+        /* Acciones de Tabla */
+        .table-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .action-btn.edit {
+            background: #e3f2fd;
+            color: var(--primary-blue);
+        }
+
+        .action-btn.edit:hover {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .action-btn.delete {
+            background: #ffebee;
+            color: var(--error-red);
+        }
+
+        .action-btn.delete:hover {
+            background: var(--error-red);
+            color: white;
+        }
+
+        /* Paginación Moderna */
+        .pagination-container {
+            padding: var(--spacing-md);
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .pagination-info {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+
+        .pagination-btn {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-light);
+            background: var(--bg-primary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: 0.875rem;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: var(--bg-hover);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn.active {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+
+        /* Modal Moderno */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-lg);
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-strong);
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all var(--transition-fast);
+        }
+
+        .modal-close:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: var(--spacing-md);
+        }
+
+        .modal-footer {
+            padding: var(--spacing-md);
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            gap: var(--spacing-sm);
+            justify-content: flex-end;
+        }
+
+        /* Formulario Moderno */
+        .form-grid {
+            display: grid;
+            gap: var(--spacing-md);
+        }
+
+        .form-section {
+            background: var(--bg-hover);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+        }
+
+        .form-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-sm);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-input, .form-select {
+            padding: 0.625rem;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            background: var(--bg-primary);
+            transition: all var(--transition-fast);
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+        }
+
+        /* Estados de carga */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-xl);
+            color: var(--text-secondary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-xl);
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: var(--spacing-sm);
+            opacity: 0.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: var(--spacing-sm);
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .kpis-container {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .employees-table {
+                font-size: 0.75rem;
+            }
+
+            .employees-table th,
+            .employees-table td {
+                padding: 0.5rem;
+            }
+        }
+
+        /* Notificaciones */
+        .notification {
+            position: fixed;
+            top: var(--spacing-lg);
+            right: var(--spacing-lg);
+            background: var(--bg-primary);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-strong);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-left: 4px solid var(--primary-blue);
+            z-index: 2000;
+            transform: translateX(100%);
+            transition: transform var(--transition-medium);
+            max-width: 400px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left-color: var(--success-green);
+        }
+
+        .notification.error {
+            border-left-color: var(--error-red);
+        }
+
+        .notification.warning {
+            border-left-color: var(--warning-orange);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Moderno -->
+    <header class="modern-header">
+        <div class="header-content">
+            <div class="header-left">
+                <button class="btn-modern btn-secondary" onclick="window.location.href='/dashboard'">
+                    <i data-feather="arrow-left"></i>
+                    <span>Volver al Dashboard</span>
+                </button>
+                <div>
+                    <h1><i data-feather="users"></i> Gestión de Personal</h1>
+                    <p>Panel Moderno de Control de Empleados</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-modern btn-secondary" onclick="verPanelCompleto()">
+                    <i data-feather="bar-chart-2"></i>
+                    <span>Ver Panel Completo</span>
+                </button>
+                <button class="btn-modern btn-secondary" onclick="cargaMasivaEmpleados()">
+                    <i data-feather="upload"></i>
+                    <span>Carga Masiva</span>
+                </button>
+                <button class="btn-modern btn-primary" onclick="showNuevoEmpleadoModal()">
+                    <i data-feather="user-plus"></i>
+                    <span>Agregar Empleado</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- KPIs de Estadísticas de Rangos y Departamentos -->
+        <div class="kpis-container">
+            <!-- Recuadro 1: Total de Empleados -->
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-icon blue">
+                        <i data-feather="users"></i>
+                    </div>
+                    <div class="kpi-title">Total de Empleados</div>
+                </div>
+                <div class="kpi-value" id="total-empleados">0</div>
+                <div class="kpi-subtitle">Empleados registrados en el sistema</div>
+            </div>
+
+            <!-- Recuadro 2: Rango Principal -->
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-icon green">
+                        <i data-feather="award"></i>
+                    </div>
+                    <div class="kpi-title">Rango Principal</div>
+                </div>
+                <div class="kpi-value" id="rango-principal" style="font-size: 1.2rem; line-height: 1.3;">Calculando...</div>
+                <div class="kpi-subtitle">Rango con mayor cantidad de empleados</div>
+            </div>
+
+            <!-- Recuadro 3: Departamento Principal -->
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-icon purple">
+                        <i data-feather="building"></i>
+                    </div>
+                    <div class="kpi-title">Departamento Principal</div>
+                </div>
+                <div class="kpi-value" id="departamento-principal" style="font-size: 1rem; line-height: 1.3;">Calculando...</div>
+                <div class="kpi-subtitle">Departamento con más personal</div>
+            </div>
+
+            <!-- Recuadro 4: Rangos Diferentes -->
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-icon orange">
+                        <i data-feather="layers"></i>
+                    </div>
+                    <div class="kpi-title">Rangos Diferentes</div>
+                </div>
+                <div class="kpi-value" id="rangos-diferentes">0</div>
+                <div class="kpi-subtitle">Tipos de rangos únicos en el sistema</div>
+            </div>
+
+            <!-- Recuadro 5: Distribución de Rangos -->
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-icon red">
+                        <i data-feather="bar-chart-2"></i>
+                    </div>
+                    <div class="kpi-title">Distribución de Rangos</div>
+                </div>
+                <div class="kpi-value" id="distribucion-rangos" style="font-size: 0.8rem; line-height: 1.4; max-height: 120px; overflow-y: auto;">Calculando...</div>
+                <div class="kpi-subtitle">Top 5 rangos más frecuentes</div>
+            </div>
+        </div>
+
+        <!-- Panel de Controles -->
+        <div class="controls-panel">
+            <div class="controls-header">
+                <div class="controls-title">
+                    <i data-feather="filter"></i>
+                    Filtros y Búsqueda
+                </div>
+            </div>
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Búsqueda Global</label>
+                    <input type="text" class="filter-input" id="busqueda-global" placeholder="Buscar por nombre, placa, email...">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Filtrar por Departamento</label>
+                    <select class="filter-select" id="filtro-departamento">
+                        <option value="">Todos los departamentos</option>
+                        <!-- Las opciones se cargarán dinámicamente desde JavaScript -->
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Filtrar por Rango</label>
+                    <select class="filter-select" id="filtro-rango">
+                        <option value="">Todos los rangos</option>
+                        <option value="AGENTE">AGENTE</option>
+                        <option value="CABO 2DO.">CABO 2DO.</option>
+                        <option value="CABO 1RO.">CABO 1RO.</option>
+                        <option value="SGTO. 2DO.">SGTO. 2DO.</option>
+                        <option value="SGTO. 1RO.">SGTO. 1RO.</option>
+                        <option value="SUBTENIENTE">SUBTENIENTE</option>
+                        <option value="TENIENTE">TENIENTE</option>
+                        <option value="CAPITÁN">CAPITÁN</option>
+                        <option value="MAYOR">MAYOR</option>
+                        <option value="SUBCOMISIONADO">SUBCOMISIONADO</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Estado</label>
+                    <select class="filter-select" id="filtro-estado">
+                        <option value="">Todos los estados</option>
+                        <option value="Activo">Activo</option>
+                        <option value="Inactivo">Inactivo</option>
+                        <option value="Licencia">Licencia</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Empleados -->
+        <div class="table-container">
+            <div class="table-header">
+                <div class="table-title">
+                    <i data-feather="users"></i>
+                    Lista de Empleados
+                </div>
+                <div class="pagination-info" id="empleados-count">
+                    0 empleados encontrados
+                </div>
+            </div>
+
+            <table class="employees-table">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('id')">
+                            <i data-feather="hash"></i> ID
+                        </th>
+                        <th onclick="sortTable('placa')">
+                            <i data-feather="credit-card"></i> Placa
+                        </th>
+                        <th onclick="sortTable('rango')">
+                            <i data-feather="award"></i> Rango
+                        </th>
+                        <th onclick="sortTable('nombre')">
+                            <i data-feather="user"></i> Nombre Completo
+                        </th>
+                        <th onclick="sortTable('departamento')">
+                            <i data-feather="building"></i> Departamento
+                        </th>
+                        <th onclick="sortTable('email')">
+                            <i data-feather="mail"></i> Email
+                        </th>
+                        <th onclick="sortTable('telefono')">
+                            <i data-feather="phone"></i> Teléfono
+                        </th>
+                        <th>
+                            <i data-feather="settings"></i> Acciones
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="employees-tbody">
+                    <tr>
+                        <td colspan="8" class="loading">
+                            <i data-feather="loader"></i> Cargando empleados...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pagination-container">
+                <div class="pagination-info" id="pagination-info">
+                    Mostrando 0 de 0 empleados
+                </div>
+                <div class="pagination-controls">
+                    <button class="pagination-btn" id="prev-page" onclick="changePage(-1)">
+                        <i data-feather="chevron-left"></i>
+                    </button>
+                    <span id="page-numbers"></span>
+                    <button class="pagination-btn" id="next-page" onclick="changePage(1)">
+                        <i data-feather="chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Empleado -->
+    <div id="empleado-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-title">
+                    <i data-feather="user-plus"></i>
+                    Agregar Empleado
+                </div>
+                <button class="modal-close" onclick="closeEmpleadoModal()">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="empleado-form" class="form-grid">
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i data-feather="user"></i>
+                            Información Personal
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Nombre *</label>
+                                <input type="text" class="form-input" name="nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Apellido *</label>
+                                <input type="text" class="form-input" name="apellido" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Cédula</label>
+                                <input type="text" class="form-input" name="cedula">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Fecha de Nacimiento</label>
+                                <input type="date" class="form-input" name="fecha_nacimiento">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-input" name="correo_electronico" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Teléfono</label>
+                                <input type="tel" class="form-input" name="telefono">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i data-feather="briefcase"></i>
+                            Información Laboral
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Placa</label>
+                                <input type="text" class="form-input" name="placa">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Rango *</label>
+                                <select class="form-select" name="rango" required>
+                                    <option value="">Seleccionar rango</option>
+                                    <option value="AGENTE">AGENTE</option>
+                                    <option value="CABO 2DO.">CABO 2DO.</option>
+                                    <option value="CABO 1RO.">CABO 1RO.</option>
+                                    <option value="SGTO. 2DO.">SGTO. 2DO.</option>
+                                    <option value="SGTO. 1RO.">SGTO. 1RO.</option>
+                                    <option value="SUBTENIENTE">SUBTENIENTE</option>
+                                    <option value="TENIENTE">TENIENTE</option>
+                                    <option value="CAPITÁN">CAPITÁN</option>
+                                    <option value="MAYOR">MAYOR</option>
+                                    <option value="SUBCOMISIONADO">SUBCOMISIONADO</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Departamento *</label>
+                            <select class="form-select" name="departamento" required>
+                                <option value="">Seleccionar departamento</option>
+                                <!-- Las opciones se cargarán dinámicamente desde JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+                    <input type="hidden" name="id" id="empleado-id">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modern btn-cancel" onclick="closeEmpleadoModal()">
+                    <i data-feather="x"></i>
+                    Cancelar
+                </button>
+                <button class="btn-modern btn-save" onclick="saveEmpleado()">
+                    <i data-feather="save"></i>
+                    Guardar Empleado
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación de Eliminación -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i data-feather="alert-triangle"></i>
+                    Confirmar Eliminación
+                </div>
+                <button class="modal-close" onclick="closeDeleteModal()">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; padding: var(--spacing-md);">
+                    <div style="font-size: 3rem; color: var(--error-red); margin-bottom: var(--spacing-sm);">
+                        <i data-feather="trash-2"></i>
+                    </div>
+                    <h3 style="margin-bottom: var(--spacing-sm); color: var(--text-primary);">
+                        ¿Eliminar Empleado?
+                    </h3>
+                    <p style="color: var(--text-secondary); margin-bottom: var(--spacing-md);">
+                        Esta acción no se puede deshacer. El empleado será eliminado permanentemente del sistema.
+                    </p>
+                    <div id="employee-delete-info" style="background: var(--bg-hover); padding: var(--spacing-sm); border-radius: var(--radius-md); margin-bottom: var(--spacing-md);">
+                        <strong id="delete-employee-name">Nombre del empleado</strong><br>
+                        <small style="color: var(--text-muted);" id="delete-employee-details">Detalles del empleado</small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modern btn-cancel" onclick="closeDeleteModal()">
+                    <i data-feather="x"></i>
+                    Cancelar
+                </button>
+                <button class="btn-modern btn-delete-modal" onclick="confirmDeleteEmpleado()">
+                    <i data-feather="trash-2"></i>
+                    Eliminar Empleado
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="empleados.js"></script>
+    <script>
+        // Inicializar iconos de Feather
+        feather.replace();
+        
+        // Reinicializar iconos después de cargar contenido dinámico
+        function refreshIcons() {
+            feather.replace();
+        }
+    </script>
+</body>
+</html>

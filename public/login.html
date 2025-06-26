@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema Seguro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <!-- Video de fondo -->
+    <div class="video-background">
+        <video autoplay muted loop playsinline>
+            <source src="../attached_assets/bg_login_1750632035308.mp4" type="video/mp4">
+            <!-- Fallback imagen si el video no carga -->
+            <div class="video-fallback"></div>
+        </video>
+    </div>
+
+    <!-- Contenedor principal -->
+    <div class="login-wrapper">
+        <!-- Página de bienvenida inicial -->
+        <div class="landing" id="landing">
+            <div class="landing-content">
+                <h1 class="landing-title">Bienvenido al Sistema</h1>
+                <p class="landing-subtitle">
+                    Accede a tu cuenta de forma segura
+                </p>
+                <button class="landing-login-btn" id="show-login">
+                    Iniciar Sesión
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal de Login -->
+        <div class="login-container" id="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <div class="logo-container">
+                        <div class="logo">S</div>
+                    </div>
+                    <h2 class="login-title">Iniciar Sesión</h2>
+                    <p class="login-subtitle">Accede a tu panel de control</p>
+                </div>
+
+                <form class="login-form" id="login-form">
+                    <!-- Campo de usuario -->
+                    <div class="form-group">
+                        <label for="username" class="form-label">Usuario</label>
+                        <div class="input-container">
+                            <input type="text" id="username" class="form-input" placeholder="Ingresa tu usuario" required>
+                            <i class="input-icon">👤</i>
+                        </div>
+                    </div>
+
+                    <!-- Campo de contraseña -->
+                    <div class="form-group">
+                        <label for="password" class="form-label">Contraseña</label>
+                        <div class="input-container">
+                            <input type="password" id="password" class="form-input" placeholder="Ingresa tu contraseña" required>
+                            <i class="input-icon">🔒</i>
+                        </div>
+                    </div>
+
+                    <!-- Botón de login -->
+                    <button type="submit" class="login-button" id="login-button">
+                        Iniciar Sesión
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toggle de tema -->
+    <div class="theme-toggle" id="theme-toggle">
+        <i>🌙</i>
+    </div>
+
+    <script src="login.js"></script>
+</body>
+</html>

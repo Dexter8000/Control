@@ -1,0 +1,379 @@
+
+/* Estilos para el Sistema de Gestión de Vacaciones */
+
+/* Estilos del modal que heredan del tema actual */
+.modal#vacaciones-modal {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+}
+
+.modal#vacaciones-modal .modal-content {
+    background: var(--glass-bg);
+    backdrop-filter: blur(30px);
+    border: 1px solid var(--glass-border-strong);
+    color: var(--text-primary);
+}
+
+.modal#vacaciones-modal h2,
+.modal#vacaciones-modal h3,
+.modal#vacaciones-modal h4 {
+    color: var(--text-primary) !important;
+}
+
+.modal#vacaciones-modal label {
+    color: var(--text-secondary) !important;
+}
+
+.modal#vacaciones-modal input,
+.modal#vacaciones-modal select,
+.modal#vacaciones-modal textarea {
+    background: var(--glass-bg-light) !important;
+    border: 1px solid var(--glass-border) !important;
+    color: var(--text-primary) !important;
+}
+
+.modal#vacaciones-modal input::placeholder,
+.modal#vacaciones-modal textarea::placeholder {
+    color: var(--text-muted) !important;
+}
+
+/* Tema claro específico para modal */
+[data-theme="light"] .modal#vacaciones-modal {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .modal#vacaciones-modal .modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.vacaciones-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.vacaciones-estado {
+    font-weight: 600;
+}
+
+.vacaciones-estado.en-vacaciones {
+    color: #28a745;
+}
+
+.vacaciones-estado.programadas {
+    color: #17a2b8;
+}
+
+.vacaciones-estado.sin-vacaciones {
+    color: var(--text-muted);
+}
+
+.vacaciones-estado.finalizadas {
+    color: var(--text-muted);
+}
+
+.vacaciones-detalle {
+    margin-top: 2px;
+}
+
+.vacaciones-detalle small {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+/* Modal de gestión de vacaciones */
+.vacaciones-info-section,
+.vacaciones-form-section,
+.vacaciones-historial-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.vacaciones-status-card {
+    background: var(--glass-bg-light);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+}
+
+.status-card {
+    text-align: center;
+    padding: var(--spacing-lg);
+}
+
+.status-card i {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-md);
+    display: block;
+}
+
+.status-card h4 {
+    margin: 0 0 var(--spacing-md) 0;
+    color: var(--text-primary);
+}
+
+.status-en-vacaciones i {
+    color: #28a745;
+}
+
+.status-programadas i {
+    color: #17a2b8;
+}
+
+.status-disponible i {
+    color: #6c757d;
+}
+
+.status-sin-vacaciones i {
+    color: var(--text-muted);
+}
+
+.vacaciones-details {
+    text-align: left;
+    margin-top: var(--spacing-md);
+}
+
+.vacaciones-details p {
+    margin: var(--spacing-xs) 0;
+    color: var(--text-secondary);
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--glass-bg-strong);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-top: var(--spacing-md);
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    transition: width 0.3s ease;
+}
+
+/* Formulario de vacaciones */
+.vacaciones-form {
+    background: var(--glass-bg-light);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+}
+
+.vacaciones-form .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.vacaciones-calculation {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--glass-bg-strong);
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--primary);
+}
+
+.preview-info {
+    color: var(--text-secondary);
+}
+
+.preview-info i {
+    color: var(--primary);
+    margin-right: var(--spacing-xs);
+}
+
+.preview-error {
+    color: #dc3545;
+}
+
+.preview-error i {
+    margin-right: var(--spacing-xs);
+}
+
+/* Historial de vacaciones */
+.historial-container {
+    background: var(--glass-bg-light);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.empty-historial {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--text-muted);
+}
+
+.empty-historial i {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-md);
+    display: block;
+}
+
+.historial-table-container {
+    overflow-x: auto;
+}
+
+.historial-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.historial-table th {
+    background: var(--glass-bg-strong);
+    padding: var(--spacing-md);
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--glass-border);
+}
+
+.historial-table td {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--glass-border);
+    vertical-align: top;
+}
+
+.historial-row.activas {
+    background: rgba(40, 167, 69, 0.05);
+}
+
+.historial-row.programadas {
+    background: rgba(23, 162, 184, 0.05);
+}
+
+.historial-row.finalizadas {
+    background: rgba(108, 117, 125, 0.05);
+}
+
+.periodo-info strong {
+    color: var(--text-primary);
+}
+
+.periodo-info small {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Badges para el historial */
+.duracion-badge,
+.tipo-badge,
+.estado-badge,
+.año-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.duracion-badge {
+    background: linear-gradient(135deg, #4361ee, #3f37c9);
+    color: white;
+}
+
+.tipo-badge {
+    background: var(--glass-bg-strong);
+    color: var(--text-secondary);
+    border: 1px solid var(--glass-border);
+}
+
+.tipo-anuales {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border-color: rgba(40, 167, 69, 0.3);
+}
+
+.tipo-especiales {
+    background: rgba(23, 162, 184, 0.1);
+    color: #17a2b8;
+    border-color: rgba(23, 162, 184, 0.3);
+}
+
+.tipo-medicas {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border-color: rgba(220, 53, 69, 0.3);
+}
+
+.tipo-personales {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+    border-color: rgba(255, 193, 7, 0.3);
+}
+
+.estado-badge {
+    background: var(--glass-bg-strong);
+    color: var(--text-secondary);
+    border: 1px solid var(--glass-border);
+}
+
+.estado-activas {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border-color: rgba(40, 167, 69, 0.3);
+}
+
+.estado-programadas {
+    background: rgba(23, 162, 184, 0.1);
+    color: #17a2b8;
+    border-color: rgba(23, 162, 184, 0.3);
+}
+
+.estado-finalizadas {
+    background: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+    border-color: rgba(108, 117, 125, 0.3);
+}
+
+.estado-canceladas {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border-color: rgba(220, 53, 69, 0.3);
+}
+
+.año-badge {
+    background: linear-gradient(135deg, #f72585, #b5179e);
+    color: white;
+}
+
+/* Botón para accionar modal de vacaciones */
+.btn-vacaciones {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.btn-vacaciones:hover {
+    background: linear-gradient(135deg, #138496, #117a8b);
+    transform: translateY(-1px);
+}
+
+.btn-vacaciones i {
+    margin-right: 4px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .vacaciones-form .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .historial-table-container {
+        font-size: 0.85rem;
+    }
+    
+    .historial-table th,
+    .historial-table td {
+        padding: var(--spacing-sm);
+    }
+}
