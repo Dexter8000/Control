@@ -32,26 +32,6 @@ const db = new Database();
 const SistemaPrestamos = require('./database/prestamos');
 const prestamos = new SistemaPrestamos();
 
-// Inicializar PostgreSQL
-let pgStorage = null;
-let pgInitialized = false;
-
-async function initializePostgreSQL() {
-  try {
-    const PostgreSQLStorage = require('./server/pgStorage');
-    pgStorage = new PostgreSQLStorage();
-    // Test connection
-    await pgStorage.getDepartamentos();
-    console.log('✅ PostgreSQL conectado y inicializado correctamente');
-    pgInitialized = true;
-  } catch (error) {
-    console.log('⚠️ PostgreSQL no disponible, usando SQLite como fallback:', error.message);
-    pgInitialized = false;
-    pgStorage = null;
-  }
-}
-
-initializePostgreSQL();
 
 db.connect().then(() => {
   console.log('🎯 Sistema SQLite de base de datos inicializado correctamente');
@@ -273,21 +253,10 @@ app.get('/api/equipos-asignados', requireAuth, async (req, res) => {
   }
 });
 
-// Obtener empleados para asignación (básico) - con soporte PostgreSQL
+// Obtener empleados para asignación
 app.get('/api/empleados', requireAuth, async (req, res) => {
   try {
-    let empleados;
-    if (pgInitialized && pgStorage) {
-      try {
-        empleados = await pgStorage.getEmpleadosCompletos();
-        console.log('✅ Datos obtenidos desde PostgreSQL');
-      } catch (pgError) {
-        console.log('Fallback a SQLite para empleados:', pgError.message);
-        empleados = await db.getEmpleadosCompletos();
-      }
-    } else {
-      empleados = await db.getEmpleadosCompletos();
-    }
+    const empleados = await db.getEmpleadosCompletos();
     // Transformar datos para compatibilidad con frontend
     const empleadosFormateados = empleados.map(emp => ({
       ...emp,
@@ -742,36 +711,16 @@ app.get('/api/reporte-semanal', requireAuth, async (req, res) => {
 // Obtener todos los usuarios
 app.get('/api/usuarios', requireAuth, async (req, res) => {
   try {
-    let usuarios;
-    if (pgInitialized && pgStorage) {
-      try {
-        usuarios = await pgStorage.getUsers();
-        console.log('✅ Usuarios obtenidos desde PostgreSQL');
-      } catch (pgError) {
-        console.log('Fallback a SQLite para usuarios:', pgError.message);
-        usuarios = await new Promise((resolve, reject) => {
-          db.db.all(`
-            SELECT id, usuario, rol, nombre, email 
-            FROM usuarios 
-            ORDER BY id ASC
-          `, (err, rows) => {
-            if (err) reject(err);
-            else resolve(rows);
-          });
-        });
-      }
-    } else {
-      usuarios = await new Promise((resolve, reject) => {
-        db.db.all(`
-          SELECT id, usuario, rol, nombre, email 
-          FROM usuarios 
-          ORDER BY id ASC
-        `, (err, rows) => {
-          if (err) reject(err);
-          else resolve(rows);
-        });
+    const usuarios = await new Promise((resolve, reject) => {
+      db.db.all(`
+        SELECT id, usuario, rol, nombre, email
+        FROM usuarios
+        ORDER BY id ASC
+      `, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
       });
-    }
+    });
 
     res.json({ success: true, usuarios });
   } catch (error) {
@@ -1414,18 +1363,7 @@ app.get('/api/empleados-completos', requireAuth, async (req, res) => {
 // Obtener todos los empleados básico
 app.get('/api/empleados', requireAuth, async (req, res) => {
   try {
-    let empleados;
-    if (pgInitialized && pgStorage) {
-      try {
-        empleados = await pgStorage.getEmpleadosCompletos();
-        
-      } catch (pgError) {
-        
-        empleados = await db.getEmpleadosCompletos();
-      }
-    } else {
-      empleados = await db.getEmpleadosCompletos();
-    }
+    const empleados = await db.getEmpleadosCompletos();
     
     res.json({ 
             success: true, 
