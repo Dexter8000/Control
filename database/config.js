@@ -79,7 +79,7 @@ class Database {
                     FOREIGN KEY (responsable_actual) REFERENCES empleados(id)
                 );
 
-                -- Tabla de inventario periférico (migrada exacta)
+                -- Tabla de inventario periférico (actualizada)
                 CREATE TABLE IF NOT EXISTS inventario_periferico (
                     id_periferico TEXT PRIMARY KEY,
                     nombre_periferico TEXT,
@@ -88,32 +88,43 @@ class Database {
                     serie_periferico TEXT,
                     estado_periferico TEXT DEFAULT 'operativo',
                     condicion_periferico TEXT DEFAULT 'nuevo',
-                    id_inventario_principal TEXT,
+                    tipo_adquisicion_periferico TEXT,
+                    id_departamento_asignado_periferico TEXT,
+                    ubicacion_especifica_periferico TEXT,
+                    responsable_actual_periferico TEXT,
+                    fecha_creacion_periferico TEXT,
+                    fecha_adquisicion_periferico TEXT,
                     detalles_periferico TEXT,
-                    fecha_adquisicion_periferico DATE,
-                    responsable_actual TEXT,
+                    id_inventario_principal TEXT,
                     fecha_asignacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (id_inventario_principal) REFERENCES inventario_principal(id),
-                    FOREIGN KEY (responsable_actual) REFERENCES empleados(id)
+                    FOREIGN KEY (id_departamento_asignado_periferico) REFERENCES departamentos(id),
+                    FOREIGN KEY (responsable_actual_periferico) REFERENCES empleados(id),
+                    FOREIGN KEY (id_inventario_principal) REFERENCES inventario_principal(id)
                 );
 
-                -- Tabla de inventario principal (migrada exacta)
+                -- Tabla de inventario principal (actualizada)
                 CREATE TABLE IF NOT EXISTS inventario_principal (
                     id TEXT PRIMARY KEY,
                     nombre TEXT,
                     marca TEXT,
                     modelo TEXT,
                     serie TEXT,
+                    categoria TEXT,
+                    subcategoria TEXT,
                     estado TEXT DEFAULT 'operativo',
                     condicion TEXT DEFAULT 'nuevo',
+                    tipo_adquisicion TEXT,
+                    id_departamento_asignado TEXT,
+                    ubicacion_especifica TEXT,
                     responsable_actual TEXT,
-                    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    fecha_adquisicion DATE,
+                    fecha_creacion TEXT,
+                    fecha_adquisicion TEXT,
                     detalles TEXT,
                     ubicacion TEXT,
                     valor_compra DECIMAL(10,2),
                     proveedor TEXT,
                     garantia_hasta DATE,
+                    FOREIGN KEY (id_departamento_asignado) REFERENCES departamentos(id),
                     FOREIGN KEY (responsable_actual) REFERENCES empleados(id)
                 );
 
@@ -217,78 +228,67 @@ class Database {
                     if (row.count === 0) {
                         console.log('🔄 Migrando datos de la base de datos original...');
 
-                        // 1. Insertar departamentos estandarizados actualizados
-                        const insertDepartamentos = `
-                            INSERT OR REPLACE INTO departamentos (id, nombre) VALUES
-                            ('DEP001', '01-JEFATURA'),
-                            ('DEP002', 'JEFATURA'),
-                            ('DEP003', 'DEPARTAMENTO ADMINISTRATIVO'),
-                            ('DEP004', 'UNIDADES EN OTRA DEPENDENCIA'),
-                            ('DEP005', 'DEPARTAMENTO DE ENLACE Y MONITOREO DE INFORMACION AERONAVAL'),
-                            ('DEP006', 'DEPARTAMENTO DE OPERACIONES'),
-                            ('DEP007', 'TÉCNICOS OPERACIONALES'),
-                            ('DEP008', 'Departamento de Fusión Operacional de Inteligencia'),
-                            ('DEP009', 'INTELIGENCIA INSULAR'),
-                            ('DEP010', 'INTELIGENCIA AÉREA'),
-                            ('DEP011', 'Departamento de Análisis de Inteligencia'),
-                            ('DEP012', 'DEPARTAMENTO CANINO'),
-                            ('DEP013', 'DEPARTAMENTO DE INTELIGENCIA CRIMINAL'),
-                            ('DEP014', 'DEPARTAMENTO REGIONAL DE INTELIGENCIA AERONAVAL'),
-                            ('DEP015', '[sin departamento]');
-                        `;
+                        const dataDir = path.join(__dirname, '../tablas');
 
-                        await new Promise((resolve, reject) => {
-                            this.db.run(insertDepartamentos, (err) => {
-                                if (err) reject(err);
-                                else {
-                                    console.log('✅ Departamentos migrados');
-                                    resolve();
-                                }
-                            });
-                        });
-
-                        // 2. Migrar usuarios con contraseñas hasheadas
-                        const usuariosOriginales = [
-                            { usuario: 'juan_perez', contrasena: 'contrasena123', rol: 'administrador' },
-                            { usuario: 'maria_lopez', contrasena: 'm14523', rol: 'administrador' },
-                            { usuario: 'pedro_gomez', contrasena: 'abc12345', rol: 'no administrador' },
-                            { usuario: 'admin', contrasena: 'admin', rol: 'administrador' },
-                            { usuario: 'dexterl', contrasena: 'Panama21', rol: 'administrador' }
-                        ];
-
-                        for (const user of usuariosOriginales) {
+                        const departamentos = JSON.parse(fs.readFileSync(path.join(dataDir, 'departamentos.json'), 'utf8'));
+                        for (const dep of departamentos) {
                             await new Promise((resolve, reject) => {
                                 this.db.run(
-                                    'INSERT INTO usuarios (usuario, contrasena, rol, activo) VALUES (?, ?, ?, 1)',
-                                    [user.usuario, user.contrasena, user.rol],
-                                    (err) => {
-                                        if (err) reject(err);
-                                        else resolve();
-                                    }
+                                    'INSERT OR REPLACE INTO departamentos (id, nombre) VALUES (?, ?)',
+                                    [dep.id, dep.nombre],
+                                    (err) => (err ? reject(err) : resolve())
+                                );
+                            });
+                        }
+                        console.log('✅ Departamentos migrados');
+
+                        const usuarios = JSON.parse(fs.readFileSync(path.join(dataDir, 'usuarios.json'), 'utf8'));
+                        for (const user of usuarios) {
+                            await new Promise((resolve, reject) => {
+                                this.db.run(
+                                    'INSERT OR REPLACE INTO usuarios (id, usuario, contrasena, rol, nombre, email) VALUES (?, ?, ?, ?, ?, ?)',
+                                    [user.id, user.usuario, user.contrasena, user.rol, user.nombre, user.email],
+                                    (err) => (err ? reject(err) : resolve())
                                 );
                             });
                         }
                         console.log('✅ Usuarios migrados');
 
-                        // 3. Insertar empleados de muestra con todas las columnas
-                        const insertEmpleados = `
-                            INSERT INTO empleados (id, placa, rango, nombre, apellido, departamento_id, correo_electronico, cedula, telefono, fecha_ingreso, fecha_nacimiento, fecha_vacaciones_inicio, fecha_vacaciones_fin) VALUES
-                            ('EMP001', '10722', 'SUBCOMISIONADO', 'JHONATHAN INDOMAR', 'ALI SANCHEZ', 'DEP002', 'jhonathan.ali@ejemplo.com', '8-123-456', '6123-4567', '2020-03-15', '1985-07-22', '2025-01-01', '2025-01-30'),
-                            ('EMP002', '80403', 'COMISIONADO', 'LEE', 'BAZER MELENDEZ', 'DEP002', 'lee.bazer@ejemplo.com', '8-234-567', '6234-5678', '2018-11-08', '1978-12-03', NULL, NULL),
-                            ('EMP003', '23456', 'AGENTE', 'ANA SOFIA', 'PEREZ GOMEZ', 'DEP001', 'ana.perez@ejemplo.com', '8-345-678', '6345-6789', '2022-06-12', '1992-04-18', '2025-07-15', '2025-07-29'),
-                            ('EMP004', '78901', 'CABO 2DO.', 'MARCO ANTONIO', 'RODRIGUEZ VERA', 'DEP003', 'marco.rodriguez@ejemplo.com', '8-456-789', '6456-7890', '2021-09-20', '1988-10-30', NULL, NULL),
-                            ('EMP005', '11223', 'CABO 1RO.', 'LUISA FERNANDA', 'DIAZ ACOSTA', 'DEP004', 'luisa.diaz@ejemplo.com', '8-567-890', '6567-8901', '2019-01-25', '1990-02-14', '2025-12-20', '2026-01-05');
-                        `;
-
-                        await new Promise((resolve, reject) => {
-                            this.db.run(insertEmpleados, (err) => {
-                                if (err) reject(err);
-                                else {
-                                    console.log('✅ Empleados de muestra insertados');
-                                    resolve();
-                                }
+                        const empleados = JSON.parse(fs.readFileSync(path.join(dataDir, 'empleados.json'), 'utf8'));
+                        for (const emp of empleados) {
+                            await new Promise((resolve, reject) => {
+                                this.db.run(
+                                    `INSERT OR REPLACE INTO empleados (id, placa, rango, nombre, apellido, departamento_id, correo_electronico, cedula, telefono, fecha_nacimiento) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                    [emp.id, emp.placa, emp.rango, emp.nombre, emp.apellido, emp.departamento_id, emp.correo_electronico, emp.cedula, emp.telefono, emp.fecha_nacimiento],
+                                    (err) => (err ? reject(err) : resolve())
+                                );
                             });
-                        });
+                        }
+                        console.log('✅ Empleados migrados');
+
+                        const inventarioPrincipal = JSON.parse(fs.readFileSync(path.join(dataDir, 'inventario_principal.json'), 'utf8'));
+                        for (const item of inventarioPrincipal) {
+                            await new Promise((resolve, reject) => {
+                                this.db.run(
+                                    `INSERT OR REPLACE INTO inventario_principal (id, nombre, marca, modelo, serie, categoria, subcategoria, estado, condicion, tipo_adquisicion, id_departamento_asignado, ubicacion_especifica, responsable_actual, fecha_creacion, fecha_adquisicion, detalles) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                    [item.id, item.nombre, item.marca, item.modelo, item.serie, item.categoria, item.subcategoria, item.estado, item.condicion, item.tipo_adquisicion, item.id_departamento_asignado, item.ubicacion_especifica, item.responsable_actual, item.fecha_creacion, item.fecha_adquisicion, item.detalles],
+                                    (err) => (err ? reject(err) : resolve())
+                                );
+                            });
+                        }
+                        console.log('✅ Inventario principal migrado');
+
+                        const inventarioPeriferico = JSON.parse(fs.readFileSync(path.join(dataDir, 'inventario_periferico.json'), 'utf8'));
+                        for (const per of inventarioPeriferico) {
+                            await new Promise((resolve, reject) => {
+                                this.db.run(
+                                    `INSERT OR REPLACE INTO inventario_periferico (id_periferico, nombre_periferico, marca_periferico, modelo_periferico, serie_periferico, estado_periferico, condicion_periferico, tipo_adquisicion_periferico, id_departamento_asignado_periferico, ubicacion_especifica_periferico, responsable_actual_periferico, fecha_creacion_periferico, fecha_adquisicion_periferico, detalles_periferico, id_inventario_principal) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                    [per.id_periferico, per.nombre_periferico, per.marca_periferico, per.modelo_periferico, per.serie_periferico, per.estado_periferico, per.condicion_periferico, per.tipo_adquisicion_periferico, per.id_departamento_asignado_periferico, per.ubicacion_especifica_periferico, per.responsable_actual_periferico, per.fecha_creacion_periferico, per.fecha_adquisicion_periferico, per.detalles_periferico, per.id_inventario_principal],
+                                    (err) => (err ? reject(err) : resolve())
+                                );
+                            });
+                        }
+                        console.log('✅ Inventario periférico migrado');
 
                         // 4. Insertar configuración inicial
                         const insertConfig = `
