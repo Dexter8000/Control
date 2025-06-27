@@ -7,7 +7,7 @@ const Database = require('./database/config');
 const VacacionesManager = require('./database/vacaciones');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(express.json());
@@ -227,16 +227,20 @@ app.get('/api/equipos-asignados', requireAuth, async (req, res) => {
 // Obtener empleados para asignación
 app.get('/api/empleados', requireAuth, async (req, res) => {
   try {
+    console.log('🔍 Obteniendo empleados desde la base de datos...');
     const empleados = await db.getEmpleadosCompletos();
+    console.log(`✅ Obtenidos ${empleados.length} empleados`);
     // Transformar datos para compatibilidad con frontend
     const empleadosFormateados = empleados.map(emp => ({
       ...emp,
       departamento: emp.departamento_nombre || emp.departamento || 'Sin departamento'
     }));
+    console.log('✅ Datos transformados, enviando respuesta...');
     res.json(empleadosFormateados);
   } catch (error) {
-    console.error('❌ Error obteniendo empleados:', error);
-    res.status(500).json({ error: 'Error obteniendo empleados' });
+    console.error('❌ Error obteniendo empleados:', error.message);
+    console.error('❌ Stack trace:', error.stack);
+    res.status(500).json({ error: 'Error obteniendo empleados', details: error.message });
   }
 });
 
@@ -1326,20 +1330,20 @@ app.get('/api/empleados-completos', requireAuth, async (req, res) => {
 // Obtener todos los empleados básico
 app.get('/api/empleados', requireAuth, async (req, res) => {
   try {
+    console.log('🔍 Obteniendo empleados desde la base de datos...');
     const empleados = await db.getEmpleadosCompletos();
-    
-    res.json({ 
-            success: true, 
-            empleados: empleados || [],
-            count: empleados ? empleados.length : 0
-        });
+    console.log(`✅ Obtenidos ${empleados.length} empleados`);
+    // Transformar datos para compatibilidad con frontend
+    const empleadosFormateados = empleados.map(emp => ({
+      ...emp,
+      departamento: emp.departamento_nombre || emp.departamento || 'Sin departamento'
+    }));
+    console.log('✅ Datos transformados, enviando respuesta...');
+    res.json(empleadosFormateados);
   } catch (error) {
-    console.error('❌ Error obteniendo empleados:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Error interno del servidor',
-            empleados: []
-        });
+    console.error('❌ Error obteniendo empleados:', error.message);
+    console.error('❌ Stack trace:', error.stack);
+    res.status(500).json({ error: 'Error obteniendo empleados', details: error.message });
   }
 });
 
@@ -1409,7 +1413,4 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('✅ Sesiones configuradas');
   console.log('✅ Autenticación lista');
   console.log('✅ Archivos estáticos en /public');
-  console.log('\n👤 Usuarios de prueba:');
-  console.log('   Username: admin | Password: admin123');
-  console.log('   Username: user  | Password: admin123');
 });

@@ -95,43 +95,58 @@ function setupEventListeners() {
     });
 }
 
-// Cargar empleados
+// Cargar empleados desde API
 async function loadEmpleados() {
     try {
+        console.log('🔄 Cargando empleados desde API...');
         showLoading();
-
-        const response = await fetch('/api/empleados-completos');
+        
+        const response = await fetch('/api/empleados');
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
-
+        
         const data = await response.json();
-        allEmpleados = data.empleados || [];
+        console.log('📊 Respuesta API empleados:', data);
+        
+        allEmpleados = data;
         filteredEmpleados = [...allEmpleados];
-
-        console.log(`✅ Cargados ${allEmpleados.length} empleados`);
-
         updateKPIs();
         renderEmpleados();
         updatePagination();
-        refreshIcons();
-
+        updateDepartmentFilter();
+        
+        console.log(`✅ ${allEmpleados.length} empleados cargados`);
     } catch (error) {
         console.error('❌ Error cargando empleados:', error);
-        showError('Error cargando empleados: ' + error.message);
+        showError('No se pudieron cargar los empleados. Intente recargar la página.');
+        showNotification('Error cargando empleados: ' + error.message, 'error');
     }
 }
 
 // Actualizar KPIs con estadísticas de rangos y departamentos
 function updateKPIs() {
-    console.log('📊 Calculando estadísticas de rangos y departamentos...');
+    console.log('📊 Calculando estadísticas mejoradas de personal...');
 
     const empleadosActivos = allEmpleados.filter(emp => 
         emp.activo === 'Sí' || emp.activo === 'Activo' || emp.estado === 'Activo'
     );
 
-    // Recuadro 1: Total de Empleados
-    document.getElementById('total-empleados').textContent = allEmpleados.length;
+    const empleadosInactivos = allEmpleados.filter(emp => 
+        emp.activo === 'No' || emp.activo === 'Inactivo' || emp.estado === 'Inactivo'
+    );
+
+    // Recuadro 1: Total de Empleados (Activos/Total)
+    const totalEmpleados = allEmpleados.length;
+    const activosCount = empleadosActivos.length;
+    const inactivosCount = empleadosInactivos.length;
+    
+    document.getElementById('total-empleados').innerHTML = 
+        `<div style="font-size: 2.5rem; font-weight: 700; color: var(--primary-blue);">${totalEmpleados}</div>
+         <div style="font-size: 0.9rem; margin-top: 4px;">
+             <span style="color: var(--success-green);">✓ ${activosCount} activos</span> • 
+             <span style="color: var(--error-red);">✗ ${inactivosCount} inactivos</span>
+         </div>`;
 
     // Recuadro 2: Rango con Más Empleados
     const rangoCount = {};
@@ -145,16 +160,22 @@ function updateKPIs() {
         .sort(([,a], [,b]) => b - a)[0];
     
     if (rangoMasFrecuente) {
+        const porcentaje = ((rangoMasFrecuente[1] / activosCount) * 100).toFixed(1);
         document.getElementById('rango-principal').innerHTML = 
-            `<strong>${rangoMasFrecuente[0]}</strong><br><small>${rangoMasFrecuente[1]} empleados</small>`;
+            `<div style="font-size: 1.1rem; font-weight: 600; color: var(--success-green); margin-bottom: 4px;">
+                ${rangoMasFrecuente[0]}
+             </div>
+             <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                ${rangoMasFrecuente[1]} empleados (${porcentaje}%)
+             </div>`;
     } else {
         document.getElementById('rango-principal').innerHTML = 'Sin datos';
     }
 
-    // Recuadro 3: Departamento con Más Empleados
+    // Recuadro 3: Departamento con Más Personal
     const deptCount = {};
     empleadosActivos.forEach(emp => {
-        const dept = emp.departamento_nombre || emp.departamento || '[sin departamento]';
+        const dept = emp.departamento_nombre || emp.departamento || '[Sin Departamento]';
         deptCount[dept] = (deptCount[dept] || 0) + 1;
     });
 
@@ -162,32 +183,52 @@ function updateKPIs() {
         .sort(([,a], [,b]) => b - a)[0];
     
     if (deptMasFrecuente) {
+        const porcentaje = ((deptMasFrecuente[1] / activosCount) * 100).toFixed(1);
+        const nombreCorto = deptMasFrecuente[0].length > 25 ? 
+            deptMasFrecuente[0].substring(0, 25) + '...' : 
+            deptMasFrecuente[0];
+        
         document.getElementById('departamento-principal').innerHTML = 
-            `<strong>${deptMasFrecuente[0]}</strong><br><small>${deptMasFrecuente[1]} empleados</small>`;
+            `<div style="font-size: 0.95rem; font-weight: 600; color: var(--primary-purple); margin-bottom: 4px; line-height: 1.2;">
+                ${nombreCorto}
+             </div>
+             <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                ${deptMasFrecuente[1]} empleados (${porcentaje}%)
+             </div>`;
     } else {
         document.getElementById('departamento-principal').innerHTML = 'Sin datos';
     }
 
-    // Recuadro 4: Total de Rangos Únicos
+    // Recuadro 4: Total de Departamentos Únicos
+    const departamentosUnicos = Object.keys(deptCount).length;
     const rangosUnicos = Object.keys(rangoCount).length;
-    document.getElementById('rangos-diferentes').textContent = rangosUnicos;
+    
+    document.getElementById('rangos-diferentes').innerHTML = 
+        `<div style="font-size: 2.5rem; font-weight: 700; color: var(--warning-orange);">${departamentosUnicos}</div>
+         <div style="font-size: 0.9rem; margin-top: 4px; color: var(--text-secondary);">
+             Departamentos • ${rangosUnicos} rangos
+         </div>`;
 
-    // Recuadro 5: Distribución por Rangos (Top 5)
-    const topRangos = Object.entries(rangoCount)
+    // Recuadro 5: Distribución por Departamentos (Top 5)
+    const topDepartamentos = Object.entries(deptCount)
         .sort(([,a], [,b]) => b - a)
         .slice(0, 5)
-        .map(([rango, count]) => {
-            const porcentaje = ((count / empleadosActivos.length) * 100).toFixed(1);
-            return `<div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                        <span style="font-size: 0.75rem;">${rango}</span>
-                        <span style="font-weight: 600;">${count} (${porcentaje}%)</span>
+        .map(([dept, count]) => {
+            const porcentaje = ((count / activosCount) * 100).toFixed(1);
+            const nombreCorto = dept.length > 20 ? dept.substring(0, 20) + '...' : dept;
+            return `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding: 2px 0;">
+                        <span style="font-size: 0.7rem; color: var(--text-primary); flex: 1;">${nombreCorto}</span>
+                        <span style="font-weight: 600; font-size: 0.75rem; color: var(--error-red); margin-left: 8px;">
+                            ${count} <small style="color: var(--text-muted);">(${porcentaje}%)</small>
+                        </span>
                     </div>`;
         })
         .join('');
 
-    document.getElementById('distribucion-rangos').innerHTML = topRangos || 'Sin datos';
+    document.getElementById('distribucion-rangos').innerHTML = topDepartamentos || 
+        '<div style="color: var(--text-muted); font-style: italic;">Sin datos disponibles</div>';
 
-    console.log('📊 Estadísticas de rangos y departamentos calculadas');
+    console.log(`📊 Estadísticas calculadas: ${totalEmpleados} empleados, ${departamentosUnicos} departamentos, ${rangosUnicos} rangos`);
 }
 
 // Aplicar filtros
@@ -503,7 +544,7 @@ function deleteEmpleado(empleadoId) {
     // Mostrar modal
     document.getElementById('delete-modal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
-    refreshIcons();
+    empleadoToDelete = null;
 }
 
 // Cerrar modal de eliminación
@@ -751,13 +792,23 @@ function closePanelCompleto() {
 async function loadAnalisisCompleto() {
     try {
         console.log('📊 Cargando análisis completo...');
+        console.log('🔍 Total empleados disponibles:', allEmpleados.length);
+        console.log('🔍 Muestra de empleados:', allEmpleados.slice(0, 3));
+
+        if (allEmpleados.length === 0) {
+            console.warn('⚠️ No hay empleados cargados, intentando recargar...');
+            await loadEmpleados();
+            console.log('🔍 Después de recargar - Total empleados:', allEmpleados.length);
+        }
 
         // Resumen general de rangos
         const resumenRangos = calcularResumenGeneralRangos();
+        console.log('📊 Resumen rangos calculado:', resumenRangos);
         renderResumenRangos(resumenRangos);
 
         // Análisis detallado por departamento
         const analisisDepartamentos = calcularAnalisisDepartamentos();
+        console.log('📊 Análisis departamentos calculado:', analisisDepartamentos);
         renderAnalisisDepartamentos(analisisDepartamentos);
 
         // Comparativa entre departamentos

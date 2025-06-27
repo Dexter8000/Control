@@ -10,7 +10,7 @@ class Database {
             fs.mkdirSync(assetsDir, { recursive: true });
         }
         this.dbPath = path.join(assetsDir, 'kilo.db');
-        console.log('🎯 Usando base de datos principal: kilo.db');
+        console.log(' Usando base de datos principal: kilo.db');
     }
 
     // Conectar a la base de datos
@@ -18,10 +18,10 @@ class Database {
         return new Promise((resolve, reject) => {
             this.db = new sqlite3.Database(this.dbPath, (err) => {
                 if (err) {
-                    console.error('❌ Error conectando a la base de datos:', err.message);
+                    console.error(' Error conectando a la base de datos:', err.message);
                     reject(err);
                 } else {
-                    console.log('✅ Conectado a la base de datos SQLite');
+                    console.log(' Conectado a la base de datos SQLite');
                     this.initializeTables().then(resolve).catch(reject);
                 }
             });
@@ -204,10 +204,10 @@ class Database {
 
             this.db.exec(createTables, (err) => {
                 if (err) {
-                    console.error('❌ Error creando tablas:', err.message);
+                    console.error(' Error creando tablas:', err.message);
                     reject(err);
                 } else {
-                    console.log('✅ Tablas creadas/verificadas correctamente');
+                    console.log(' Tablas creadas/verificadas correctamente');
                     this.insertMigratedData().then(resolve).catch(reject);
                 }
             });
@@ -226,7 +226,7 @@ class Database {
                     }
 
                     if (row.count === 0) {
-                        console.log('🔄 Migrando datos de la base de datos original...');
+                        console.log(' Migrando datos de la base de datos original...');
 
                         const dataDir = path.join(__dirname, '../tablas');
 
@@ -240,7 +240,7 @@ class Database {
                                 );
                             });
                         }
-                        console.log('✅ Departamentos migrados');
+                        console.log(' Departamentos migrados');
 
                         const usuarios = JSON.parse(fs.readFileSync(path.join(dataDir, 'usuarios.json'), 'utf8'));
                         for (const user of usuarios) {
@@ -252,7 +252,7 @@ class Database {
                                 );
                             });
                         }
-                        console.log('✅ Usuarios migrados');
+                        console.log(' Usuarios migrados');
 
                         const empleados = JSON.parse(fs.readFileSync(path.join(dataDir, 'empleados.json'), 'utf8'));
                         for (const emp of empleados) {
@@ -264,7 +264,7 @@ class Database {
                                 );
                             });
                         }
-                        console.log('✅ Empleados migrados');
+                        console.log(' Empleados migrados');
 
                         const inventarioPrincipal = JSON.parse(fs.readFileSync(path.join(dataDir, 'inventario_principal.json'), 'utf8'));
                         for (const item of inventarioPrincipal) {
@@ -276,7 +276,7 @@ class Database {
                                 );
                             });
                         }
-                        console.log('✅ Inventario principal migrado');
+                        console.log(' Inventario principal migrado');
 
                         const inventarioPeriferico = JSON.parse(fs.readFileSync(path.join(dataDir, 'inventario_periferico.json'), 'utf8'));
                         for (const per of inventarioPeriferico) {
@@ -288,7 +288,7 @@ class Database {
                                 );
                             });
                         }
-                        console.log('✅ Inventario periférico migrado');
+                        console.log(' Inventario periférico migrado');
 
                         // 4. Insertar configuración inicial
                         const insertConfig = `
@@ -305,15 +305,15 @@ class Database {
                             this.db.run(insertConfig, (err) => {
                                 if (err) reject(err);
                                 else {
-                                    console.log('✅ Configuración inicial creada');
+                                    console.log(' Configuración inicial creada');
                                     resolve();
                                 }
                             });
                         });
 
-                        console.log('🎉 Migración de datos completada exitosamente');
+                        console.log(' Migración de datos completada exitosamente');
                     } else {
-                        console.log('✅ Base de datos ya contiene datos migrados');
+                        console.log(' Base de datos ya contiene datos migrados');
                     }
                     resolve();
                 });
@@ -430,15 +430,28 @@ class Database {
     getEmpleadosCompletos() {
         return new Promise((resolve, reject) => {
             const query = `
-                SELECT e.*, d.nombre as departamento_nombre 
-                FROM empleados e 
-                LEFT JOIN departamentos d ON e.departamento_id = d.id 
-                WHERE e.activo = 1
-                ORDER BY e.nombre, e.apellido
+                SELECT 
+                    id,
+                    nombre,
+                    placa,
+                    rango,
+                    email,
+                    telefono,
+                    activo,
+                    fecha_ingreso,
+                    observaciones
+                FROM empleados
+                ORDER BY id ASC
             `;
-            this.db.all(query, (err, rows) => {
-                if (err) reject(err);
-                else resolve(rows);
+            
+            this.db.all(query, [], (err, rows) => {
+                if (err) {
+                    console.error(' Error obteniendo empleados completos:', err.message);
+                    reject(err);
+                } else {
+                    console.log(` Obtenidos ${rows.length} empleados completos`);
+                    resolve(rows);
+                }
             });
         });
     }
@@ -470,15 +483,15 @@ class Database {
                 null // fecha_ingreso se establece como NULL por defecto
             ];
 
-            console.log('🔍 Creando empleado con datos:', empleadoData);
-            console.log('🔍 Valores SQL:', values);
+            console.log(' Creando empleado con datos:', empleadoData);
+            console.log(' Valores SQL:', values);
 
             this.db.run(query, values, function(err) {
                 if (err) {
-                    console.error('❌ Error creando empleado:', err);
+                    console.error(' Error creando empleado:', err);
                     reject(err);
                 } else {
-                    console.log('✅ Empleado creado exitosamente con ID:', id);
+                    console.log(' Empleado creado exitosamente con ID:', id);
                     resolve({ id: id });
                 }
             });
@@ -493,16 +506,16 @@ class Database {
             
             this.db.get(checkQuery, [id], (err, existingEmpleado) => {
                 if (err) {
-                    console.error('❌ Error verificando empleado:', err);
+                    console.error(' Error verificando empleado:', err);
                     return reject(err);
                 }
                 
                 if (!existingEmpleado) {
-                    console.error('❌ Empleado no encontrado para actualizar:', id);
+                    console.error(' Empleado no encontrado para actualizar:', id);
                     return reject(new Error(`Empleado con ID ${id} no encontrado`));
                 }
                 
-                console.log('✅ Empleado encontrado para actualizar:', existingEmpleado.nombre, existingEmpleado.apellido);
+                console.log(' Empleado encontrado para actualizar:', existingEmpleado.nombre, existingEmpleado.apellido);
                 
                 const query = `
                     UPDATE empleados SET 
@@ -524,17 +537,17 @@ class Database {
                     id
                 ];
 
-                console.log('🔄 Actualizando empleado ID:', id);
-                console.log('📝 Nuevos datos:', empleadoData);
+                console.log(' Actualizando empleado ID:', id);
+                console.log(' Nuevos datos:', empleadoData);
 
                 this.db.run(query, values, function(err) {
                     if (err) {
-                        console.error('❌ Error SQL actualizando empleado:', err);
+                        console.error(' Error SQL actualizando empleado:', err);
                         reject(err);
                     } else {
-                        console.log('✅ Empleado actualizado exitosamente. Filas afectadas:', this.changes);
+                        console.log(' Empleado actualizado exitosamente. Filas afectadas:', this.changes);
                         if (this.changes === 0) {
-                            console.warn('⚠️ No se actualizó ninguna fila - verificar ID');
+                            console.warn(' No se actualizó ninguna fila - verificar ID');
                         }
                         resolve({ changes: this.changes, id: id });
                     }
@@ -625,9 +638,9 @@ class Database {
         if (this.db) {
             this.db.close((err) => {
                 if (err) {
-                    console.error('❌ Error cerrando la base de datos:', err.message);
+                    console.error(' Error cerrando la base de datos:', err.message);
                 } else {
-                    console.log('✅ Conexión a la base de datos cerrada');
+                    console.log(' Conexión a la base de datos cerrada');
                 }
             });
         }
