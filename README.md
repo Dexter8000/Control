@@ -82,6 +82,8 @@ DATABASE_URL=postgresql://[usuario]:[contraseña]@[host]:[puerto]/[base_de_datos
 SESSION_SECRET=tu_clave_secreta_aqui_para_sesiones_seguras
 (Asegúrate de reemplazar los valores entre [] y la SESSION_SECRET con tus propias credenciales y una clave segura)
 
+Antes de iniciar por primera vez, verifica que exista el directorio `attached_assets` en la raíz del proyecto. Allí se almacena la base de datos SQLite. Si no está presente, los scripts lo crearán automáticamente.
+
 4. Inicializar Base de Datos
 Bash
 

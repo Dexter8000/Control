@@ -1,8 +1,13 @@
 
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 
-const dbPath = path.join(__dirname, '../attached_assets/sistema_completo.db');
+const assetsDir = path.join(__dirname, '../attached_assets');
+if (!fs.existsSync(assetsDir)) {
+    fs.mkdirSync(assetsDir, { recursive: true });
+}
+const dbPath = path.join(assetsDir, 'sistema_completo.db');
 
 console.log('👥 USUARIOS EN LA BASE DE DATOS');
 console.log('===============================\n');
