@@ -1,5 +1,4 @@
 const sqlite3 = require('sqlite3').verbose();
-const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
 
@@ -37,8 +36,7 @@ class Database {
                 CREATE TABLE IF NOT EXISTS usuarios (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     usuario TEXT UNIQUE NOT NULL,
-                    contrasena TEXT NOT NULL, -- Será migrada a hash
-                    password_hash TEXT, -- Nueva columna para contraseñas hasheadas
+                    contrasena TEXT NOT NULL, -- contraseña en texto plano (hash pendiente)
                     rol TEXT DEFAULT 'no administrador',
                     nombre TEXT,
                     apellido TEXT,
@@ -259,11 +257,10 @@ class Database {
                         ];
 
                         for (const user of usuariosOriginales) {
-                            const passwordHash = await bcrypt.hash(user.contrasena, 10);
                             await new Promise((resolve, reject) => {
                                 this.db.run(
-                                    'INSERT INTO usuarios (usuario, contrasena, password_hash, rol, activo) VALUES (?, ?, ?, ?, 1)',
-                                    [user.usuario, user.contrasena, passwordHash, user.rol],
+                                    'INSERT INTO usuarios (usuario, contrasena, rol, activo) VALUES (?, ?, ?, 1)',
+                                    [user.usuario, user.contrasena, user.rol],
                                     (err) => {
                                         if (err) reject(err);
                                         else resolve();
@@ -271,7 +268,7 @@ class Database {
                                 );
                             });
                         }
-                        console.log('✅ Usuarios migrados con contraseñas hasheadas');
+                        console.log('✅ Usuarios migrados');
 
                         // 3. Insertar empleados de muestra con todas las columnas
                         const insertEmpleados = `
@@ -330,10 +327,10 @@ class Database {
     getUser(identifier) {
         return new Promise((resolve, reject) => {
             const query = `
-                SELECT id, usuario as username, usuario, password_hash, contrasena, 
-                       nombre, apellido, email, telefono, rol, activo, ultimo_acceso, 
+                SELECT id, usuario as username, usuario, contrasena,
+                       nombre, apellido, email, telefono, rol, activo, ultimo_acceso,
                        intentos_fallidos, bloqueado_hasta
-                FROM usuarios 
+                FROM usuarios
                 WHERE (usuario = ? OR email = ?) AND activo = 1
             `;
 

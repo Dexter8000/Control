@@ -6,7 +6,7 @@ Sistema integral de gestión empresarial desarrollado en Node.js con Express, Po
 
 - **Dashboard Ejecutivo**: Panel de control con estadísticas en tiempo real y métricas avanzadas
 - **Gestión de Empleados**: CRUD completo con 30+ empleados activos y análisis por departamentos
-- **Sistema de Autenticación**: Login seguro con bcrypt, sesiones y control de acceso basado en roles
+- **Sistema de Autenticación**: Login con sesiones y control de acceso basado en roles (hashing de contraseñas pendiente)
 - **Gestión de Usuarios**: Administración completa de 10 usuarios del sistema con diferentes roles
 - **Sistema de Inventarios**: Gestión de inventario principal y periférico con asignaciones
 - **Gestión de Vacaciones**: Sistema completo de solicitudes, aprobaciones e historial
@@ -31,7 +31,7 @@ Sistema integral de gestión empresarial desarrollado en Node.js con Express, Po
 - Historial de cambios
 
 ### 🔐 Sistema de Usuarios (10 operativos)
-- Autenticación robusta con bcrypt
+- Autenticación básica (hashing pendiente)
 - Roles: Administrador, Usuario, Supervisor
 - Control de sesiones seguras
 - Logs de acceso y actividad
@@ -165,7 +165,8 @@ Responsive: Adaptable a móviles y tablets
 Iconografía: Font Awesome + Feather Icons
 
 🔒 Seguridad Implementada
-Autenticación con bcrypt (factor 12)
+Autenticación básica (hashing pendiente)
+Actualmente las contraseñas se almacenan sin cifrar. Se añadirá hashing en futuras versiones.
 
 Sesiones seguras con express-session
 
@@ -183,7 +184,7 @@ PostgreSQL: Base de datos principal con Drizzle ORM
 
 SQLite3: Base de datos de respaldo
 
-bcryptjs: Encriptación de contraseñas
+bcryptjs: (se usará próximamente para encriptar contraseñas)
 
 express-session: Manejo de sesiones
 
