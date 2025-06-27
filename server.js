@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
-const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
 const Database = require('./database/config');
@@ -118,36 +117,8 @@ app.post('/api/login', async (req, res) => {
       });
     }
 
-    // Verificar password (compatible con migración)
-    let passwordValido = false;
-
-    // 1. Intentar con password hasheado (nuevo sistema)
-    if (usuario.password_hash) {
-      passwordValido = await bcrypt.compare(password, usuario.password_hash);
-    }
-
-    // 2. Si no funciona, intentar con contraseña en texto plano (sistema original)
-    if (!passwordValido && usuario.contrasena) {
-      passwordValido = (password === usuario.contrasena);
-
-      // Si es válida, migrar a hash automáticamente
-      if (passwordValido) {
-        const newHash = await bcrypt.hash(password, 10);
-        await new Promise((resolve, reject) => {
-          db.db.run(
-            'UPDATE usuarios SET password_hash = ? WHERE id = ?',
-            [newHash, usuario.id],
-            (err) => {
-              if (err) reject(err);
-              else {
-                console.log(`🔄 Contraseña migrada a hash para usuario: ${usuario.usuario}`);
-                resolve();
-              }
-            }
-          );
-        });
-      }
-    }
+    // Verificar password directamente (sin hashing por ahora)
+    const passwordValido = (password === usuario.contrasena);
 
     if (!passwordValido) {
       // Incrementar intentos fallidos
@@ -760,15 +731,12 @@ app.post('/api/usuarios', requireAuth, requireRole('administrador'), async (req,
       });
     }
 
-    // Hash de la contraseña
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    // Insertar nuevo usuario
+    // Insertar nuevo usuario con contraseña sin hash
     const newUserId = await new Promise((resolve, reject) => {
       db.db.run(`
-        INSERT INTO usuarios (usuario, contrasena, password_hash, rol, nombre, email, activo, fecha_creacion)
-        VALUES (?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
-      `, [usuario, password, passwordHash, rol, nombre || null, email || null], function(err) {
+        INSERT INTO usuarios (usuario, contrasena, rol, nombre, email, activo, fecha_creacion)
+        VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+      `, [usuario, password, rol, nombre || null, email || null], function(err) {
         if (err) {
           console.error('❌ Error SQL creando usuario:', err);
           // Verificar si es error de usuario duplicado
@@ -874,9 +842,8 @@ app.put('/api/usuarios/:id', requireAuth, async (req, res) => {
 
     // Si se proporciona nueva contraseña
     if (password && password.trim() !== '') {
-      const passwordHash = await bcrypt.hash(password, 10);
-      updateFields.push('password_hash = ?');
-      updateValues.push(passwordHash);
+      updateFields.push('contrasena = ?');
+      updateValues.push(password);
     }
 
     updateValues.push(id);
@@ -953,18 +920,14 @@ app.post('/api/usuarios/mass-upload', requireAuth, requireRole('administrador'),
         continue;
       }
 
-      // Hash de la contraseña
-      const passwordHash = await bcrypt.hash(usuario.password, 10);
-
       // Insertar usuario
       await new Promise((resolve, reject) => {
         db.db.run(`
-          INSERT INTO usuarios (usuario, contrasena, password_hash, rol, nombre, email, activo, fecha_creacion)
-          VALUES (?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+          INSERT INTO usuarios (usuario, contrasena, rol, nombre, email, activo, fecha_creacion)
+          VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
         `, [
           usuario.usuario,
           usuario.password,
-          passwordHash,
           usuario.rol,
           usuario.nombre || null,
           usuario.email || null
