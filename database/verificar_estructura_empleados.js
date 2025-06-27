@@ -7,7 +7,7 @@ const assetsDir = path.join(__dirname, '../attached_assets');
 if (!fs.existsSync(assetsDir)) {
     fs.mkdirSync(assetsDir, { recursive: true });
 }
-const dbPath = path.join(assetsDir, 'sistema_completo.db');
+const dbPath = path.join(assetsDir, 'kilo.db');
 
 console.log('🔍 VERIFICANDO ESTRUCTURA DE LA TABLA EMPLEADOS');
 console.log('================================================\n');

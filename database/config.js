@@ -10,8 +10,8 @@ class Database {
         if (!fs.existsSync(assetsDir)) {
             fs.mkdirSync(assetsDir, { recursive: true });
         }
-        this.dbPath = path.join(assetsDir, 'sistema_completo.db');
-        console.log('🎯 Usando base de datos principal: sistema_completo.db');
+        this.dbPath = path.join(assetsDir, 'kilo.db');
+        console.log('🎯 Usando base de datos principal: kilo.db');
     }
 
     // Conectar a la base de datos
