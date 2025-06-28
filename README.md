@@ -72,15 +72,12 @@ Bash
 
 npm install
 3. Configurar Variables de Entorno
-Para conectar tu aplicación a la base de datos de Neon, necesitas la DATABASE_URL y una SESSION_SECRET.
-Importante: Obtén tu DATABASE_URL de la consola de Neon, dentro de la configuración de tu proyecto o base de datos que creaste.
+Crea un archivo `.env` en la raíz de tu proyecto y define la siguiente variable:
 
-Bash
-
-# Crear archivo .env en la raíz de tu proyecto
-DATABASE_URL=postgresql://[usuario]:[contraseña]@[host]:[puerto]/[base_de_datos]?sslmode=require
+```bash
 SESSION_SECRET=tu_clave_secreta_aqui_para_sesiones_seguras
-(Asegúrate de reemplazar los valores entre [] y la SESSION_SECRET con tus propias credenciales y una clave segura)
+```
+(Asegúrate de reemplazar el valor con tu propia clave segura)
 
 Antes de iniciar por primera vez, verifica que exista el directorio `attached_assets` en la raíz del proyecto. Allí se almacena la base de datos SQLite. Si no está presente, los scripts lo crearán automáticamente.
 

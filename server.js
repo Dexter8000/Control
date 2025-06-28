@@ -5,21 +5,6 @@ const path = require('path');
 const fs = require('fs');
 const Database = require('./database/config');
 const VacacionesManager = require('./database/vacaciones');
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
-
-async function pgQuery(text, params) {
-  const client = await pool.connect();
-  try {
-    return await client.query(text, params);
-  } finally {
-    client.release();
-  }
-}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -184,78 +169,81 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-// === Endpoints de Dashboard (PostgreSQL) ===
-app.get('/api/dashboard/total-empleados', async (req, res) => {
-  try {
-    const result = await pgQuery('SELECT COUNT(*) FROM empleados;');
-    res.json({ total: parseInt(result.rows[0].count) });
-  } catch (err) {
-    console.error('Error al obtener total de empleados:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
+// === Endpoints de Dashboard (SQLite) ===
+app.get('/api/dashboard/total-empleados', (req, res) => {
+  db.db.get('SELECT COUNT(*) as total FROM empleados', [], (err, row) => {
+    if (err) {
+      console.error('Error al obtener total de empleados:', err);
+      return res.status(500).json({ error: 'Error interno del servidor' });
+    }
+    res.json({ total: row.total });
+  });
 });
 
-app.get('/api/dashboard/rangos-por-departamento', async (req, res) => {
-  try {
-    const result = await pgQuery(`
-            SELECT r.nombre as rango_nombre, d.nombre as departamento_nombre, COUNT(e.id) as cantidad
-            FROM empleados e
-            JOIN rangos r ON e.id_rango = r.id
-            JOIN departamentos d ON e.id_departamento = d.id
-            GROUP BY r.nombre, d.nombre
-            ORDER BY cantidad DESC, rango_nombre, departamento_nombre;
-        `);
-    res.json({ detalle: result.rows });
-  } catch (err) {
-    console.error('Error al obtener rangos por departamento:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
+app.get('/api/dashboard/rangos-por-departamento', (req, res) => {
+  const query = `
+    SELECT e.rango AS rango_nombre, d.nombre AS departamento_nombre, COUNT(*) AS cantidad
+    FROM empleados e
+    LEFT JOIN departamentos d ON e.departamento_id = d.id
+    WHERE e.rango IS NOT NULL AND e.rango != ''
+    GROUP BY e.rango, d.nombre
+    ORDER BY cantidad DESC, rango_nombre, departamento_nombre;
+  `;
+  db.db.all(query, [], (err, rows) => {
+    if (err) {
+      console.error('Error al obtener rangos por departamento:', err);
+      return res.status(500).json({ error: 'Error interno del servidor' });
+    }
+    res.json({ detalle: rows });
+  });
 });
 
-app.get('/api/dashboard/cantidad-rangos', async (req, res) => {
-  try {
-    const result = await pgQuery(`
-            SELECT r.nombre as rango_nombre, COUNT(e.id) as cantidad
-            FROM empleados e
-            JOIN rangos r ON e.id_rango = r.id
-            GROUP BY r.nombre
-            ORDER BY cantidad DESC, rango_nombre;
-        `);
-    res.json({ detalle: result.rows });
-  } catch (err) {
-    console.error('Error al obtener cantidad de rangos:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
+app.get('/api/dashboard/cantidad-rangos', (req, res) => {
+  const query = `
+    SELECT rango AS rango_nombre, COUNT(*) as cantidad
+    FROM empleados
+    WHERE rango IS NOT NULL AND rango != ''
+    GROUP BY rango
+    ORDER BY cantidad DESC;
+  `;
+  db.db.all(query, [], (err, rows) => {
+    if (err) {
+      console.error('Error al obtener cantidad de rangos:', err);
+      return res.status(500).json({ error: 'Error interno del servidor' });
+    }
+    res.json({ detalle: rows });
+  });
 });
 
-app.get('/api/dashboard/total-departamentos', async (req, res) => {
-  try {
-    const result = await pgQuery('SELECT COUNT(*) FROM departamentos;');
-    res.json({ total: parseInt(result.rows[0].count) });
-  } catch (err) {
-    console.error('Error al obtener total de departamentos:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
+app.get('/api/dashboard/total-departamentos', (req, res) => {
+  db.db.get('SELECT COUNT(*) as total FROM departamentos', [], (err, row) => {
+    if (err) {
+      console.error('Error al obtener total de departamentos:', err);
+      return res.status(500).json({ error: 'Error interno del servidor' });
+    }
+    res.json({ total: row.total });
+  });
 });
 
-app.get('/api/dashboard/datos-incompletos', async (req, res) => {
-  try {
-    const result = await pgQuery(`
-            SELECT id, nombre, rango, id_departamento
-            FROM empleados
-            WHERE nombre IS NULL OR nombre = ''
-               OR rango IS NULL OR rango = ''
-               OR id_departamento IS NULL;
-        `);
+app.get('/api/dashboard/datos-incompletos', (req, res) => {
+  const query = `
+    SELECT id, nombre, rango, departamento_id
+    FROM empleados
+    WHERE nombre IS NULL OR nombre = ''
+       OR rango IS NULL OR rango = ''
+       OR departamento_id IS NULL OR departamento_id = '';
+  `;
+  db.db.all(query, [], (err, rows) => {
+    if (err) {
+      console.error('Error al obtener datos incompletos:', err);
+      return res.status(500).json({ error: 'Error interno del servidor' });
+    }
     res.json({
-      ids: result.rows.map(row => row.id),
-      detalle: result.rows,
-      count: result.rows.length
+      ids: rows.map(row => row.id),
+      detalle: rows,
+      count: rows.length
     });
-  } catch (err) {
-    console.error('Error al obtener datos incompletos:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
+  });
 });
 
 // API de logout
