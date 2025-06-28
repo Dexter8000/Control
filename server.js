@@ -1482,21 +1482,29 @@ app.get('/api/empleado/:id', requireAuth, async (req, res) => {
     }
 });
 
-// Inicializar sistema de vacaciones después de que la base de datos esté lista
-db.connect().then(() => {
-  console.log('🎯 Sistema de base de datos inicializado correctamente');
-  return prestamos.conectar();
-}).then(() => {
-  console.log('📦 Sistema de préstamos inicializado');
-  return initializeVacacionesSystem();
-}).catch(err => {
-  console.error('❌ Error inicializando el sistema:', err);
-});
+// Inicializar sistema de vacaciones y arrancar servidor solo cuando este
+// archivo se ejecuta directamente. Esto facilita su uso en pruebas.
+if (require.main === module) {
+  db.connect()
+    .then(() => {
+      console.log('🎯 Sistema de base de datos inicializado correctamente');
+      return prestamos.conectar();
+    })
+    .then(() => {
+      console.log('📦 Sistema de préstamos inicializado');
+      return initializeVacacionesSystem();
+    })
+    .catch((err) => {
+      console.error('❌ Error inicializando el sistema:', err);
+    });
 
-// Iniciar servidor
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Servidor Express ejecutándose en http://0.0.0.0:${PORT}`);
-  console.log('✅ Sesiones configuradas');
-  console.log('✅ Autenticación lista');
-  console.log('✅ Archivos estáticos en /public');
-});
+  // Iniciar servidor
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Servidor Express ejecutándose en http://0.0.0.0:${PORT}`);
+    console.log('✅ Sesiones configuradas');
+    console.log('✅ Autenticación lista');
+    console.log('✅ Archivos estáticos en /public');
+  });
+}
+
+module.exports = app;
