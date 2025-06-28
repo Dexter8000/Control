@@ -6,6 +6,7 @@ let currentPage = 1;
 async function init() {
     await cargarEmpleados();
     await cargarDashboardData();
+    setInterval(actualizarDatosIncompletos, 60000);
     document.getElementById('search').addEventListener('input', filtrar);
     document.getElementById('departamentoFilter').addEventListener('change', filtrar);
     document.getElementById('rangoFilter').addEventListener('change', filtrar);
@@ -117,19 +118,35 @@ async function cargarDashboardData() {
     const totalDeptos = await r3.json();
     document.getElementById('totalDepartamentos').textContent = totalDeptos.total;
 
-    const r4 = await fetch('/api/dashboard/datos-incompletos');
-    const incompletos = await r4.json();
-    const cont = document.getElementById('datosIncompletos');
-    if (incompletos.count === 0) {
-        cont.innerHTML = '<p>No hay datos incompletos</p>';
-    } else {
-        const ul = document.createElement('ul');
-        incompletos.ids.forEach(id=>{
-            const li=document.createElement('li');
-            li.textContent='ID: '+id;
-            ul.appendChild(li);
-        });
-        cont.innerHTML='';
-        cont.appendChild(ul);
+    await actualizarDatosIncompletos();
+}
+
+async function actualizarDatosIncompletos() {
+    try {
+        const r = await fetch('/api/dashboard/datos-incompletos');
+        const incompletos = await r.json();
+        const cont = document.getElementById('datosIncompletos');
+        const card = cont.closest('.chart-box');
+        if (incompletos.count === 0) {
+            cont.innerHTML = '<p>No hay datos incompletos</p>';
+            if (card) card.style.display = 'none';
+        } else {
+            if (card) card.style.display = '';
+            let ul = cont.querySelector('ul');
+            if (!ul) {
+                ul = document.createElement('ul');
+                cont.innerHTML = '';
+                cont.appendChild(ul);
+            } else {
+                ul.innerHTML = '';
+            }
+            incompletos.ids.forEach(id => {
+                const li = document.createElement('li');
+                li.textContent = 'ID: ' + id;
+                ul.appendChild(li);
+            });
+        }
+    } catch (err) {
+        console.error('Error al actualizar datos incompletos:', err);
     }
 }
