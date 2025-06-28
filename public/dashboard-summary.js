@@ -3,10 +3,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     cargarDatosDashboard();
 
-    const btnVerPanelCompleto = document.getElementById('btnVerPanelCompleto');
-    if (btnVerPanelCompleto) {
-        btnVerPanelCompleto.addEventListener('click', () => mostrarPanelCompletoGlobal());
-    }
 });
 
 async function cargarDatosDashboard() {
@@ -55,51 +51,3 @@ async function cargarDatosDashboard() {
     }
 }
 
-async function mostrarPanelCompletoGlobal() {
-    const modal = document.getElementById('panelCompletoModal');
-    const contenido = document.getElementById('contenidoPanelCompleto');
-    contenido.innerHTML = 'Cargando información detallada...';
-    modal.style.display = 'block';
-
-    try {
-        let htmlContenido = '<h3>Detalles Completos del Panel de Gestión</h3>';
-
-        const resRangosDepto = await fetch('/api/dashboard/rangos-por-departamento');
-        const dataRangosDepto = await resRangosDepto.json();
-        htmlContenido += '<h4>Rangos por Departamento:</h4>';
-        htmlContenido += '<table><thead><tr><th>Rango</th><th>Departamento</th><th>Cantidad</th></tr></thead><tbody>';
-        dataRangosDepto.detalle.forEach(item => {
-            htmlContenido += `<tr><td>${item.rango_nombre}</td><td>${item.departamento_nombre}</td><td>${item.cantidad}</td></tr>`;
-        });
-        htmlContenido += '</tbody></table>';
-
-        const resCantidadRangos = await fetch('/api/dashboard/cantidad-rangos');
-        const dataCantidadRangos = await resCantidadRangos.json();
-        htmlContenido += '<h4>Cantidad Total de Rangos:</h4>';
-        htmlContenido += '<table><thead><tr><th>Rango</th><th>Cantidad</th></tr></thead><tbody>';
-        dataCantidadRangos.detalle.forEach(item => {
-            htmlContenido += `<tr><td>${item.rango_nombre}</td><td>${item.cantidad}</td></tr>`;
-        });
-        htmlContenido += '</tbody></table>';
-
-        const resIncompletos = await fetch('/api/dashboard/datos-incompletos');
-        const dataIncompletos = await resIncompletos.json();
-        if (dataIncompletos.count > 0) {
-            htmlContenido += '<h4>Registros con Datos Incompletos:</h4>';
-            htmlContenido += '<table><thead><tr><th>ID</th><th>Nombre</th><th>Rango</th><th>Departamento ID</th></tr></thead><tbody>';
-            dataIncompletos.detalle.forEach(item => {
-                htmlContenido += `<tr><td>${item.id || 'N/A'}</td><td>${item.nombre || 'INCOMPLETO'}</td><td>${item.rango || 'INCOMPLETO'}</td><td>${item.id_departamento || 'INCOMPLETO'}</td></tr>`;
-            });
-            htmlContenido += '</tbody></table>';
-        }
-
-        contenido.innerHTML = htmlContenido;
-    } catch (error) {
-        contenido.innerHTML = '<p>Error al cargar el panel completo. Por favor, inténtelo de nuevo.</p>';
-        console.error('Error al cargar el panel completo:', error);
-    }
-}
-
-function cerrarPanelCompleto() {
-    document.getElementById('panelCompletoModal').style.display = 'none';
-}
