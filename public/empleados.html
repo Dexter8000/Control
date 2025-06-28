@@ -766,28 +766,28 @@
                 <div class="kpi-subtitle">Empleados registrados en el sistema</div>
             </div>
 
-            <!-- Recuadro 2: Rango Principal -->
+            <!-- Recuadro 2: CANTIDAD TOTAL DE RANGOS POR DEPARTAMENTOS -->
             <div class="kpi-card">
                 <div class="kpi-header">
                     <div class="kpi-icon green">
                         <i data-feather="award"></i>
                     </div>
-                    <div class="kpi-title">Rango Principal</div>
+                    <div class="kpi-title">CANTIDAD TOTAL DE RANGOS POR DEPARTAMENTOS</div>
                 </div>
-                <div class="kpi-value" id="rango-principal" style="font-size: 1.2rem; line-height: 1.3;">Calculando...</div>
-                <div class="kpi-subtitle">Rango con mayor cantidad de empleados</div>
+                <div class="kpi-value" id="rango-principal" style="font-size: 0.9rem; line-height: 1.3;">Cargando...</div>
+                <div class="kpi-subtitle">Resumen de rangos por departamento</div>
             </div>
 
-            <!-- Recuadro 3: Departamento Principal -->
+            <!-- Recuadro 3: CANTIDAD TOTAL DE RANGOS -->
             <div class="kpi-card">
                 <div class="kpi-header">
                     <div class="kpi-icon purple">
                         <i data-feather="briefcase"></i>
                     </div>
-                    <div class="kpi-title">Departamento Principal</div>
+                    <div class="kpi-title">CANTIDAD TOTAL DE RANGOS</div>
                 </div>
-                <div class="kpi-value" id="departamento-principal" style="font-size: 1rem; line-height: 1.3;">Calculando...</div>
-                <div class="kpi-subtitle">Departamento con más personal</div>
+                <div class="kpi-value" id="departamento-principal" style="font-size: 0.9rem; line-height: 1.3;">Cargando...</div>
+                <div class="kpi-subtitle">Resumen de cantidad de rangos</div>
             </div>
 
             <!-- Recuadro 4: Rangos Diferentes -->
@@ -802,16 +802,16 @@
                 <div class="kpi-subtitle">Departamentos únicos en el sistema</div>
             </div>
 
-            <!-- Recuadro 5: Distribución de Rangos -->
-            <div class="kpi-card">
+            <!-- Recuadro 5: DATOS INCOMPLETOS -->
+            <div class="kpi-card" id="datosIncompletosCard" style="display: none;">
                 <div class="kpi-header">
                     <div class="kpi-icon red">
-                        <i data-feather="bar-chart-2"></i>
+                        <i data-feather="alert-triangle"></i>
                     </div>
-                    <div class="kpi-title">Top Departamentos</div>
+                    <div class="kpi-title">DATOS INCOMPLETOS</div>
                 </div>
-                <div class="kpi-value" id="distribucion-rangos" style="font-size: 0.8rem; line-height: 1.4; max-height: 120px; overflow-y: auto;">Calculando...</div>
-                <div class="kpi-subtitle">Departamentos con más personal</div>
+                <div class="kpi-value" id="mensajeIncompletos" style="font-size: 0.8rem; line-height: 1.4;">Cargando...</div>
+                <ul id="listaIncompletos" style="font-size: 0.75rem; list-style: none; padding-left: 0; max-height: 80px; overflow-y: auto; margin-top: 4px;"></ul>
             </div>
         </div>
 

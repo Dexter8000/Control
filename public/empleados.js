@@ -56,6 +56,7 @@ function initializeDepartmentSelectors() {
 async function initializeApp() {
     try {
         await loadEmpleados();
+        await loadDashboardStats();
         setupEventListeners();
         refreshIcons();
         console.log('✅ Aplicación inicializada exitosamente');
@@ -111,7 +112,6 @@ async function loadEmpleados() {
         
         allEmpleados = data;
         filteredEmpleados = [...allEmpleados];
-        updateKPIs();
         renderEmpleados();
         updatePagination();
         updateDepartmentFilter();
@@ -121,6 +121,54 @@ async function loadEmpleados() {
         console.error('❌ Error cargando empleados:', error);
         showError('No se pudieron cargar los empleados. Intente recargar la página.');
         showNotification('Error cargando empleados: ' + error.message, 'error');
+    }
+}
+
+// Cargar datos del dashboard para las tarjetas de resumen
+async function loadDashboardStats() {
+    try {
+        const resEmpleados = await fetch('/api/dashboard/total-empleados');
+        const dataEmpleados = await resEmpleados.json();
+        document.getElementById('total-empleados').textContent = dataEmpleados.total;
+
+        const resRangosDepto = await fetch('/api/dashboard/rangos-por-departamento');
+        const dataRangosDepto = await resRangosDepto.json();
+        const resumenRangosDepto = dataRangosDepto.detalle.slice(0, 2)
+            .map(item => `${item.rango_nombre} (${item.departamento_nombre}): ${item.cantidad}`)
+            .join(', ');
+        document.getElementById('rango-principal').textContent =
+            resumenRangosDepto || 'No hay datos de rangos por departamento.';
+
+        const resCantidadRangos = await fetch('/api/dashboard/cantidad-rangos');
+        const dataCantidadRangos = await resCantidadRangos.json();
+        const resumenCantidadRangos = dataCantidadRangos.detalle.slice(0, 2)
+            .map(item => `${item.rango_nombre}: ${item.cantidad}`)
+            .join(', ');
+        document.getElementById('departamento-principal').textContent =
+            resumenCantidadRangos || 'No hay datos de rangos.';
+
+        const resDepartamentos = await fetch('/api/dashboard/total-departamentos');
+        const dataDepartamentos = await resDepartamentos.json();
+        document.getElementById('rangos-diferentes').textContent = dataDepartamentos.total;
+
+        const resIncompletos = await fetch('/api/dashboard/datos-incompletos');
+        const dataIncompletos = await resIncompletos.json();
+        const card = document.getElementById('datosIncompletosCard');
+        const mensaje = document.getElementById('mensajeIncompletos');
+        const lista = document.getElementById('listaIncompletos');
+        if (dataIncompletos.count > 0) {
+            card.style.display = 'block';
+            mensaje.textContent = `Se encontraron ${dataIncompletos.count} registros con datos incompletos. IDs:`;
+            lista.innerHTML = dataIncompletos.ids.slice(0, 5)
+                .map(id => `<li>ID: ${id}</li>`).join('');
+            if (dataIncompletos.count > 5) {
+                lista.innerHTML += `<li>...y ${dataIncompletos.count - 5} más.</li>`;
+            }
+        } else {
+            card.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error al cargar datos del dashboard:', error);
     }
 }
 
