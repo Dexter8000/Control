@@ -430,18 +430,10 @@ class Database {
     getEmpleadosCompletos() {
         return new Promise((resolve, reject) => {
             const query = `
-                SELECT 
-                    id,
-                    nombre,
-                    placa,
-                    rango,
-                    email,
-                    telefono,
-                    activo,
-                    fecha_ingreso,
-                    observaciones
-                FROM empleados
-                ORDER BY id ASC
+                SELECT e.*, d.nombre AS departamento_nombre
+                FROM empleados e
+                LEFT JOIN departamentos d ON e.departamento_id = d.id
+                ORDER BY e.id ASC
             `;
             
             this.db.all(query, [], (err, rows) => {
