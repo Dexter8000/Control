@@ -6,6 +6,15 @@ const fs = require('fs');
 const Database = require('./database/config');
 const VacacionesManager = require('./database/vacaciones');
 
+// Verificar si se proporcionó la cadena de conexión a PostgreSQL
+const HAS_DATABASE_URL = Boolean(process.env.DATABASE_URL);
+if (!HAS_DATABASE_URL) {
+  console.error('⚠️  DATABASE_URL no está definido. Se omitirá la inicialización de PostgreSQL y se usará únicamente SQLite.');
+} else {
+  console.log('🔌 Conexión de PostgreSQL detectada a través de DATABASE_URL');
+  // Aquí se inicializaría PostgreSQL cuando esté disponible
+}
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
