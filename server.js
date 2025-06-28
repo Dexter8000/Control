@@ -178,6 +178,15 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
+// Panel completo de análisis
+app.get('/panel-completo', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
+
+  res.sendFile(path.join(__dirname, 'public', 'panel-completo.html'));
+});
+
 // === Endpoints de Dashboard (SQLite) ===
 app.get('/api/dashboard/total-empleados', (req, res) => {
   db.db.get('SELECT COUNT(*) as total FROM empleados', [], (err, row) => {
