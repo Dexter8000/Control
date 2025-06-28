@@ -109,6 +109,60 @@
                 <div id="dashboard-section" class="content-section active">
                     <h1 class="page-title">Dashboard Ejecutivo</h1>
 
+                    <div class="dashboard-cards-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="icon-empleados"></i> TOTAL DE EMPLEADOS
+                            </div>
+                            <div class="card-body">
+                                <span class="metric-value" id="totalEmpleados">0</span>
+                                <p>Empleados registrados en el sistema</p>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="icon-rangos-depto"></i> CANTIDAD TOTAL DE RANGOS POR DEPARTAMENTOS
+                            </div>
+                            <div class="card-body">
+                                <p id="resumenRangosPorDepartamentos">Cargando...</p>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="icon-total-rangos"></i> CANTIDAD TOTAL DE RANGOS
+                            </div>
+                            <div class="card-body">
+                                <p id="resumenCantidadRangos">Cargando...</p>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="icon-departamentos"></i> TOTAL DE DEPARTAMENTOS
+                            </div>
+                            <div class="card-body">
+                                <span class="metric-value" id="totalDepartamentos">0</span>
+                                <p>Departamentos únicos en el sistema</p>
+                            </div>
+                        </div>
+
+                        <div class="card card-warning" id="datosIncompletosCard" style="display: none;">
+                            <div class="card-header">
+                                <i class="icon-warning"></i> DATOS INCOMPLETOS
+                            </div>
+                            <div class="card-body">
+                                <p id="mensajeIncompletos">Cargando...</p>
+                                <ul id="listaIncompletos"></ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="btnVerPanelCompleto" class="btn-modern btn-secondary" style="margin-bottom:1rem;">
+                        Ver Panel Completo
+                    </button>
+
                     <!-- Stats Cards -->
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -486,11 +540,19 @@
                     <p>Registro completo de todas las transacciones del sistema.</p>
                 </div>
             </div>
+
+            <div id="panelCompletoModal" style="display: none;">
+                <h2>Panel Completo de Datos</h2>
+                <div id="contenidoPanelCompleto"></div>
+                <button onclick="cerrarPanelCompleto()">Cerrar</button>
+            </div>
+
         </div>
     </div>
 
     <!-- Scripts principales -->
     <script src="/dashboard.js"></script>
+    <script src="/dashboard-summary.js"></script>
     <script src="vacaciones-manager.js"></script>
 </body>
 </html>
