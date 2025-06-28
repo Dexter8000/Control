@@ -53,6 +53,25 @@ function initializeDepartmentSelectors() {
     console.log('✅ Selectores de departamentos inicializados con lista estándar');
 }
 
+// Actualizar opciones del filtro de departamentos según los datos cargados
+function updateDepartmentFilter() {
+    const filtroDepartamento = document.getElementById('filtro-departamento');
+    if (!filtroDepartamento) return;
+
+    const departamentos = Array.from(new Set(
+        allEmpleados
+            .map(emp => emp.departamento_nombre || emp.departamento)
+            .filter(dept => dept && dept.trim() !== '')
+            .map(dept => dept.trim())
+    )).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+
+    const opciones = ['<option value="">Todos los departamentos</option>']
+        .concat(departamentos.map(d => `<option value="${d}">${d}</option>`))
+        .join('');
+
+    filtroDepartamento.innerHTML = opciones;
+}
+
 async function initializeApp() {
     try {
         await loadEmpleados();
