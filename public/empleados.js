@@ -737,7 +737,7 @@ function verPanelCompleto() {
                         <!-- Comparativa Departamentos -->
                         <div class="form-section">
                             <div class="form-section-title">
-                                <i data-feather="git-compare"></i>
+                                <i data-feather="git-branch"></i>
                                 Comparativa entre Departamentos
                             </div>
                             <div id="comparativa-container">
@@ -996,7 +996,7 @@ function renderAnalisisDepartamentos(analisisDepartamentos) {
                     <div class="form-section-title" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;" 
                          onclick="toggleDepartamento('${deptId}')">
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <i data-feather="building"></i>
+                            <i data-feather="briefcase"></i>
                             <strong>${departamento}</strong>
                         </div>
                         <div style="display: flex; gap: 1rem; align-items: center;">
@@ -1062,7 +1062,7 @@ function renderComparativa(comparativa) {
         <table class="employees-table">
             <thead>
                 <tr>
-                    <th><i data-feather="building"></i> Departamento</th>
+                    <th><i data-feather="briefcase"></i> Departamento</th>
                     <th><i data-feather="users"></i> Total Empleados</th>
                     <th><i data-feather="award"></i> Rango Predominante</th>
                     <th><i data-feather="layers"></i> Diversidad Rangos</th>
