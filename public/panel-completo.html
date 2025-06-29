@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/dashboard.css">
     <link rel="stylesheet" href="/shared-components.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
     <style>
         body{font-family:'Inter',sans-serif;background:var(--bg-secondary);color:var(--text-primary);padding:0;margin:0;}
@@ -24,8 +23,8 @@
         .btn-primary{background:var(--primary-blue);color:#fff;}
         .btn-secondary{background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border-light);}
         .section{margin:1rem 2rem;}
-        .chart-box{max-width:600px;margin:2rem auto;height:300px;position:relative;}
-        .chart-box canvas{width:100%;height:100%;}
+        .chart-box{max-width:600px;margin:2rem auto;position:relative;}
+        .chart-box table{width:100%;}
         #datosIncompletos ul{margin-left:1.2rem;}
     </style>
 </head>
@@ -61,11 +60,30 @@
 
     <div class="chart-box">
         <h2>Rangos por Departamento</h2>
-        <canvas id="rangosDepartamentoChart"></canvas>
+        <input type="text" id="buscar-rangos-departamento" placeholder="Buscar...">
+        <table id="tabla-rangos-departamento">
+            <thead>
+                <tr>
+                    <th data-col="rango_nombre">Rango</th>
+                    <th data-col="departamento_nombre">Departamento</th>
+                    <th data-col="cantidad">Cantidad</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
     </div>
     <div class="chart-box">
         <h2>Cantidad de Rangos</h2>
-        <canvas id="cantidadRangosChart"></canvas>
+        <input type="text" id="buscar-cantidad-rangos" placeholder="Buscar...">
+        <table id="tabla-cantidad-rangos">
+            <thead>
+                <tr>
+                    <th data-col="rango_nombre">Rango</th>
+                    <th data-col="cantidad">Cantidad</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
     </div>
     <div class="chart-box">
         <h2>Departamentos Totales: <span id="totalDepartamentos">0</span></h2>
