@@ -1,6 +1,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 class Database {
     constructor() {
@@ -451,8 +452,8 @@ class Database {
     // Crear nuevo empleado
     createEmpleado(empleadoData) {
         return new Promise((resolve, reject) => {
-            // Generar ID único
-            const id = 'EMP' + Date.now().toString().slice(-6);
+            // Generar ID único utilizando UUID
+            const id = crypto.randomUUID();
 
             const query = `
                 INSERT INTO empleados (
