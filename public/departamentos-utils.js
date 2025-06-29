@@ -1,5 +1,11 @@
 let departamentosCache = null;
 
+// Permite limpiar la caché manualmente en caso de que
+// los datos obtenidos no sean los esperados
+function clearDepartamentosCache() {
+    departamentosCache = null;
+}
+
 async function getDepartamentosList() {
     if (departamentosCache) {
         return departamentosCache;
@@ -11,13 +17,13 @@ async function getDepartamentosList() {
             departamentosCache = data.departamentos || [];
         } else {
             console.error('Error al cargar departamentos:', response.status);
-            departamentosCache = [];
+            departamentosCache = null;
         }
     } catch (error) {
         console.error('❌ Error obteniendo departamentos:', error);
-        departamentosCache = [];
+        departamentosCache = null;
     }
-    return departamentosCache;
+    return departamentosCache || [];
 }
 
 async function generarOpcionesDepartamentos(selectedNombre = '') {
@@ -32,3 +38,4 @@ async function generarOpcionesDepartamentos(selectedNombre = '') {
 // Expose functions globally
 window.getDepartamentosList = getDepartamentosList;
 window.generarOpcionesDepartamentos = generarOpcionesDepartamentos;
+window.clearDepartamentosCache = clearDepartamentosCache;
