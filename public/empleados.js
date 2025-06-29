@@ -23,7 +23,8 @@ const DEPARTAMENTOS_LISTA = [
     'DEPARTAMENTO CANINO',
     'DEPARTAMENTO DE INTELIGENCIA CRIMINAL',
     'DEPARTAMENTO REGIONAL DE INTELIGENCIA AERONAVAL',
-    '[sin departamento]'
+    '[sin departamento]',
+    'DEPARTAMENTO sin recurso'
 ];
 
 // Función para generar opciones de departamentos dinámicamente
