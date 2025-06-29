@@ -11,27 +11,9 @@ let currentEditingUserId = null;
 let currentDeletingUserId = null;
 
 // Cache de departamentos para evitar solicitudes repetidas
-let departamentosCache = null;
-
-// Obtener lista de departamentos desde la API
+// Obtener lista de departamentos utilizando utilidades compartidas
 async function fetchDepartamentos() {
-    if (departamentosCache) {
-        return departamentosCache;
-    }
-    try {
-        const response = await fetch('/api/departamentos');
-        if (response.ok) {
-            const data = await response.json();
-            departamentosCache = data.departamentos || [];
-        } else {
-            console.error('Error al cargar departamentos:', response.status);
-            departamentosCache = [];
-        }
-    } catch (error) {
-        console.error('❌ Error obteniendo departamentos:', error);
-        departamentosCache = [];
-    }
-    return departamentosCache;
+    return await getDepartamentosList();
 }
 
 // Inicializar el dashboard
