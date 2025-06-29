@@ -337,7 +337,7 @@ function renderEmpleados() {
 
     tbody.innerHTML = empleadosPage.map(empleado => `
         <tr>
-            <td>${empleado.id ? empleado.id.toString().replace('EMP', '') : 'N/A'}</td>
+            <td>${empleado.id || 'N/A'}</td>
             <td>
                 <span class="employee-badge badge-placa">
                     ${empleado.placa || 'Sin placa'}

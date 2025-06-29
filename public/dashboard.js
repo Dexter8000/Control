@@ -633,7 +633,7 @@ let empleadoEnEdicion = null;
 
 // Función para editar empleado (disponible globalmente)
 window.editarEmpleado = async function editarEmpleado(empleadoId) {
-    // Usar el ID tal como viene (EMP001, EMP002, etc.)
+    // Usar el ID tal como viene
     console.log('Editando empleado ID:', empleadoId);
 
     try {
@@ -923,7 +923,7 @@ function updateEmployeesTable(empleados) {
     tbody.innerHTML = empleados.map(empleado => {
         return `
             <tr>
-                <td>${empleado.id.toString().replace('EMP', '')}</td>
+                <td>${empleado.id}</td>
                 <td><span class="placa-badge">${empleado.placa || 'Sin placa'}</span></td>
                 <td><span class="rango-badge">${empleado.rango || 'Sin rango'}</span></td>
                 <td>

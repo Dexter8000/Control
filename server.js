@@ -1332,7 +1332,7 @@ app.get('/api/empleados-completos', requireAuth, async (req, res) => {
                     // Añadir ID numérico a cada empleado
                     const empleadosConIdNumerico = rows.map(empleado => ({
                         ...empleado,
-                        id_numerico: parseInt(empleado.id.toString().replace('EMP', '')) || empleado.id
+                        id_numerico: parseInt(empleado.id) || empleado.id
                     }));
                     resolve(empleadosConIdNumerico);
                 }
