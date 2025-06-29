@@ -10,6 +10,30 @@ let filteredUsers = [];
 let currentEditingUserId = null;
 let currentDeletingUserId = null;
 
+// Cache de departamentos para evitar solicitudes repetidas
+let departamentosCache = null;
+
+// Obtener lista de departamentos desde la API
+async function fetchDepartamentos() {
+    if (departamentosCache) {
+        return departamentosCache;
+    }
+    try {
+        const response = await fetch('/api/departamentos');
+        if (response.ok) {
+            const data = await response.json();
+            departamentosCache = data.departamentos || [];
+        } else {
+            console.error('Error al cargar departamentos:', response.status);
+            departamentosCache = [];
+        }
+    } catch (error) {
+        console.error('❌ Error obteniendo departamentos:', error);
+        departamentosCache = [];
+    }
+    return departamentosCache;
+}
+
 // Inicializar el dashboard
 async function initializeDashboard() {
     try {
@@ -643,7 +667,7 @@ window.editarEmpleado = async function editarEmpleado(empleadoId) {
 
         if (data.success && data.empleado) {
             empleadoEnEdicion = data.empleado;
-            mostrarModalEdicionEmpleado(data.empleado);
+            await mostrarModalEdicionEmpleado(data.empleado);
         } else {
             console.error('Respuesta sin datos válidos:', data);
             showNotification('Error: No se encontraron datos del empleado', 'error');
@@ -655,8 +679,13 @@ window.editarEmpleado = async function editarEmpleado(empleadoId) {
 }
 
 // Mostrar modal de edición de empleado
-function mostrarModalEdicionEmpleado(empleado) {
+async function mostrarModalEdicionEmpleado(empleado) {
     console.log('Mostrando modal para empleado:', empleado);
+
+    const departamentos = await fetchDepartamentos();
+    const departamentoOptions = departamentos.map(dep =>
+        `<option value="${dep.id}" ${empleado.departamento_id === dep.id ? 'selected' : ''}>${dep.nombre}</option>`
+    ).join('');
 
     // Crear modal simple
     const modalHTML = `
@@ -721,9 +750,7 @@ function mostrarModalEdicionEmpleado(empleado) {
                                         <label>Departamento</label>
                                         <select name="departamento_id">
                                             <option value="">Seleccionar departamento</option>
-                                            <option value="1" ${empleado.departamento_id == 1 ? 'selected' : ''}>JEFATURA</option>
-                                            <option value="2" ${empleado.departamento_id == 2 ? 'selected' : ''}>UNIDADES EN OTRA DEPENDENCIA</option>
-                                            <option value="3" ${empleado.departamento_id == 3 ? 'selected' : ''}>DEPARTAMENTO ADMINISTRATIVO</option>
+                                            ${departamentoOptions}
                                         </select>
                                     </div>
                                     <div class="form-group">
