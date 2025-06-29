@@ -664,7 +664,11 @@ window.editarEmpleado = async function editarEmpleado(empleadoId) {
 async function mostrarModalEdicionEmpleado(empleado) {
     console.log('Mostrando modal para empleado:', empleado);
 
-    const departamentos = await fetchDepartamentos();
+    let departamentos = await fetchDepartamentos();
+    if (departamentos.length !== 16) {
+        clearDepartamentosCache();
+        departamentos = await fetchDepartamentos();
+    }
     const departamentoOptions = departamentos.map(dep =>
         `<option value="${dep.id}" ${empleado.departamento_id === dep.id ? 'selected' : ''}>${dep.nombre}</option>`
     ).join('');
@@ -865,6 +869,11 @@ function loadDepartamentosFilter(departamentos) {
             option.textContent = dept.nombre;
             select.appendChild(option);
         });
+
+        if (select.options.length - 1 !== 16) {
+            clearDepartamentosCache();
+            fetchDepartamentos().then(deps => loadDepartamentosFilter(deps));
+        }
     }
 }
 

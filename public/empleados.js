@@ -18,20 +18,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Función para inicializar selectores de departamentos
 async function initializeDepartmentSelectors() {
-    const departamentos = await getDepartamentosList();
-    const options = departamentos.map(d => `<option value="${d.nombre}">${d.nombre}</option>`).join('');
+    let departamentos = await getDepartamentosList();
+    if (departamentos.length !== 16) {
+        console.warn('Número de departamentos inesperado, recargando caché');
+        clearDepartamentosCache();
+        departamentos = await getDepartamentosList();
+    }
+    let options = departamentos.map(d => `<option value="${d.nombre}">${d.nombre}</option>`).join('');
 
     // Actualizar filtro de departamentos
     const filtroDepartamento = document.getElementById('filtro-departamento');
     if (filtroDepartamento) {
         const opcionesTodos = '<option value="">Todos los departamentos</option>';
         filtroDepartamento.innerHTML = opcionesTodos + options;
+        if (filtroDepartamento.options.length - 1 !== 16) {
+            clearDepartamentosCache();
+            departamentos = await getDepartamentosList();
+            options = departamentos.map(d => `<option value="${d.nombre}">${d.nombre}</option>`).join('');
+            filtroDepartamento.innerHTML = opcionesTodos + options;
+        }
     }
 
     // Actualizar selector en modal si está presente
     const modalDepartmentSelect = document.querySelector('#empleado-modal select[name="departamento"]');
     if (modalDepartmentSelect) {
         modalDepartmentSelect.innerHTML = '<option value="">Seleccionar departamento</option>' + options;
+        if (modalDepartmentSelect.options.length - 1 !== 16) {
+            clearDepartamentosCache();
+            departamentos = await getDepartamentosList();
+            options = departamentos.map(d => `<option value="${d.nombre}">${d.nombre}</option>`).join('');
+            modalDepartmentSelect.innerHTML = '<option value="">Seleccionar departamento</option>' + options;
+        }
     }
 
     console.log('✅ Selectores de departamentos inicializados');
@@ -42,12 +59,24 @@ async function updateDepartmentFilter() {
     const filtroDepartamento = document.getElementById('filtro-departamento');
     if (!filtroDepartamento) return;
 
-    const departamentos = await getDepartamentosList();
-    const opciones = ['<option value="">Todos los departamentos</option>']
+    let departamentos = await getDepartamentosList();
+    if (departamentos.length !== 16) {
+        clearDepartamentosCache();
+        departamentos = await getDepartamentosList();
+    }
+    let opciones = ['<option value="">Todos los departamentos</option>']
         .concat(departamentos.map(d => `<option value="${d.nombre}">${d.nombre}</option>`))
         .join('');
 
     filtroDepartamento.innerHTML = opciones;
+    if (filtroDepartamento.options.length - 1 !== 16) {
+        clearDepartamentosCache();
+        departamentos = await getDepartamentosList();
+        opciones = ['<option value="">Todos los departamentos</option>']
+            .concat(departamentos.map(d => `<option value="${d.nombre}">${d.nombre}</option>`))
+            .join('');
+        filtroDepartamento.innerHTML = opciones;
+    }
 }
 
 async function initializeApp() {
@@ -502,7 +531,15 @@ async function showNuevoEmpleadoModal() {
 async function updateModalDepartmentSelector(selected = '') {
     const modalDepartmentSelect = document.querySelector('#empleado-modal select[name="departamento"]');
     if (modalDepartmentSelect) {
-        const options = await generarOpcionesDepartamentos(selected);
+        let departamentos = await getDepartamentosList();
+        if (departamentos.length !== 16) {
+            clearDepartamentosCache();
+            departamentos = await getDepartamentosList();
+        }
+        const options = departamentos.map(dep => {
+            const sel = dep.nombre === selected ? 'selected' : '';
+            return `<option value="${dep.nombre}" ${sel}>${dep.nombre}</option>`;
+        }).join('');
         modalDepartmentSelect.innerHTML = '<option value="">Seleccionar departamento</option>' + options;
         if (selected) {
             modalDepartmentSelect.value = selected;
