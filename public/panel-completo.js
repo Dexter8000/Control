@@ -3,6 +3,14 @@ let filtrados = [];
 let itemsPerPage = 15;
 let currentPage = 1;
 
+let rangosDepartamento = [];
+let filtradosRD = [];
+let cantidadRangos = [];
+let filtradosCR = [];
+
+let sortRD = { column: null, asc: true };
+let sortCR = { column: null, asc: true };
+
 async function init() {
     await cargarEmpleados();
     await cargarDashboardData();
@@ -13,6 +21,16 @@ async function init() {
     document.getElementById('cargarMas').addEventListener('click', cargarMas);
     document.getElementById('btnExportar').addEventListener('click', exportarCSV);
     document.getElementById('btnImprimir').addEventListener('click', () => window.print());
+
+    const inpRD = document.getElementById('buscar-rangos-departamento');
+    if (inpRD) inpRD.addEventListener('input', filtrarRD);
+    const inpCR = document.getElementById('buscar-cantidad-rangos');
+    if (inpCR) inpCR.addEventListener('input', filtrarCR);
+
+    document.querySelectorAll('#tabla-rangos-departamento th').forEach(th =>
+        th.addEventListener('click', () => ordenarRD(th.dataset.col)));
+    document.querySelectorAll('#tabla-cantidad-rangos th').forEach(th =>
+        th.addEventListener('click', () => ordenarCR(th.dataset.col)));
 }
 
 document.addEventListener('DOMContentLoaded', init);
@@ -95,24 +113,102 @@ function exportarCSV() {
     URL.revokeObjectURL(url);
 }
 
+function filtrarRD() {
+    const t = document.getElementById('buscar-rangos-departamento').value.toLowerCase();
+    filtradosRD = rangosDepartamento.filter(d =>
+        d.rango_nombre.toLowerCase().includes(t) ||
+        d.departamento_nombre.toLowerCase().includes(t)
+    );
+    renderTablaRD();
+}
+
+function filtrarCR() {
+    const t = document.getElementById('buscar-cantidad-rangos').value.toLowerCase();
+    filtradosCR = cantidadRangos.filter(d =>
+        d.rango_nombre.toLowerCase().includes(t)
+    );
+    renderTablaCR();
+}
+
+function ordenarRD(col) {
+    if (sortRD.column === col) {
+        sortRD.asc = !sortRD.asc;
+    } else {
+        sortRD.column = col;
+        sortRD.asc = true;
+    }
+    filtradosRD.sort((a,b)=>{
+        let av=a[col]; let bv=b[col];
+        if(typeof av==='string') av=av.toLowerCase();
+        if(typeof bv==='string') bv=bv.toLowerCase();
+        if(av<bv) return sortRD.asc?-1:1;
+        if(av>bv) return sortRD.asc?1:-1;
+        return 0;
+    });
+    renderTablaRD();
+}
+
+function ordenarCR(col) {
+    if (sortCR.column === col) {
+        sortCR.asc = !sortCR.asc;
+    } else {
+        sortCR.column = col;
+        sortCR.asc = true;
+    }
+    filtradosCR.sort((a,b)=>{
+        let av=a[col]; let bv=b[col];
+        if(typeof av==='string') av=av.toLowerCase();
+        if(typeof bv==='string') bv=bv.toLowerCase();
+        if(av<bv) return sortCR.asc?-1:1;
+        if(av>bv) return sortCR.asc?1:-1;
+        return 0;
+    });
+    renderTablaCR();
+}
+
+function renderTablaRD() {
+    const tbody = document.querySelector('#tabla-rangos-departamento tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    filtradosRD.forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${d.rango_nombre}</td><td>${d.departamento_nombre}</td><td>${d.cantidad}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function renderTablaCR() {
+    const tbody = document.querySelector('#tabla-cantidad-rangos tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    filtradosCR.forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${d.rango_nombre}</td><td>${d.cantidad}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function verificarTotales() {
+    const totalEmp = empleados.length;
+    const totalRD = rangosDepartamento.reduce((s,d)=>s+d.cantidad,0);
+    const totalCR = cantidadRangos.reduce((s,d)=>s+d.cantidad,0);
+    if (totalRD !== totalEmp || totalCR !== totalEmp) {
+        console.warn('Inconsistencia en totales', {totalEmp,totalRD,totalCR});
+    }
+}
+
 async function cargarDashboardData() {
     const r1 = await fetch('/api/dashboard/rangos-por-departamento');
-    const datosDepto = (await r1.json()).detalle;
-    const etiquetas1 = datosDepto.map(d => `${d.rango_nombre} - ${d.departamento_nombre}`);
-    const valores1 = datosDepto.map(d => d.cantidad);
-    new Chart(document.getElementById('rangosDepartamentoChart').getContext('2d'), {
-        type:'bar',
-        data:{labels:etiquetas1,datasets:[{label:'Cantidad',data:valores1,backgroundColor:'rgba(26,115,232,0.6)'}]},
-        options:{responsive:true,maintainAspectRatio:false}
-    });
+    rangosDepartamento = (await r1.json()).detalle;
+    filtradosRD = [...rangosDepartamento];
+    renderTablaRD();
 
     const r2 = await fetch('/api/dashboard/cantidad-rangos');
-    const datosRangos = (await r2.json()).detalle;
-    new Chart(document.getElementById('cantidadRangosChart').getContext('2d'), {
-        type:'bar',
-        data:{labels:datosRangos.map(d=>d.rango_nombre),datasets:[{label:'Cantidad',data:datosRangos.map(d=>d.cantidad),backgroundColor:'rgba(67,233,123,0.6)'}]},
-        options:{responsive:true,maintainAspectRatio:false}
-    });
+    cantidadRangos = (await r2.json()).detalle;
+    filtradosCR = [...cantidadRangos];
+    renderTablaCR();
+
+    verificarTotales();
 
     const r3 = await fetch('/api/dashboard/total-departamentos');
     const totalDeptos = await r3.json();
