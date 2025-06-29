@@ -734,7 +734,221 @@ function closeEmpleadoModal() {
 
 // Carga masiva
 function cargaMasivaEmpleados() {
-    showNotification('Función de carga masiva próximamente disponible', 'warning');
+    showMassUploadModal();
+}
+
+function showMassUploadModal() {
+    console.log('📤 Mostrando modal de carga masiva');
+
+    const modalHTML = `
+        <div id="mass-upload-modal" class="modal" style="display: flex;">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h2><i class="fas fa-upload"></i> Carga Masiva de Empleados</h2>
+                    <span class="close" onclick="closeMassUploadModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="upload-section">
+                        <div class="upload-info">
+                            <h3><i class="fas fa-info-circle"></i> Instrucciones</h3>
+                            <ul>
+                                <li>El archivo debe estar en formato CSV</li>
+                                <li>La primera fila debe contener los encabezados</li>
+                                <li>Columnas requeridas: nombre, apellido, correo_electronico, rango, departamento_id, fecha_ingreso</li>
+                                <li>Columnas opcionales: cedula, telefono, placa, fecha_nacimiento</li>
+                            </ul>
+                        </div>
+
+                        <div class="upload-controls">
+                            <div class="form-group">
+                                <label>Seleccionar archivo CSV:</label>
+                                <input type="file" id="csv-file" accept=".csv" onchange="previewCSV()">
+                            </div>
+                            <div class="template-download">
+                                <button type="button" class="btn-info" onclick="downloadTemplate()">
+                                    <i class="fas fa-download"></i> Descargar Plantilla
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="upload-preview" style="display: none;">
+                            <h4>Vista Previa:</h4>
+                            <div id="preview-content"></div>
+                        </div>
+
+                        <div id="upload-results" style="display: none;">
+                            <h4>Resultados:</h4>
+                            <div id="results-content"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeMassUploadModal()">Cancelar</button>
+                    <button type="button" class="btn-primary" id="upload-btn" onclick="uploadCSV()" style="display: none;">
+                        <i class="fas fa-upload"></i> Subir Empleados
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const modalExistente = document.getElementById('mass-upload-modal');
+    if (modalExistente) {
+        modalExistente.remove();
+    }
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    document.body.style.overflow = 'hidden';
+}
+
+function closeMassUploadModal() {
+    const modal = document.getElementById('mass-upload-modal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = 'auto';
+    }
+}
+
+function downloadTemplate() {
+    const csvContent = `nombre,apellido,cedula,telefono,correo_electronico,placa,rango,departamento_id,fecha_ingreso,fecha_nacimiento
+Juan,Pérez,12345678,555-1234,juan.perez@ejemplo.com,P001,AGENTE,1,2023-01-15,1990-05-20
+María,González,87654321,555-5678,maria.gonzalez@ejemplo.com,P002,CABO 1RO.,2,2023-02-10,1988-08-12`;
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', 'plantilla_empleados.csv');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    showNotification('Plantilla descargada exitosamente', 'success');
+}
+
+function previewCSV() {
+    const fileInput = document.getElementById('csv-file');
+    const file = fileInput.files[0];
+
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const csv = e.target.result;
+        const lines = csv.split('\n');
+        const headers = lines[0].split(',');
+
+        let previewHTML = `
+            <div class="upload-preview">
+                <p><strong>Archivo:</strong> ${file.name}</p>
+                <p><strong>Filas detectadas:</strong> ${lines.length - 1}</p>
+                <table class="preview-table">
+                    <thead>
+                        <tr>${headers.map(h => `<th>${h.trim()}</th>`).join('')}</tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        for (let i = 1; i <= Math.min(3, lines.length - 1); i++) {
+            if (lines[i].trim()) {
+                const cells = lines[i].split(',');
+                previewHTML += `<tr>${cells.map(c => `<td>${c.trim()}</td>`).join('')}</tr>`;
+            }
+        }
+
+        previewHTML += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        document.getElementById('preview-content').innerHTML = previewHTML;
+        document.getElementById('upload-preview').style.display = 'block';
+        document.getElementById('upload-btn').style.display = 'inline-flex';
+    };
+
+    reader.readAsText(file);
+}
+
+async function uploadCSV() {
+    const fileInput = document.getElementById('csv-file');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        showNotification('Por favor seleccione un archivo', 'error');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const csv = e.target.result;
+        const lines = csv.split('\n');
+        const headers = lines[0].split(',').map(h => h.trim());
+
+        let sucessCount = 0;
+        let errorCount = 0;
+        let errors = [];
+
+        for (let i = 1; i < lines.length; i++) {
+            if (!lines[i].trim()) continue;
+
+            const cells = lines[i].split(',').map(c => c.trim());
+            const empleadoData = {};
+
+            headers.forEach((header, index) => {
+                empleadoData[header] = cells[index] || '';
+            });
+
+            try {
+                const response = await fetch('/api/empleados', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(empleadoData)
+                });
+
+                if (response.ok) {
+                    sucessCount++;
+                } else {
+                    errorCount++;
+                    const error = await response.json();
+                    errors.push(`Fila ${i}: ${error.message}`);
+                }
+            } catch (error) {
+                errorCount++;
+                errors.push(`Fila ${i}: Error de conexión`);
+            }
+        }
+
+        let resultHTML = `
+            <div class="upload-success">
+                <p><strong>✅ Empleados creados exitosamente:</strong> ${sucessCount}</p>
+            </div>
+        `;
+
+        if (errorCount > 0) {
+            resultHTML += `
+                <div class="upload-error">
+                    <p><strong>❌ Errores encontrados:</strong> ${errorCount}</p>
+                    <div class="error-list">
+                        <ul>${errors.map(e => `<li>${e}</li>`).join('')}</ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.getElementById('results-content').innerHTML = resultHTML;
+        document.getElementById('upload-results').style.display = 'block';
+
+        if (sucessCount > 0) {
+            await loadEmpleados();
+            showNotification(`${sucessCount} empleados cargados exitosamente`, 'success');
+        }
+    };
+
+    reader.readAsText(file);
 }
 
 
