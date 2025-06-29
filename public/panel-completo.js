@@ -39,21 +39,20 @@ async function cargarEmpleados() {
     const res = await fetch('/api/empleados');
     empleados = await res.json();
     filtrados = [...empleados];
-    poblarFiltros();
+    await poblarFiltros();
     renderTabla();
 }
 
-function poblarFiltros() {
+async function poblarFiltros() {
     const depSelect = document.getElementById('departamentoFilter');
     const rangoSelect = document.getElementById('rangoFilter');
-    const deps = new Set();
+    const departamentos = await getDepartamentosList();
     const rangos = new Set();
     empleados.forEach(e => {
-        if (e.departamento_nombre || e.departamento) deps.add(e.departamento_nombre || e.departamento);
         if (e.rango) rangos.add(e.rango);
     });
     depSelect.innerHTML = '<option value="">Todos los departamentos</option>' +
-        Array.from(deps).map(d => `<option value="${d}">${d}</option>`).join('');
+        departamentos.map(d => `<option value="${d.nombre}">${d.nombre}</option>`).join('');
     rangoSelect.innerHTML = '<option value="">Todos los rangos</option>' +
         Array.from(rangos).map(r => `<option value="${r}">${r}</option>`).join('');
 }

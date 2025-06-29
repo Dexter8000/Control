@@ -7,32 +7,7 @@ let itemsPerPage = 10;
 let sortColumn = '';
 let sortDirection = 'asc';
 
-// Lista estandarizada de departamentos según propuesta oficial
-const DEPARTAMENTOS_LISTA = [
-    '01-JEFATURA',
-    'JEFATURA',
-    'DEPARTAMENTO ADMINISTRATIVO',
-    'UNIDADES EN OTRA DEPENDENCIA',
-    'DEPARTAMENTO DE ENLACE Y MONITOREO DE INFORMACION AERONAVAL',
-    'DEPARTAMENTO DE OPERACIONES',
-    'TÉCNICOS OPERACIONALES',
-    'Departamento de Fusión Operacional de Inteligencia',
-    'INTELIGENCIA INSULAR',
-    'INTELIGENCIA AÉREA',
-    'Departamento de Análisis de Inteligencia',
-    'DEPARTAMENTO CANINO',
-    'DEPARTAMENTO DE INTELIGENCIA CRIMINAL',
-    'DEPARTAMENTO REGIONAL DE INTELIGENCIA AERONAVAL',
-    '[sin departamento]',
-    'DEPARTAMENTO sin recurso'
-];
-
-// Función para generar opciones de departamentos dinámicamente
-function generarOpcionesDepartamentos() {
-    return DEPARTAMENTOS_LISTA.map(dept => 
-        `<option value="${dept}">${dept}</option>`
-    ).join('');
-}
+// Funciones de departamentos provistas por departamentos-utils.js
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', function() {
@@ -42,32 +17,34 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Función para inicializar selectores de departamentos
-function initializeDepartmentSelectors() {
+async function initializeDepartmentSelectors() {
+    const departamentos = await getDepartamentosList();
+    const options = departamentos.map(d => `<option value="${d.nombre}">${d.nombre}</option>`).join('');
+
     // Actualizar filtro de departamentos
     const filtroDepartamento = document.getElementById('filtro-departamento');
     if (filtroDepartamento) {
         const opcionesTodos = '<option value="">Todos los departamentos</option>';
-        filtroDepartamento.innerHTML = opcionesTodos + generarOpcionesDepartamentos();
+        filtroDepartamento.innerHTML = opcionesTodos + options;
     }
 
-    // Actualizar selector en modal (se hará cuando se abra)
-    console.log('✅ Selectores de departamentos inicializados con lista estándar');
+    // Actualizar selector en modal si está presente
+    const modalDepartmentSelect = document.querySelector('#empleado-modal select[name="departamento"]');
+    if (modalDepartmentSelect) {
+        modalDepartmentSelect.innerHTML = '<option value="">Seleccionar departamento</option>' + options;
+    }
+
+    console.log('✅ Selectores de departamentos inicializados');
 }
 
 // Actualizar opciones del filtro de departamentos según los datos cargados
-function updateDepartmentFilter() {
+async function updateDepartmentFilter() {
     const filtroDepartamento = document.getElementById('filtro-departamento');
     if (!filtroDepartamento) return;
 
-    const departamentos = Array.from(new Set(
-        allEmpleados
-            .map(emp => emp.departamento_nombre || emp.departamento)
-            .filter(dept => dept && dept.trim() !== '')
-            .map(dept => dept.trim())
-    )).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
-
+    const departamentos = await getDepartamentosList();
     const opciones = ['<option value="">Todos los departamentos</option>']
-        .concat(departamentos.map(d => `<option value="${d}">${d}</option>`))
+        .concat(departamentos.map(d => `<option value="${d.nombre}">${d.nombre}</option>`))
         .join('');
 
     filtroDepartamento.innerHTML = opciones;
@@ -501,7 +478,7 @@ function goToPage(page) {
 }
 
 // Mostrar modal de nuevo empleado
-function showNuevoEmpleadoModal() {
+async function showNuevoEmpleadoModal() {
     console.log('➕ Abriendo modal para agregar nuevo empleado');
     
     currentEditingEmpleadoId = null;
@@ -510,7 +487,7 @@ function showNuevoEmpleadoModal() {
     document.getElementById('empleado-id').value = '';
     
     // Actualizar selector de departamentos en el modal
-    updateModalDepartmentSelector();
+    await updateModalDepartmentSelector();
     
     // Restaurar texto del botón de guardar
     const saveBtn = document.querySelector('.btn-save');
@@ -522,11 +499,14 @@ function showNuevoEmpleadoModal() {
 }
 
 // Función para actualizar selector de departamentos en modal
-function updateModalDepartmentSelector() {
+async function updateModalDepartmentSelector(selected = '') {
     const modalDepartmentSelect = document.querySelector('#empleado-modal select[name="departamento"]');
     if (modalDepartmentSelect) {
-        const opcionSeleccionar = '<option value="">Seleccionar departamento</option>';
-        modalDepartmentSelect.innerHTML = opcionSeleccionar + generarOpcionesDepartamentos();
+        const options = await generarOpcionesDepartamentos(selected);
+        modalDepartmentSelect.innerHTML = '<option value="">Seleccionar departamento</option>' + options;
+        if (selected) {
+            modalDepartmentSelect.value = selected;
+        }
         console.log('✅ Selector de departamentos en modal actualizado');
     }
 }
@@ -570,7 +550,7 @@ async function editEmpleado(empleadoId) {
             saveBtn.innerHTML = '<i data-feather="save"></i> Actualizar Empleado';
 
             // Actualizar selector de departamentos antes de mostrar
-            updateModalDepartmentSelector();
+            await updateModalDepartmentSelector(empleado.departamento || empleado.departamento_nombre || '');
 
             // Mostrar modal
             document.getElementById('empleado-modal').style.display = 'flex';
