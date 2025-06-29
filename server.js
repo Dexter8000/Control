@@ -187,6 +187,11 @@ app.get('/panel-completo', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'panel-completo.html'));
 });
 
+// Panel de control de tablas
+app.get('/panel-control', requireAuth, (req, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'panel-control.html'))
+);
+
 // === Endpoints de Dashboard (SQLite) ===
 app.get('/api/dashboard/total-empleados', (req, res) => {
   db.db.get('SELECT COUNT(*) as total FROM empleados', [], (err, row) => {
@@ -623,6 +628,57 @@ app.get('/api/departamentos', requireAuth, async (req, res) => {
     console.error('❌ Error obteniendo departamentos:', error);
     res.status(500).json({ success: false, message: 'Error obteniendo departamentos' });
   }
+});
+
+// Endpoints de solo lectura para el panel de control
+app.get('/api/inventario_principal', requireAuth, async (req, res) => {
+  try {
+    const data = await db.getInventarioPrincipal();
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('❌ Error obteniendo inventario principal:', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo inventario principal' });
+  }
+});
+
+app.get('/api/inventario_periferico', requireAuth, async (req, res) => {
+  try {
+    const data = await db.getInventarioPeriferico();
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('❌ Error obteniendo inventario periférico:', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo inventario periférico' });
+  }
+});
+
+app.get('/api/configuracion', requireAuth, (req, res) => {
+  db.db.all('SELECT * FROM configuracion', [], (err, rows) => {
+    if (err) {
+      console.error('❌ Error obteniendo configuracion:', err);
+      return res.status(500).json({ success: false, message: 'Error obteniendo configuracion' });
+    }
+    res.json({ success: true, data: rows });
+  });
+});
+
+app.get('/api/logs_acceso', requireAuth, (req, res) => {
+  db.db.all('SELECT * FROM logs_acceso ORDER BY fecha DESC', [], (err, rows) => {
+    if (err) {
+      console.error('❌ Error obteniendo logs:', err);
+      return res.status(500).json({ success: false, message: 'Error obteniendo logs' });
+    }
+    res.json({ success: true, data: rows });
+  });
+});
+
+app.get('/api/historial_asignaciones', requireAuth, (req, res) => {
+  db.db.all('SELECT * FROM historial_asignaciones ORDER BY fecha_cambio DESC', [], (err, rows) => {
+    if (err) {
+      console.error('❌ Error obteniendo historial asignaciones:', err);
+      return res.status(500).json({ success: false, message: 'Error obteniendo historial asignaciones' });
+    }
+    res.json({ success: true, data: rows });
+  });
 });
 
 // Registrar préstamo de equipo
