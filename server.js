@@ -339,37 +339,6 @@ app.get('/api/empleados', requireAuth, async (req, res) => {
   }
 });
 
-// Obtener empleados completos con cálculos de vacaciones
-app.get('/api/empleados-completos', requireAuth, async (req, res) => {
-    console.log('🔍 Obteniendo empleados completos con información de departamentos...');
-
-    const query = `
-        SELECT 
-            e.*,
-            d.nombre as departamento_nombre
-        FROM empleados e
-        LEFT JOIN departamentos d ON e.departamento_id = d.id
-        ORDER BY e.id ASC
-    `;
-
-    db.db.all(query, [], (err, rows) => {
-        if (err) {
-            console.error('❌ Error obteniendo empleados completos:', err);
-            res.status(500).json({ 
-                success: false, 
-                message: 'Error en la base de datos',
-                error: err.message 
-            });
-        } else {
-            console.log(`✅ Empleados completos obtenidos: ${rows.length} registros`);
-            res.json({ 
-                success: true, 
-                empleados: rows,
-                total: rows.length
-            });
-        }
-    });
-});
 
 // Obtener estadísticas de empleados para el dashboard
 app.get('/api/empleados-estadisticas', requireAuth, async (req, res) => {
@@ -442,43 +411,6 @@ app.get('/api/empleados-estadisticas', requireAuth, async (req, res) => {
     }
 });
 
-// Obtener empleado individual
-app.get('/api/empleado/:id', requireAuth, (req, res) => {
-    const empleadoId = req.params.id;
-    console.log('🔍 Obteniendo empleado individual ID:', empleadoId);
-
-    const query = `
-        SELECT 
-            e.*,
-            d.nombre as departamento_nombre
-        FROM empleados e
-        LEFT JOIN departamentos d ON e.departamento_id = d.id
-        WHERE e.id = ?
-    `;
-
-    db.db.get(query, [empleadoId], (err, row) => {
-        if (err) {
-            console.error('❌ Error obteniendo empleado:', err);
-            res.status(500).json({ 
-                success: false, 
-                message: 'Error en la base de datos',
-                error: err.message 
-            });
-        } else if (!row) {
-            console.log('❌ Empleado no encontrado:', empleadoId);
-            res.status(404).json({ 
-                success: false, 
-                message: 'Empleado no encontrado'
-            });
-        } else {
-            console.log('✅ Empleado encontrado:', row.nombre, row.apellido);
-            res.json({ 
-                success: true, 
-                empleado: row
-            });
-        }
-    });
-});
 
 // Endpoint para carga masiva de empleados (solo administradores)
 app.post('/api/empleados/mass-upload', requireAuth, requireRole('administrador'), async (req, res) => {
