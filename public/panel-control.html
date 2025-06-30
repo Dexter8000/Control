@@ -50,6 +50,53 @@
                 <span>Nuevo Usuario</span>
             </button>
         </div>
+
+        <!-- Modal Crear/Editar Departamento -->
+        <div id="departamento-modal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="departamento-modal-title">Nuevo Departamento</h2>
+                    <button class="close" onclick="closeDepartamentoModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="departamento-form" onsubmit="event.preventDefault(); saveDepartamento();">
+                        <div class="form-group">
+                            <label for="departamento-id">ID</label>
+                            <input type="text" id="departamento-id" name="id" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="departamento-nombre">Nombre</label>
+                            <input type="text" id="departamento-nombre" name="nombre" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-modern btn-secondary" onclick="closeDepartamentoModal()">Cancelar</button>
+                    <button class="btn-modern btn-primary" onclick="saveDepartamento()">Guardar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Confirmar Eliminación -->
+        <div id="departamento-delete-modal" class="modal" style="display:none;">
+            <div class="modal-content" style="max-width:450px;">
+                <div class="modal-header">
+                    <h2><i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación</h2>
+                    <button class="close" onclick="closeDeleteDepartamentoModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p id="delete-depto-text"></p>
+                    <div class="form-group">
+                        <label for="confirm-delete-depto">Escriba el ID para confirmar</label>
+                        <input type="text" id="confirm-delete-depto" placeholder="ID">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-modern btn-secondary" onclick="closeDeleteDepartamentoModal()">Cancelar</button>
+                    <button class="btn-modern btn-danger" onclick="confirmDeleteDepartamento()">Eliminar</button>
+                </div>
+            </div>
+        </div>
     </main>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

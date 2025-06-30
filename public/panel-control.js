@@ -1,4 +1,6 @@
 let dataTable;
+let editingDepartamentoId = null;
+let deletingDepartamentoId = null;
 
 function parseRows(res) {
     if (Array.isArray(res)) return res;
@@ -25,7 +27,7 @@ async function loadTable(tableName) {
                     return `
                         <div class="table-actions">
                             <i class="fas fa-edit edit-depto" data-id="${row.id}" data-nombre="${row.nombre}"></i>
-                            <i class="fas fa-trash delete-depto" data-id="${row.id}"></i>
+                            <i class="fas fa-trash delete-depto" data-id="${row.id}" data-nombre="${row.nombre}"></i>
                         </div>`;
                 }
             });
@@ -51,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnAddDepartamento = document.getElementById('btn-add-departamento');
 
     if (btnAddDepartamento) {
-        btnAddDepartamento.addEventListener('click', crearDepartamento);
+        btnAddDepartamento.addEventListener('click', () => openDepartamentoModal());
     }
     document.querySelectorAll('.pc-card').forEach(card => {
         card.addEventListener('click', () => {
@@ -68,43 +70,102 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    document.addEventListener('click', e => {
+        if (e.target.classList.contains('modal')) {
+            if (e.target.id === 'departamento-modal') {
+                closeDepartamentoModal();
+            } else if (e.target.id === 'departamento-delete-modal') {
+                closeDeleteDepartamentoModal();
+            }
+        }
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            closeDepartamentoModal();
+            closeDeleteDepartamentoModal();
+        }
+    });
 });
 
 function addDepartamentoListeners() {
     $('#control-table').off('click', '.edit-depto');
     $('#control-table').off('click', '.delete-depto');
 
-    $('#control-table').on('click', '.edit-depto', async function() {
+    $('#control-table').on('click', '.edit-depto', function() {
         const id = this.dataset.id;
         const nombreActual = this.dataset.nombre || '';
-        const nuevoNombre = prompt('Nuevo nombre del departamento:', nombreActual);
-        if (nuevoNombre && nuevoNombre.trim() !== '') {
-            await fetch(`/api/departamentos/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nombre: nuevoNombre.trim() })
-            });
-            loadTable('departamentos');
-        }
+        openDepartamentoModal(nombreActual, id);
     });
 
-    $('#control-table').on('click', '.delete-depto', async function() {
+    $('#control-table').on('click', '.delete-depto', function() {
         const id = this.dataset.id;
-        const confirmId = prompt(`Escriba el ID ${id} para confirmar eliminación:`);
-        if (confirmId === id) {
-            await fetch(`/api/departamentos/${id}`, { method: 'DELETE' });
-            loadTable('departamentos');
-        }
+        const nombre = this.dataset.nombre || '';
+        openDeleteDepartamentoModal(id, nombre);
     });
 }
 
-async function crearDepartamento() {
-    const nombre = prompt('Nombre del nuevo departamento:');
-    if (!nombre || nombre.trim() === '') return;
-    await fetch('/api/departamentos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre: nombre.trim() })
-    });
+async function saveDepartamento() {
+    const nombre = document.getElementById('departamento-nombre').value.trim();
+    const id = document.getElementById('departamento-id').value;
+    if (!nombre) return;
+
+    if (id) {
+        await fetch(`/api/departamentos/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre })
+        });
+    } else {
+        await fetch('/api/departamentos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre })
+        });
+    }
+    closeDepartamentoModal();
     loadTable('departamentos');
 }
+
+function openDepartamentoModal(nombre = '', id = '') {
+    editingDepartamentoId = id || null;
+    document.getElementById('departamento-modal-title').textContent = id ? 'Editar Departamento' : 'Nuevo Departamento';
+    document.getElementById('departamento-nombre').value = nombre;
+    document.getElementById('departamento-id').value = id;
+    document.getElementById('departamento-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDepartamentoModal() {
+    document.getElementById('departamento-modal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+    editingDepartamentoId = null;
+}
+
+function openDeleteDepartamentoModal(id, nombre = '') {
+    deletingDepartamentoId = id;
+    document.getElementById('delete-depto-text').textContent = `¿Eliminar el departamento "${nombre}" (ID ${id})?`;
+    document.getElementById('confirm-delete-depto').value = '';
+    document.getElementById('departamento-delete-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDeleteDepartamentoModal() {
+    document.getElementById('departamento-delete-modal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+    deletingDepartamentoId = null;
+}
+
+async function confirmDeleteDepartamento() {
+    const confirmInput = document.getElementById('confirm-delete-depto').value.trim();
+    if (String(deletingDepartamentoId) !== confirmInput) return;
+    await fetch(`/api/departamentos/${deletingDepartamentoId}`, { method: 'DELETE' });
+    closeDeleteDepartamentoModal();
+    loadTable('departamentos');
+}
+
+window.saveDepartamento = saveDepartamento;
+window.closeDepartamentoModal = closeDepartamentoModal;
+window.closeDeleteDepartamentoModal = closeDeleteDepartamentoModal;
+window.confirmDeleteDepartamento = confirmDeleteDepartamento;
