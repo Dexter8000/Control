@@ -454,6 +454,48 @@ class Database {
         });
     }
 
+    // Obtener inventario principal junto con periféricos asociados
+    getInventarioCompleto() {
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT ip.*,
+                       COALESCE(json_group_array(
+                           json_object(
+                               'id_periferico', iph.id_periferico,
+                               'nombre_periferico', iph.nombre_periferico,
+                               'marca_periferico', iph.marca_periferico,
+                               'modelo_periferico', iph.modelo_periferico,
+                               'serie_periferico', iph.serie_periferico,
+                               'estado_periferico', iph.estado_periferico,
+                               'condicion_periferico', iph.condicion_periferico,
+                               'tipo_adquisicion_periferico', iph.tipo_adquisicion_periferico,
+                               'id_departamento_asignado_periferico', iph.id_departamento_asignado_periferico,
+                               'ubicacion_especifica_periferico', iph.ubicacion_especifica_periferico,
+                               'responsable_actual_periferico', iph.responsable_actual_periferico,
+                               'fecha_creacion_periferico', iph.fecha_creacion_periferico,
+                               'fecha_adquisicion_periferico', iph.fecha_adquisicion_periferico,
+                               'detalles_periferico', iph.detalles_periferico
+                           )
+                       ), '[]') AS perifericos
+                FROM inventario_principal ip
+                LEFT JOIN inventario_periferico iph ON iph.id_inventario_principal = ip.id
+                GROUP BY ip.id
+                ORDER BY ip.fecha_adquisicion DESC, ip.nombre
+            `;
+
+            this.db.all(query, (err, rows) => {
+                if (err) reject(err);
+                else {
+                    const formatted = rows.map(row => ({
+                        ...row,
+                        perifericos: row.perifericos ? JSON.parse(row.perifericos) : []
+                    }));
+                    resolve(formatted);
+                }
+            });
+        });
+    }
+
     getEmpleados() {
         return new Promise((resolve, reject) => {
             const query = `

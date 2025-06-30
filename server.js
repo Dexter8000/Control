@@ -619,6 +619,17 @@ app.get('/api/inventario-periferico', requireAuth, async (req, res) => {
   }
 });
 
+// Obtener inventario completo con periféricos asociados
+app.get('/api/inventario-completo', requireAuth, async (req, res) => {
+  try {
+    const inventario = await db.getInventarioCompleto();
+    res.json({ success: true, inventario });
+  } catch (error) {
+    console.error('❌ Error obteniendo inventario completo:', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo inventario completo' });
+  }
+});
+
 // Obtener departamentos
 app.get('/api/departamentos', requireAuth, async (req, res) => {
   try {

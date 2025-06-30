@@ -389,17 +389,16 @@ function closeConfirmModal() {
 // Cargar datos de inventario
 async function loadInventoryData() {
     try {
-        const [principalResponse, perifericoResponse] = await Promise.all([
-            fetch('/api/inventario-principal'),
-            fetch('/api/inventario-periferico')
-        ]);
+        const response = await fetch('/api/inventario-completo');
 
-        if (principalResponse.ok && perifericoResponse.ok) {
-            const principalData = await principalResponse.json();
-            const perifericoData = await perifericoResponse.json();
+        if (response.ok) {
+            const data = await response.json();
+
+            const principalData = data.inventario || [];
+            const perifericoData = principalData.flatMap(item => item.perifericos || []);
 
             // Actualizar contadores del dashboard
-            updateInventoryCounters(principalData.inventario, perifericoData.inventario);
+            updateInventoryCounters(principalData, perifericoData);
         }
     } catch (error) {
         console.error('❌ Error cargando inventario:', error);
