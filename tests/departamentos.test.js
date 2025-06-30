@@ -12,6 +12,7 @@ const mockCommitTransaction = jest.fn(() => Promise.resolve());
 const mockRollbackTransaction = jest.fn(() => Promise.resolve());
 const mockGetInventarioPrincipal = jest.fn(() => Promise.resolve([{ id: 'p1' }]));
 const mockGetInventarioPeriferico = jest.fn(() => Promise.resolve([{ id_periferico: 'pf1' }]));
+const mockGetInventarioCompleto = jest.fn(() => Promise.resolve([{ id: 'ip1', perifericos: [] }]));
 
 jest.mock('../database/config', () => {
   return jest.fn().mockImplementation(() => ({
@@ -26,6 +27,7 @@ jest.mock('../database/config', () => {
     getDepartamentos: mockGetDepartamentos,
     getInventarioPrincipal: mockGetInventarioPrincipal,
     getInventarioPeriferico: mockGetInventarioPeriferico,
+    getInventarioCompleto: mockGetInventarioCompleto,
     getUser: jest.fn(),
     logAccess: jest.fn(),
   }));
@@ -99,5 +101,29 @@ describe('Panel control inventario endpoints', () => {
     const res = await request(app).get('/api/inventario_periferico');
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ success: true, data: [{ id_periferico: 'pf1' }] });
+  });
+});
+
+describe('Modal inventory endpoints', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('GET /api/inventario-principal returns inventory list', async () => {
+    const res = await request(app).get('/api/inventario-principal');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ success: true, inventario: [{ id: 'p1' }] });
+  });
+
+  test('GET /api/inventario-periferico returns inventory list', async () => {
+    const res = await request(app).get('/api/inventario-periferico');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ success: true, inventario: [{ id_periferico: 'pf1' }] });
+  });
+
+  test('GET /api/inventario-completo returns joined inventory', async () => {
+    const res = await request(app).get('/api/inventario-completo');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ success: true, inventario: [{ id: 'ip1', perifericos: [] }] });
   });
 });
