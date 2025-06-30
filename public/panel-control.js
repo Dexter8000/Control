@@ -30,9 +30,9 @@ async function loadTable(tableName) {
                 }
             });
         }
-        if (dataTable) {
-            dataTable.clear().destroy();
-            document.querySelector('#control-table').innerHTML = '';
+        if ($.fn.dataTable.isDataTable('#control-table')) {
+            $('#control-table').DataTable().clear().destroy();
+            $('#control-table').empty();
         }
         dataTable = $('#control-table').DataTable({ data: rows, columns });
 
