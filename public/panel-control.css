@@ -77,3 +77,16 @@
     background: var(--bg-hover);
     border-color: var(--border-medium);
 }
+
+.table-actions i {
+    cursor: pointer;
+    margin: 0 0.25rem;
+}
+
+.table-actions .edit-depto {
+    color: var(--primary-color);
+}
+
+.table-actions .delete-depto {
+    color: var(--error-color);
+}

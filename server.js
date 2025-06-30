@@ -630,6 +630,60 @@ app.get('/api/departamentos', requireAuth, async (req, res) => {
   }
 });
 
+// Crear departamento
+app.post('/api/departamentos', requireAuth, async (req, res) => {
+  const { nombre } = req.body;
+
+  if (!nombre) {
+    return res.status(400).json({ success: false, message: 'Nombre de departamento es requerido' });
+  }
+
+  try {
+    const resultado = await db.createDepartamento(nombre);
+    res.status(201).json({ success: true, message: 'Departamento creado', departamentoId: resultado.id });
+  } catch (error) {
+    console.error('❌ Error creando departamento:', error);
+    res.status(500).json({ success: false, message: 'Error creando departamento' });
+  }
+});
+
+// Actualizar departamento
+app.put('/api/departamentos/:id', requireAuth, async (req, res) => {
+  const { id } = req.params;
+  const { nombre } = req.body;
+
+  if (!nombre) {
+    return res.status(400).json({ success: false, message: 'Nombre de departamento es requerido' });
+  }
+
+  try {
+    const resultado = await db.updateDepartamento(id, nombre);
+    if (resultado.changes === 0) {
+      return res.status(404).json({ success: false, message: 'Departamento no encontrado' });
+    }
+    res.json({ success: true, message: 'Departamento actualizado' });
+  } catch (error) {
+    console.error('❌ Error actualizando departamento:', error);
+    res.status(500).json({ success: false, message: 'Error actualizando departamento' });
+  }
+});
+
+// Eliminar departamento
+app.delete('/api/departamentos/:id', requireAuth, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const resultado = await db.deleteDepartamento(id);
+    if (resultado.changes === 0) {
+      return res.status(404).json({ success: false, message: 'Departamento no encontrado' });
+    }
+    res.json({ success: true, message: 'Departamento eliminado' });
+  } catch (error) {
+    console.error('❌ Error eliminando departamento:', error);
+    res.status(500).json({ success: false, message: 'Error eliminando departamento' });
+  }
+});
+
 // Endpoints de solo lectura para el panel de control
 app.get('/api/inventario_principal', requireAuth, async (req, res) => {
   try {
