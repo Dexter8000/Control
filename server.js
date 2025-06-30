@@ -486,6 +486,16 @@ app.post('/api/empleados/mass-upload', requireAuth, requireRole('administrador')
 app.post('/api/empleados', requireAuth, async (req, res) => {
   const empleadoData = req.body;
 
+  // Validar campos requeridos y tipos
+  if (!empleadoData.nombre || typeof empleadoData.nombre !== 'string' ||
+      !empleadoData.apellido || typeof empleadoData.apellido !== 'string' ||
+      !empleadoData.rango || typeof empleadoData.rango !== 'string') {
+    return res.status(400).json({
+      success: false,
+      message: 'Nombre, apellido y rango son requeridos y deben ser texto'
+    });
+  }
+
   try {
     // Buscar departamento_id si se envió nombre de departamento
     if (empleadoData.departamento && !empleadoData.departamento_id) {
@@ -496,11 +506,37 @@ app.post('/api/empleados', requireAuth, async (req, res) => {
       }
     }
 
+    // Validar unicidad de placa y cédula
+    if (empleadoData.placa) {
+      const placaExists = await new Promise((resolve, reject) => {
+        db.db.get('SELECT id FROM empleados WHERE placa = ?', [empleadoData.placa], (err, row) => {
+          if (err) reject(err); else resolve(row);
+        });
+      });
+      if (placaExists) {
+        return res.status(409).json({ success: false, message: 'La placa ya está registrada' });
+      }
+    }
+    if (empleadoData.cedula) {
+      const cedulaExists = await new Promise((resolve, reject) => {
+        db.db.get('SELECT id FROM empleados WHERE cedula = ?', [empleadoData.cedula], (err, row) => {
+          if (err) reject(err); else resolve(row);
+        });
+      });
+      if (cedulaExists) {
+        return res.status(409).json({ success: false, message: 'La cédula ya está registrada' });
+      }
+    }
+
+    await db.beginTransaction();
     const resultado = await db.createEmpleado(empleadoData);
+    await db.commitTransaction();
+
     res.status(201).json({ success: true, message: 'Empleado creado exitosamente', empleadoId: resultado.id });
   } catch (error) {
+    await db.rollbackTransaction();
     console.error('❌ Error creando empleado:', error);
-    res.status(500).json({ error: 'Error creando empleado: ' + error.message });
+    res.status(500).json({ success: false, message: 'Error creando empleado', details: error.message });
   }
 });
 
@@ -509,6 +545,16 @@ app.put('/api/empleados/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
   const empleadoData = req.body;
 
+  // Validar campos básicos
+  if (!empleadoData.nombre || typeof empleadoData.nombre !== 'string' ||
+      !empleadoData.apellido || typeof empleadoData.apellido !== 'string' ||
+      !empleadoData.rango || typeof empleadoData.rango !== 'string') {
+    return res.status(400).json({
+      success: false,
+      message: 'Nombre, apellido y rango son requeridos y deben ser texto'
+    });
+  }
+
   try {
     // Buscar departamento_id si se envió nombre de departamento
     if (empleadoData.departamento && !empleadoData.departamento_id) {
@@ -519,11 +565,37 @@ app.put('/api/empleados/:id', requireAuth, async (req, res) => {
       }
     }
 
+    // Validar unicidad de placa y cédula
+    if (empleadoData.placa) {
+      const placaExists = await new Promise((resolve, reject) => {
+        db.db.get('SELECT id FROM empleados WHERE placa = ? AND id != ?', [empleadoData.placa, id], (err, row) => {
+          if (err) reject(err); else resolve(row);
+        });
+      });
+      if (placaExists) {
+        return res.status(409).json({ success: false, message: 'La placa ya está registrada' });
+      }
+    }
+    if (empleadoData.cedula) {
+      const cedulaExists = await new Promise((resolve, reject) => {
+        db.db.get('SELECT id FROM empleados WHERE cedula = ? AND id != ?', [empleadoData.cedula, id], (err, row) => {
+          if (err) reject(err); else resolve(row);
+        });
+      });
+      if (cedulaExists) {
+        return res.status(409).json({ success: false, message: 'La cédula ya está registrada' });
+      }
+    }
+
+    await db.beginTransaction();
     await db.updateEmpleado(id, empleadoData);
+    await db.commitTransaction();
+
     res.json({ success: true, message: 'Empleado actualizado exitosamente' });
   } catch (error) {
+    await db.rollbackTransaction();
     console.error('❌ Error actualizando empleado:', error);
-    res.status(500).json({ error: 'Error actualizando empleado: ' + error.message });
+    res.status(500).json({ success: false, message: 'Error actualizando empleado', details: error.message });
   }
 });
 
@@ -645,16 +717,30 @@ app.get('/api/departamentos', requireAuth, async (req, res) => {
 app.post('/api/departamentos', requireAuth, async (req, res) => {
   const { nombre } = req.body;
 
-  if (!nombre) {
-    return res.status(400).json({ success: false, message: 'Nombre de departamento es requerido' });
+  if (!nombre || typeof nombre !== 'string') {
+    return res.status(400).json({ success: false, message: 'Nombre de departamento es requerido y debe ser texto' });
   }
 
   try {
+    const existente = await new Promise((resolve, reject) => {
+      db.db.get('SELECT id FROM departamentos WHERE nombre = ?', [nombre], (err, row) => {
+        if (err) reject(err); else resolve(row);
+      });
+    });
+
+    if (existente) {
+      return res.status(409).json({ success: false, message: 'El departamento ya existe' });
+    }
+
+    await db.beginTransaction();
     const resultado = await db.createDepartamento(nombre);
+    await db.commitTransaction();
+
     res.status(201).json({ success: true, message: 'Departamento creado', departamentoId: resultado.id });
   } catch (error) {
+    await db.rollbackTransaction();
     console.error('❌ Error creando departamento:', error);
-    res.status(500).json({ success: false, message: 'Error creando departamento' });
+    res.status(500).json({ success: false, message: 'Error creando departamento', details: error.message });
   }
 });
 
@@ -663,19 +749,32 @@ app.put('/api/departamentos/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
   const { nombre } = req.body;
 
-  if (!nombre) {
-    return res.status(400).json({ success: false, message: 'Nombre de departamento es requerido' });
+  if (!nombre || typeof nombre !== 'string') {
+    return res.status(400).json({ success: false, message: 'Nombre de departamento es requerido y debe ser texto' });
   }
 
   try {
+    const existente = await new Promise((resolve, reject) => {
+      db.db.get('SELECT id FROM departamentos WHERE nombre = ? AND id != ?', [nombre, id], (err, row) => {
+        if (err) reject(err); else resolve(row);
+      });
+    });
+    if (existente) {
+      return res.status(409).json({ success: false, message: 'El departamento ya existe' });
+    }
+
+    await db.beginTransaction();
     const resultado = await db.updateDepartamento(id, nombre);
     if (resultado.changes === 0) {
+      await db.rollbackTransaction();
       return res.status(404).json({ success: false, message: 'Departamento no encontrado' });
     }
+    await db.commitTransaction();
     res.json({ success: true, message: 'Departamento actualizado' });
   } catch (error) {
+    await db.rollbackTransaction();
     console.error('❌ Error actualizando departamento:', error);
-    res.status(500).json({ success: false, message: 'Error actualizando departamento' });
+    res.status(500).json({ success: false, message: 'Error actualizando departamento', details: error.message });
   }
 });
 
@@ -859,11 +958,18 @@ app.get('/api/usuarios', requireAuth, async (req, res) => {
 app.post('/api/usuarios', requireAuth, requireRole('administrador'), async (req, res) => {
   const { usuario, password, rol, nombre, email } = req.body;
 
-  if (!usuario || !password || !rol) {
-    return res.status(400).json({ 
-      success: false, 
-      message: 'Usuario, contraseña y rol son requeridos' 
+  if (!usuario || !password || !rol ||
+      typeof usuario !== 'string' || typeof password !== 'string' || typeof rol !== 'string') {
+    return res.status(400).json({
+      success: false,
+      message: 'Usuario, contraseña y rol son requeridos y deben ser texto'
     });
+  }
+  if (nombre && typeof nombre !== 'string') {
+    return res.status(400).json({ success: false, message: 'Nombre debe ser texto' });
+  }
+  if (email && typeof email !== 'string') {
+    return res.status(400).json({ success: false, message: 'Email debe ser texto' });
   }
 
   try {
@@ -883,6 +989,8 @@ app.post('/api/usuarios', requireAuth, requireRole('administrador'), async (req,
       });
     }
 
+    await db.beginTransaction();
+
     // Insertar nuevo usuario con contraseña sin hash
     const newUserId = await new Promise((resolve, reject) => {
       db.db.run(`
@@ -890,17 +998,8 @@ app.post('/api/usuarios', requireAuth, requireRole('administrador'), async (req,
         VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
       `, [usuario, password, rol, nombre || null, email || null], function(err) {
         if (err) {
-          console.error('❌ Error SQL creando usuario:', err);
-          // Verificar si es error de usuario duplicado
-          if (err.code === 'SQLITE_CONSTRAINT' && err.message.includes('usuarios.usuario')) {
-            reject(new Error(`El usuario '${usuario}' ya existe en el sistema`));
-          } else if (err.code === 'SQLITE_CONSTRAINT') {
-            reject(new Error('Violación de restricción de base de datos'));
-          } else {
-            reject(new Error('Error de base de datos: ' + err.message));
-          }
+          reject(err);
         } else {
-          console.log(`✅ Usuario creado exitosamente: ${usuario} (ID: ${this.lastID})`);
           resolve(this.lastID);
         }
       });
@@ -908,6 +1007,7 @@ app.post('/api/usuarios', requireAuth, requireRole('administrador'), async (req,
 
     // Log de creación
     await db.logAccess(req.session.user.id, 'USER_CREATED', req.ip, req.get('User-Agent'), true, `Usuario creado: ${usuario}`);
+    await db.commitTransaction();
 
     res.json({ 
       success: true, 
@@ -916,6 +1016,7 @@ app.post('/api/usuarios', requireAuth, requireRole('administrador'), async (req,
     });
 
   } catch (error) {
+    await db.rollbackTransaction();
     console.error('❌ Error creando usuario:', error);
 
     // Manejar errores específicos
@@ -926,9 +1027,10 @@ app.post('/api/usuarios', requireAuth, requireRole('administrador'), async (req,
       });
     }
 
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error interno al crear usuario: ' + error.message 
+    res.status(500).json({
+      success: false,
+      message: 'Error interno al crear usuario',
+      details: error.message
     });
   }
 });
@@ -938,11 +1040,20 @@ app.put('/api/usuarios/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
   const { usuario, password, rol, nombre, email } = req.body;
 
-  if (!usuario || !rol) {
-    return res.status(400).json({ 
-      success: false, 
-      message: 'Usuario y rol son requeridos' 
+  if (!usuario || !rol || typeof usuario !== 'string' || typeof rol !== 'string') {
+    return res.status(400).json({
+      success: false,
+      message: 'Usuario y rol son requeridos y deben ser texto'
     });
+  }
+  if (password && typeof password !== 'string') {
+    return res.status(400).json({ success: false, message: 'La contraseña debe ser texto' });
+  }
+  if (nombre && typeof nombre !== 'string') {
+    return res.status(400).json({ success: false, message: 'Nombre debe ser texto' });
+  }
+  if (email && typeof email !== 'string') {
+    return res.status(400).json({ success: false, message: 'Email debe ser texto' });
   }
 
   try {
@@ -1000,20 +1111,21 @@ app.put('/api/usuarios/:id', requireAuth, async (req, res) => {
 
     updateValues.push(id);
 
+    await db.beginTransaction();
     // Actualizar usuario
     await new Promise((resolve, reject) => {
       db.db.run(`
-        UPDATE usuarios 
+        UPDATE usuarios
         SET ${updateFields.join(', ')}
         WHERE id = ?
       `, updateValues, function(err) {
-        if (err) reject(err);
-        else resolve(this.changes);
+        if (err) reject(err); else resolve(this.changes);
       });
     });
 
     // Log de actualización
     await db.logAccess(req.session.user.id, 'USER_UPDATED', req.ip, req.get('User-Agent'), true, `Usuario actualizado: ${usuario}`);
+    await db.commitTransaction();
 
     res.json({ 
       success: true, 
@@ -1021,10 +1133,12 @@ app.put('/api/usuarios/:id', requireAuth, async (req, res) => {
     });
 
   } catch (error) {
+    await db.rollbackTransaction();
     console.error('❌ Error actualizando usuario:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error interno al actualizar usuario' 
+    res.status(500).json({
+      success: false,
+      message: 'Error interno al actualizar usuario',
+      details: error.message
     });
   }
 });
