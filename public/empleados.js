@@ -14,6 +14,11 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🎯 Inicializando gestión moderna de empleados');
     initializeDepartmentSelectors();
     initializeApp();
+    if (window.location.hash === '#nuevo') {
+        showNuevoEmpleadoModal();
+    } else if (window.location.hash === '#massupload') {
+        cargaMasivaEmpleados();
+    }
 });
 
 // Función para inicializar selectores de departamentos

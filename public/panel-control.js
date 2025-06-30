@@ -26,7 +26,15 @@ async function loadTable(tableName) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    const actions = document.getElementById('empleados-actions');
     document.querySelectorAll('.pc-card').forEach(card => {
-        card.addEventListener('click', () => loadTable(card.dataset.table));
+        card.addEventListener('click', () => {
+            loadTable(card.dataset.table);
+            if (card.dataset.table === 'empleados') {
+                actions.style.display = 'flex';
+            } else {
+                actions.style.display = 'none';
+            }
+        });
     });
 });
