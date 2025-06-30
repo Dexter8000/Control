@@ -21,6 +21,12 @@ jest.mock('../database/prestamos', () => {
   }));
 });
 
+jest.mock('../database/vacaciones', () => {
+  return jest.fn().mockImplementation(() => ({
+    actualizarEstadosVacaciones: jest.fn(),
+  }));
+});
+
 const app = require('../server');
 
 describe('Dashboard API', () => {
