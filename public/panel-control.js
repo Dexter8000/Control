@@ -51,9 +51,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const usuariosActions = document.getElementById('usuarios-actions');
     const departamentosActions = document.getElementById('departamentos-actions');
     const btnAddDepartamento = document.getElementById('btn-add-departamento');
+    const btnAddUsuario = document.getElementById('btn-add-usuario');
 
     if (btnAddDepartamento) {
         btnAddDepartamento.addEventListener('click', () => openDepartamentoModal());
+    }
+    if (btnAddUsuario) {
+        btnAddUsuario.addEventListener('click', () => showNewUserModal());
     }
     document.querySelectorAll('.pc-card').forEach(card => {
         card.addEventListener('click', () => {
@@ -77,6 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 closeDepartamentoModal();
             } else if (e.target.id === 'departamento-delete-modal') {
                 closeDeleteDepartamentoModal();
+            } else if (e.target.id === 'user-modal') {
+                closeUserModal();
             }
         }
     });
@@ -85,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape') {
             closeDepartamentoModal();
             closeDeleteDepartamentoModal();
+            closeUserModal();
         }
     });
 });
@@ -169,3 +176,102 @@ window.saveDepartamento = saveDepartamento;
 window.closeDepartamentoModal = closeDepartamentoModal;
 window.closeDeleteDepartamentoModal = closeDeleteDepartamentoModal;
 window.confirmDeleteDepartamento = confirmDeleteDepartamento;
+
+// === Gestión de Usuarios ===
+let currentEditingUserId = null;
+
+function showNewUserModal() {
+    const modal = document.getElementById('user-modal');
+    const title = document.getElementById('user-modal-title');
+    const form = document.getElementById('user-form');
+    if (!modal || !title || !form) return;
+
+    title.textContent = 'Nuevo Usuario';
+    currentEditingUserId = null;
+    form.reset();
+
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeUserModal() {
+    const modal = document.getElementById('user-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        currentEditingUserId = null;
+    }
+}
+
+async function saveUser(event) {
+    if (event) event.preventDefault();
+    const form = document.getElementById('user-form');
+    if (!form) return;
+
+    const formData = new FormData(form);
+    const userData = {
+        usuario: formData.get('username'),
+        password: formData.get('password'),
+        rol: formData.get('role'),
+        nombre: formData.get('name'),
+        email: formData.get('email')
+    };
+
+    if (!userData.usuario || !userData.password || !userData.rol) {
+        showNotification('Usuario, contraseña y rol son requeridos', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/usuarios', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData)
+        });
+
+        if (!response.ok) {
+            let msg = 'Error guardando usuario';
+            try {
+                const errData = await response.json();
+                msg = errData.message || msg;
+            } catch {}
+            throw new Error(msg);
+        }
+
+        const result = await response.json();
+        if (result.success) {
+            showNotification('Usuario creado exitosamente', 'success');
+            closeUserModal();
+        } else {
+            throw new Error(result.message || 'Error guardando usuario');
+        }
+    } catch (err) {
+        console.error('Error guardando usuario:', err);
+        showNotification(err.message || 'Error guardando usuario', 'error');
+    }
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+        <span>${message}</span>
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 100);
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 5000);
+}
+
+window.showNewUserModal = showNewUserModal;
+window.closeUserModal = closeUserModal;
+window.saveUser = saveUser;
