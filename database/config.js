@@ -355,6 +355,49 @@ class Database {
         });
     }
 
+    // Crear nuevo departamento
+    createDepartamento(nombre) {
+        return new Promise((resolve, reject) => {
+            const id = crypto.randomUUID();
+            const query = 'INSERT INTO departamentos (id, nombre) VALUES (?, ?)';
+            this.db.run(query, [id, nombre], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ id });
+                }
+            });
+        });
+    }
+
+    // Actualizar departamento existente
+    updateDepartamento(id, nombre) {
+        return new Promise((resolve, reject) => {
+            const query = 'UPDATE departamentos SET nombre = ? WHERE id = ?';
+            this.db.run(query, [nombre, id], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ changes: this.changes });
+                }
+            });
+        });
+    }
+
+    // Eliminar departamento
+    deleteDepartamento(id) {
+        return new Promise((resolve, reject) => {
+            const query = 'DELETE FROM departamentos WHERE id = ?';
+            this.db.run(query, [id], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ changes: this.changes });
+                }
+            });
+        });
+    }
+
     // Obtener inventario principal completo (estructura real)
     getInventarioPrincipal() {
         return new Promise((resolve, reject) => {
