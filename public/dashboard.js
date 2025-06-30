@@ -1,6 +1,10 @@
 // Dashboard JavaScript - Sistema de Inventario y Control
 document.addEventListener('DOMContentLoaded', function() {
-    initializeDashboard();
+    initializeDashboard().then(() => {
+        if (window.location.hash === '#nuevo_usuario') {
+            showNewUserModal();
+        }
+    });
 });
 
 // Variables globales
