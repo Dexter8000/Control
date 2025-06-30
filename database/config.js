@@ -434,15 +434,15 @@ class Database {
                        ip.marca as equipo_principal_marca,
                        ip.modelo as equipo_principal_modelo,
                        ip.serie as equipo_principal_serie,
-                       CASE 
-                           WHEN iph.responsable_actual IS NOT NULL AND iph.responsable_actual != '' 
-                           THEN e.nombre || ' ' || e.apellido 
-                           ELSE 'Sin asignar' 
+                       CASE
+                           WHEN iph.responsable_actual_periferico IS NOT NULL AND iph.responsable_actual_periferico != ''
+                           THEN e.nombre || ' ' || e.apellido
+                           ELSE 'Sin asignar'
                        END as responsable_nombre,
                        d.nombre as departamento_nombre
                 FROM inventario_periferico iph
                 LEFT JOIN inventario_principal ip ON iph.id_inventario_principal = ip.id
-                LEFT JOIN empleados e ON iph.responsable_actual = e.id
+                LEFT JOIN empleados e ON iph.responsable_actual_periferico = e.id
                 LEFT JOIN departamentos d ON e.departamento_id = d.id
                 ORDER BY iph.fecha_adquisicion_periferico DESC, iph.nombre_periferico
             `;
