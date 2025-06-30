@@ -712,6 +712,25 @@ class Database {
         });
     }
 
+    // Transaction helpers
+    beginTransaction() {
+        return new Promise((resolve, reject) => {
+            this.db.run('BEGIN TRANSACTION', err => (err ? reject(err) : resolve()));
+        });
+    }
+
+    commitTransaction() {
+        return new Promise((resolve, reject) => {
+            this.db.run('COMMIT', err => (err ? reject(err) : resolve()));
+        });
+    }
+
+    rollbackTransaction() {
+        return new Promise((resolve, reject) => {
+            this.db.run('ROLLBACK', err => (err ? reject(err) : resolve()));
+        });
+    }
+
     close() {
         if (this.db) {
             this.db.close((err) => {
