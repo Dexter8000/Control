@@ -193,9 +193,9 @@ app.get('/panel-control', requireAuth, (req, res) =>
 );
 
 // Ruta para acceder a la interfaz de empleados
-app.get('/empleados', requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'empleados.html'));
-});
+app.get('/empleados', requireAuth, (req, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'empleados.html'))
+);
 
 // === Endpoints de Dashboard (SQLite) ===
 app.get('/api/dashboard/total-empleados', (req, res) => {
