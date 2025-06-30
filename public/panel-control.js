@@ -32,11 +32,12 @@ async function loadTable(tableName) {
                 }
             });
         }
-        if ($.fn.dataTable.isDataTable('#control-table')) {
-            $('#control-table').DataTable().clear().destroy();
-            $('#control-table').empty();
+        const $table = $('#control-table');
+        if ($.fn.dataTable.isDataTable($table)) {
+            $table.DataTable().clear().destroy();
+            $table.empty();
         }
-        dataTable = $('#control-table').DataTable({ data: rows, columns });
+        dataTable = $table.DataTable({ data: rows, columns });
 
         if (tableName === 'departamentos') {
             addDepartamentoListeners();
