@@ -121,6 +121,13 @@ describe('Modal inventory endpoints', () => {
     expect(res.body).toEqual({ success: true, inventario: [{ id_periferico: 'pf1' }] });
   });
 
+  test('regression: /api/inventario-periferico responds with sample data', async () => {
+    const res = await request(app).get('/api/inventario-periferico');
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.inventario)).toBe(true);
+  });
+
   test('GET /api/inventario-completo returns joined inventory', async () => {
     const res = await request(app).get('/api/inventario-completo');
     expect(res.status).toBe(200);
