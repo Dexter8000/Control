@@ -207,6 +207,13 @@ SQLite: Persistencia local
 
 Migraciones: Automáticas con Drizzle Kit
 
+### 🔌 WebSocket de Eventos
+El servidor inicia un canal `ws` junto a Express. Los clientes se conectan a
+`ws://localhost:PORT` y reciben mensajes JSON con el campo `event`.
+Los eventos `users-changed` y `employees-changed` se emiten cada vez que se crea,
+actualiza o elimina un usuario o empleado. Los scripts del frontend se conectan
+automáticamente y refrescan sus datos al recibir estos eventos.
+
 📊 Métricas del Sistema
 Datos Operativos
 Empleados Activos: 30+

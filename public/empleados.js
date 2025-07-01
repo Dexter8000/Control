@@ -7,6 +7,26 @@ let itemsPerPage = 10;
 let sortColumn = '';
 let sortDirection = 'asc';
 
+let ws;
+
+function setupWebSocket() {
+    try {
+        ws = new WebSocket(`ws://${location.host}`);
+        ws.addEventListener('message', ev => {
+            try {
+                const msg = JSON.parse(ev.data);
+                if (msg.event === 'employees-changed') {
+                    loadEmpleados();
+                }
+            } catch (err) {
+                console.error('WS message error', err);
+            }
+        });
+    } catch (err) {
+        console.error('WebSocket connection failed', err);
+    }
+}
+
 // Funciones de departamentos provistas por departamentos-utils.js
 
 // Inicialización
@@ -84,6 +104,7 @@ async function initializeApp() {
         await loadEmpleados();
         await loadDashboardStats();
         setupEventListeners();
+        setupWebSocket();
         refreshIcons();
         console.log('✅ Aplicación inicializada exitosamente');
     } catch (error) {
