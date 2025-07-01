@@ -2,7 +2,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h2 id="user-modal-title">Nuevo Usuario</h2>
-                            <span class="close" onclick="closeUserModal()">&times;</span>
+                            <span class="close" onclick="closeUserModal(event)">&times;</span>
                         </div>
                         <div class="modal-body">
                             <form id="user-form" onsubmit="saveUser(event)">
@@ -51,7 +51,7 @@
                         </div>
 
                         <div class="modal-footer">
-                            <button type="button" class="btn-secondary" onclick="closeUserModal()">Cancelar</button>
+                            <button type="button" class="btn-secondary" onclick="closeUserModal(event)">Cancelar</button>
                             <button type="submit" form="user-form" class="btn-primary">
                                 <i class="fas fa-save"></i> Guardar
                             </button>
