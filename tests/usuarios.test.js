@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 
 const mockDbGet = jest.fn((q, p, cb) => cb(null, null));
 let insertedPassword;
-const mockDbRun = jest.fn(function(q, params, cb){
+const mockDbRun = jest.fn(function (q, params, cb) {
   insertedPassword = params[1];
   cb.call({ lastID: 1 }, null);
 });

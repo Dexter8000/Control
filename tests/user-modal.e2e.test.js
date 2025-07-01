@@ -6,7 +6,10 @@ const path = require('path');
 
 describe('User modal interactions', () => {
   beforeEach(() => {
-    const html = fs.readFileSync(path.join(__dirname, '../public/partials/user-modal.html'), 'utf8');
+    const html = fs.readFileSync(
+      path.join(__dirname, '../public/partials/user-modal.html'),
+      'utf8'
+    );
     document.body.innerHTML = html;
     window.currentEditingUserId = null;
 

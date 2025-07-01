@@ -6,7 +6,7 @@ jest.mock('../database/config', () => {
     return {
       db: {
         get: jest.fn((query, params, cb) => cb(null, { total: 3 })),
-        all: jest.fn()
+        all: jest.fn(),
       },
       connect: jest.fn(() => Promise.resolve()),
       getUser: jest.fn(),
@@ -36,4 +36,3 @@ describe('Dashboard API', () => {
     expect(res.body).toEqual({ total: 3 });
   });
 });
-

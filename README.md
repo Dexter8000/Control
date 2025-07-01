@@ -17,6 +17,7 @@ Sistema integral de gestión empresarial desarrollado en Node.js con Express, Po
 ## 🏢 Módulos Operativos
 
 ### 📊 Dashboard Ejecutivo
+
 - Estadísticas de empleados por departamento (16 departamentos oficiales)
 - Análisis de rangos únicos y métricas operativas
 - Contadores de inventario en tiempo real
@@ -24,6 +25,7 @@ Sistema integral de gestión empresarial desarrollado en Node.js con Express, Po
 - Reloj en tiempo real
 
 ### 👥 Gestión de Empleados (30+ activos)
+
 - CRUD completo con validación avanzada
 - Filtros por departamento, rango y estado
 - Análisis estadístico y exportación
@@ -31,24 +33,28 @@ Sistema integral de gestión empresarial desarrollado en Node.js con Express, Po
 - Historial de cambios
 
 ### 🔐 Sistema de Usuarios (10 operativos)
+
 - Autenticación básica (hashing pendiente)
 - Roles: Administrador, Usuario, Supervisor
 - Control de sesiones seguras
 - Logs de acceso y actividad
 
 ### 📦 Inventarios
+
 - **Principal**: Equipos principales con asignaciones
 - **Periférico**: Dispositivos complementarios vinculados
 - Control de responsables y ubicaciones
 - Estados: Activo, Mantenimiento, Disponible, Dañado
 
 ### 🏖️ Gestión de Vacaciones
+
 - Solicitudes con fechas y tipos
 - Sistema de aprobaciones multi-nivel
 - Historial completo de solicitudes
 - Cálculo automático de días disponibles
 
 ### 💼 Sistema de Préstamos
+
 - Préstamos temporales de equipos
 - Control de fechas de devolución
 - Seguimiento de responsables
@@ -64,7 +70,8 @@ Sistema integral de gestión empresarial desarrollado en Node.js con Express, Po
 ## 🛠️ Instalación y Configuración
 
 ### 1. Clonar el Repositorio
-```bash
+
+````bash
 git clone [https://github.com/TU_USUARIO/sistema-gestion-empresarial.git](https://github.com/TU_USUARIO/sistema-gestion-empresarial.git)
 cd sistema-gestion-empresarial
 2. Instalar Dependencias
@@ -76,17 +83,18 @@ Crea un archivo `.env` en la raíz de tu proyecto y define la siguiente variable
 
 ```bash
 SESSION_SECRET=tu_clave_secreta_aqui_para_sesiones_seguras
-```
+````
+
 (Asegúrate de reemplazar el valor con tu propia clave segura)
 
 Antes de iniciar por primera vez, verifica que exista el directorio `attached_assets` en la raíz del proyecto. Allí se almacena la base de datos SQLite. Si no está presente, los scripts lo crearán automáticamente.
 
 4. Inicializar Base de Datos
-Bash
+   Bash
 
 # El sistema inicializa automáticamente al ejecutar
-npm start
-5. Acceder al Sistema
+
+npm start 5. Acceder al Sistema
 http://localhost:3000
 👤 Usuarios de Acceso
 Usuarios de Prueba Disponibles
@@ -105,31 +113,31 @@ usuario: Acceso limitado a consultas y reportes
 
 📁 Estructura del Proyecto
 sistema-gestion-empresarial/
-├── server.js                 # Servidor principal Express
-├── database/                 # Configuración y gestión de BD
-│   ├── config.js            # Configuración de conexiones
-│   ├── prestamos.js         # Sistema de préstamos
-│   └── vacaciones.js        # Gestión de vacaciones
-├── public/                   # Frontend y recursos estáticos
-│   ├── dashboard.html       # Panel principal
-│   ├── dashboard.js         # Lógica del dashboard
-│   ├── empleados.html       # Gestión de empleados
-│   ├── empleados.js         # CRUD de empleados
-│   ├── login.html           # Página de autenticación
-│   └── *.css               # Estilos modernos
-├── shared/                   # Esquemas compartidos
-│   └── schema.ts            # Definición de tablas Drizzle
-├── server/                   # Lógica del servidor
-│   ├── db.ts               # Conexiones de base de datos
-│   ├── routes.ts           # Rutas de la API
-│   └── migration.ts        # Migraciones automáticas
-├── tablas/                   # Archivos de datos iniciales (JSON)
-│   ├── empleados.json       # Datos de empleados
-│   ├── inventario_principal.json # Datos de inventario principal
-│   ├── inventario_periferico.json # Datos de inventario periférico
-│   ├── usuarios.json        # Datos de usuarios
-│   └── departamentos.json   # Datos de departamentos
-└── attached_assets/         # Recursos multimedia y BD local
+├── server.js # Servidor principal Express
+├── database/ # Configuración y gestión de BD
+│ ├── config.js # Configuración de conexiones
+│ ├── prestamos.js # Sistema de préstamos
+│ └── vacaciones.js # Gestión de vacaciones
+├── public/ # Frontend y recursos estáticos
+│ ├── dashboard.html # Panel principal
+│ ├── dashboard.js # Lógica del dashboard
+│ ├── empleados.html # Gestión de empleados
+│ ├── empleados.js # CRUD de empleados
+│ ├── login.html # Página de autenticación
+│ └── \*.css # Estilos modernos
+├── shared/ # Esquemas compartidos
+│ └── schema.ts # Definición de tablas Drizzle
+├── server/ # Lógica del servidor
+│ ├── db.ts # Conexiones de base de datos
+│ ├── routes.ts # Rutas de la API
+│ └── migration.ts # Migraciones automáticas
+├── tablas/ # Archivos de datos iniciales (JSON)
+│ ├── empleados.json # Datos de empleados
+│ ├── inventario_principal.json # Datos de inventario principal
+│ ├── inventario_periferico.json # Datos de inventario periférico
+│ ├── usuarios.json # Datos de usuarios
+│ └── departamentos.json # Datos de departamentos
+└── attached_assets/ # Recursos multimedia y BD local
 📄 Datos Iniciales (Para desarrollo/población de la BD)
 Los archivos .json ubicados en la carpeta tablas/ contienen datos de ejemplo o datos iniciales que se utilizan para poblar las tablas de la base de datos (PostgreSQL/Neon). El sistema está diseñado para manejar la creación del esquema y la inserción de estos datos automáticamente al iniciar la aplicación (ver sección "Inicializar Base de Datos").
 
@@ -208,6 +216,7 @@ SQLite: Persistencia local
 Migraciones: Automáticas con Drizzle Kit
 
 ### 🔌 WebSocket de Eventos
+
 El servidor inicia un canal `ws` junto a Express. Los clientes se conectan a
 `ws://localhost:PORT` y reciben mensajes JSON con el campo `event`.
 Los eventos `users-changed` y `employees-changed` se emiten cada vez que se crea,

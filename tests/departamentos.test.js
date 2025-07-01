@@ -3,16 +3,24 @@ const request = require('supertest');
 // Prepare mocks for database module
 const mockDbGet = jest.fn();
 const mockDbAll = jest.fn();
-const mockGetDepartamentos = jest.fn(() => Promise.resolve([{ id: '1', nombre: 'TI' }]));
+const mockGetDepartamentos = jest.fn(() =>
+  Promise.resolve([{ id: '1', nombre: 'TI' }])
+);
 const mockCreateDepartamento = jest.fn(() => Promise.resolve({ id: 'new-id' }));
 const mockUpdateDepartamento = jest.fn(() => Promise.resolve({ changes: 1 }));
 const mockDeleteDepartamento = jest.fn(() => Promise.resolve({ changes: 1 }));
 const mockBeginTransaction = jest.fn(() => Promise.resolve());
 const mockCommitTransaction = jest.fn(() => Promise.resolve());
 const mockRollbackTransaction = jest.fn(() => Promise.resolve());
-const mockGetInventarioPrincipal = jest.fn(() => Promise.resolve([{ id: 'p1' }]));
-const mockGetInventarioPeriferico = jest.fn(() => Promise.resolve([{ id_periferico: 'pf1' }]));
-const mockGetInventarioCompleto = jest.fn(() => Promise.resolve([{ id: 'ip1', perifericos: [] }]));
+const mockGetInventarioPrincipal = jest.fn(() =>
+  Promise.resolve([{ id: 'p1' }])
+);
+const mockGetInventarioPeriferico = jest.fn(() =>
+  Promise.resolve([{ id_periferico: 'pf1' }])
+);
+const mockGetInventarioCompleto = jest.fn(() =>
+  Promise.resolve([{ id: 'ip1', perifericos: [] }])
+);
 
 jest.mock('../database/config', () => {
   return jest.fn().mockImplementation(() => ({
@@ -60,7 +68,10 @@ describe('Departamento CRUD API', () => {
   test('GET /api/departamentos returns department list', async () => {
     const res = await request(app).get('/api/departamentos');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ success: true, departamentos: [{ id: '1', nombre: 'TI' }] });
+    expect(res.body).toEqual({
+      success: true,
+      departamentos: [{ id: '1', nombre: 'TI' }],
+    });
   });
 
   test('POST /api/departamentos creates department', async () => {
@@ -68,7 +79,11 @@ describe('Departamento CRUD API', () => {
       .post('/api/departamentos')
       .send({ nombre: 'TI' });
     expect(res.status).toBe(201);
-    expect(res.body).toEqual({ success: true, message: 'Departamento creado', departamentoId: 'new-id' });
+    expect(res.body).toEqual({
+      success: true,
+      message: 'Departamento creado',
+      departamentoId: 'new-id',
+    });
   });
 
   test('PUT /api/departamentos/:id updates department', async () => {
@@ -76,13 +91,19 @@ describe('Departamento CRUD API', () => {
       .put('/api/departamentos/dep1')
       .send({ nombre: 'Soporte' });
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ success: true, message: 'Departamento actualizado' });
+    expect(res.body).toEqual({
+      success: true,
+      message: 'Departamento actualizado',
+    });
   });
 
   test('DELETE /api/departamentos/:id removes department', async () => {
     const res = await request(app).delete('/api/departamentos/dep1');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ success: true, message: 'Departamento eliminado' });
+    expect(res.body).toEqual({
+      success: true,
+      message: 'Departamento eliminado',
+    });
   });
 });
 
@@ -100,7 +121,10 @@ describe('Panel control inventario endpoints', () => {
   test('GET /api/inventario_periferico returns inventory list', async () => {
     const res = await request(app).get('/api/inventario_periferico');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ success: true, data: [{ id_periferico: 'pf1' }] });
+    expect(res.body).toEqual({
+      success: true,
+      data: [{ id_periferico: 'pf1' }],
+    });
   });
 });
 
@@ -118,7 +142,10 @@ describe('Modal inventory endpoints', () => {
   test('GET /api/inventario-periferico returns inventory list', async () => {
     const res = await request(app).get('/api/inventario-periferico');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ success: true, inventario: [{ id_periferico: 'pf1' }] });
+    expect(res.body).toEqual({
+      success: true,
+      inventario: [{ id_periferico: 'pf1' }],
+    });
   });
 
   test('regression: /api/inventario-periferico responds with sample data', async () => {
@@ -131,6 +158,9 @@ describe('Modal inventory endpoints', () => {
   test('GET /api/inventario-completo returns joined inventory', async () => {
     const res = await request(app).get('/api/inventario-completo');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ success: true, inventario: [{ id: 'ip1', perifericos: [] }] });
+    expect(res.body).toEqual({
+      success: true,
+      inventario: [{ id: 'ip1', perifericos: [] }],
+    });
   });
 });

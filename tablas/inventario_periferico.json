@@ -1,1 +1,36 @@
-[{"id_periferico":"PERI001","nombre_periferico":"Monitor Dell UltraSharp 27\"","marca_periferico":"Dell","modelo_periferico":"U2721DE","serie_periferico":"DELMON02721D","estado_periferico":"operativo","condicion_periferico":"nuevo","tipo_adquisicion_periferico":"compra","id_departamento_asignado_periferico":"DEP001","ubicacion_especifica_periferico":"Oficina 101","responsable_actual_periferico":"EMP001","fecha_creacion_periferico":"2024-06-18T05:00:00.000Z","fecha_adquisicion_periferico":"2024-06-18T05:00:00.000Z","detalles_periferico":null,"id_inventario_principal":"PC0008"},{"id_periferico":"PERI002","nombre_periferico":"Teclado Mecánico","marca_periferico":"Logitech","modelo_periferico":"G Pro X","serie_periferico":"LOGPROXON01","estado_periferico":"operativo","condicion_periferico":"nuevo","tipo_adquisicion_periferico":"compra","id_departamento_asignado_periferico":"DEP001","ubicacion_especifica_periferico":"Oficina 101","responsable_actual_periferico":"EMP001","fecha_creacion_periferico":"2024-06-18T05:00:00.000Z","fecha_adquisicion_periferico":"2024-06-18T05:00:00.000Z","detalles_periferico":null,"id_inventario_principal":"PC0008"}]
+[
+  {
+    "id_periferico": "PERI001",
+    "nombre_periferico": "Monitor Dell UltraSharp 27\"",
+    "marca_periferico": "Dell",
+    "modelo_periferico": "U2721DE",
+    "serie_periferico": "DELMON02721D",
+    "estado_periferico": "operativo",
+    "condicion_periferico": "nuevo",
+    "tipo_adquisicion_periferico": "compra",
+    "id_departamento_asignado_periferico": "DEP001",
+    "ubicacion_especifica_periferico": "Oficina 101",
+    "responsable_actual_periferico": "EMP001",
+    "fecha_creacion_periferico": "2024-06-18T05:00:00.000Z",
+    "fecha_adquisicion_periferico": "2024-06-18T05:00:00.000Z",
+    "detalles_periferico": null,
+    "id_inventario_principal": "PC0008"
+  },
+  {
+    "id_periferico": "PERI002",
+    "nombre_periferico": "Teclado Mecánico",
+    "marca_periferico": "Logitech",
+    "modelo_periferico": "G Pro X",
+    "serie_periferico": "LOGPROXON01",
+    "estado_periferico": "operativo",
+    "condicion_periferico": "nuevo",
+    "tipo_adquisicion_periferico": "compra",
+    "id_departamento_asignado_periferico": "DEP001",
+    "ubicacion_especifica_periferico": "Oficina 101",
+    "responsable_actual_periferico": "EMP001",
+    "fecha_creacion_periferico": "2024-06-18T05:00:00.000Z",
+    "fecha_adquisicion_periferico": "2024-06-18T05:00:00.000Z",
+    "detalles_periferico": null,
+    "id_inventario_principal": "PC0008"
+  }
+]

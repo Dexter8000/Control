@@ -14,18 +14,28 @@ async function migrate() {
 
   const users = await new Promise((resolve, reject) => {
     db.all('SELECT id, contrasena FROM usuarios', (err, rows) => {
-      if (err) reject(err); else resolve(rows);
+      if (err) reject(err);
+      else resolve(rows);
     });
   });
 
   for (const user of users) {
     const pass = user.contrasena || '';
-    if (!pass.startsWith('$2a$') && !pass.startsWith('$2b$') && !pass.startsWith('$2y$')) {
+    if (
+      !pass.startsWith('$2a$') &&
+      !pass.startsWith('$2b$') &&
+      !pass.startsWith('$2y$')
+    ) {
       const hash = await bcrypt.hash(pass, 10);
       await new Promise((resolve, reject) => {
-        db.run('UPDATE usuarios SET contrasena = ? WHERE id = ?', [hash, user.id], err => {
-          if (err) reject(err); else resolve();
-        });
+        db.run(
+          'UPDATE usuarios SET contrasena = ? WHERE id = ?',
+          [hash, user.id],
+          (err) => {
+            if (err) reject(err);
+            else resolve();
+          }
+        );
       });
       console.log(`Hashed password for user ${user.id}`);
     }
@@ -35,11 +45,13 @@ async function migrate() {
 }
 
 if (require.main === module) {
-  migrate().then(() => {
-    console.log('Migración de contraseñas completada');
-  }).catch(err => {
-    console.error('Error en migración:', err);
-  });
+  migrate()
+    .then(() => {
+      console.log('Migración de contraseñas completada');
+    })
+    .catch((err) => {
+      console.error('Error en migración:', err);
+    });
 }
 
 module.exports = migrate;

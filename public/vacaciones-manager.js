@@ -1,9 +1,8 @@
-
 // Sistema de Gestión de Vacaciones
 // Este archivo maneja toda la funcionalidad relacionada con vacaciones de empleados
 
-document.addEventListener('DOMContentLoaded', function() {
-    initializeVacacionesManager();
+document.addEventListener('DOMContentLoaded', function () {
+  initializeVacacionesManager();
 });
 
 // Variables globales para vacaciones
@@ -12,53 +11,54 @@ let historialVacaciones = [];
 
 // Inicializar el sistema de vacaciones
 function initializeVacacionesManager() {
-    console.log('🏖️ Sistema de gestión de vacaciones inicializado');
+  console.log('🏖️ Sistema de gestión de vacaciones inicializado');
 }
 
 // Mostrar modal de gestión de vacaciones para un empleado
 async function mostrarModalVacaciones(empleadoId) {
-    try {
-        // Obtener información del empleado
-        const empleadoResponse = await fetch(`/api/empleados`);
-        const empleadosData = await empleadoResponse.json();
-        const empleado = empleadosData.empleados.find(e => e.id === empleadoId);
+  try {
+    // Obtener información del empleado
+    const empleadoResponse = await fetch(`/api/empleados`);
+    const empleadosData = await empleadoResponse.json();
+    const empleado = empleadosData.empleados.find((e) => e.id === empleadoId);
 
-        if (!empleado) {
-            showNotification('Empleado no encontrado', 'error');
-            return;
-        }
-
-        currentEmpleadoVacaciones = empleado;
-
-        // Obtener información detallada de vacaciones
-        const vacacionesInfo = await obtenerVacacionesDetalladas(empleadoId);
-        
-        // Obtener historial de vacaciones
-        const historialResponse = await fetch(`/api/empleado/${empleadoId}/historial-vacaciones`);
-        const historialData = await historialResponse.json();
-        historialVacaciones = historialData.success ? historialData.historial : [];
-
-        // Crear y mostrar modal
-        crearModalVacaciones(empleado, vacacionesInfo, historialVacaciones);
-
-    } catch (error) {
-        console.error('❌ Error mostrando modal de vacaciones:', error);
-        showNotification('Error cargando información de vacaciones', 'error');
+    if (!empleado) {
+      showNotification('Empleado no encontrado', 'error');
+      return;
     }
+
+    currentEmpleadoVacaciones = empleado;
+
+    // Obtener información detallada de vacaciones
+    const vacacionesInfo = await obtenerVacacionesDetalladas(empleadoId);
+
+    // Obtener historial de vacaciones
+    const historialResponse = await fetch(
+      `/api/empleado/${empleadoId}/historial-vacaciones`
+    );
+    const historialData = await historialResponse.json();
+    historialVacaciones = historialData.success ? historialData.historial : [];
+
+    // Crear y mostrar modal
+    crearModalVacaciones(empleado, vacacionesInfo, historialVacaciones);
+  } catch (error) {
+    console.error('❌ Error mostrando modal de vacaciones:', error);
+    showNotification('Error cargando información de vacaciones', 'error');
+  }
 }
 
 // Crear modal completo de vacaciones
 function crearModalVacaciones(empleado, vacacionesInfo, historial) {
-    // Remover modal existente si existe
-    const existingModal = document.getElementById('vacaciones-modal');
-    if (existingModal) {
-        existingModal.remove();
-    }
+  // Remover modal existente si existe
+  const existingModal = document.getElementById('vacaciones-modal');
+  if (existingModal) {
+    existingModal.remove();
+  }
 
-    const modal = document.createElement('div');
-    modal.id = 'vacaciones-modal';
-    modal.className = 'modal';
-    modal.innerHTML = `
+  const modal = document.createElement('div');
+  modal.id = 'vacaciones-modal';
+  modal.className = 'modal';
+  modal.innerHTML = `
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h2>
@@ -129,29 +129,29 @@ function crearModalVacaciones(empleado, vacacionesInfo, historial) {
         </div>
     `;
 
-    document.body.appendChild(modal);
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
+  document.body.appendChild(modal);
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
 
-    // Configurar event listeners
-    configurarEventListenersVacaciones();
+  // Configurar event listeners
+  configurarEventListenersVacaciones();
 }
 
 // Renderizar estado detallado de vacaciones
 function renderEstadoVacacionesDetallado(vacacionesInfo) {
-    if (!vacacionesInfo) {
-        return `
+  if (!vacacionesInfo) {
+    return `
             <div class="status-card status-sin-vacaciones">
                 <i class="fas fa-calendar-times"></i>
                 <h4>Sin Vacaciones Programadas</h4>
                 <p>Este empleado no tiene vacaciones programadas actualmente.</p>
             </div>
         `;
-    }
+  }
 
-    switch (vacacionesInfo.estado) {
-        case 'en_vacaciones':
-            return `
+  switch (vacacionesInfo.estado) {
+    case 'en_vacaciones':
+      return `
                 <div class="status-card status-en-vacaciones">
                     <i class="fas fa-umbrella-beach"></i>
                     <h4>Actualmente en Vacaciones</h4>
@@ -166,8 +166,8 @@ function renderEstadoVacacionesDetallado(vacacionesInfo) {
                 </div>
             `;
 
-        case 'programadas':
-            return `
+    case 'programadas':
+      return `
                 <div class="status-card status-programadas">
                     <i class="fas fa-calendar-check"></i>
                     <h4>Vacaciones Programadas</h4>
@@ -180,29 +180,29 @@ function renderEstadoVacacionesDetallado(vacacionesInfo) {
                 </div>
             `;
 
-        default:
-            return `
+    default:
+      return `
                 <div class="status-card status-disponible">
                     <i class="fas fa-check-circle"></i>
                     <h4>Disponible para Vacaciones</h4>
                     <p>El empleado está disponible y puede programar nuevas vacaciones.</p>
                 </div>
             `;
-    }
+  }
 }
 
 // Renderizar historial de vacaciones
 function renderHistorialVacaciones(historial) {
-    if (!historial || historial.length === 0) {
-        return `
+  if (!historial || historial.length === 0) {
+    return `
             <div class="empty-historial">
                 <i class="fas fa-calendar-times"></i>
                 <p>No hay historial de vacaciones registrado</p>
             </div>
         `;
-    }
+  }
 
-    return `
+  return `
         <div class="historial-table-container">
             <table class="historial-table">
                 <thead>
@@ -216,7 +216,9 @@ function renderHistorialVacaciones(historial) {
                     </tr>
                 </thead>
                 <tbody>
-                    ${historial.map(periodo => `
+                    ${historial
+                      .map(
+                        (periodo) => `
                         <tr class="historial-row ${periodo.estado}">
                             <td>
                                 <div class="periodo-info">
@@ -241,7 +243,9 @@ function renderHistorialVacaciones(historial) {
                                 <span class="año-badge">${periodo.año_periodo}</span>
                             </td>
                         </tr>
-                    `).join('')}
+                    `
+                      )
+                      .join('')}
                 </tbody>
             </table>
         </div>
@@ -250,147 +254,158 @@ function renderHistorialVacaciones(historial) {
 
 // Configurar event listeners para el formulario de vacaciones
 function configurarEventListenersVacaciones() {
-    const form = document.getElementById('vacaciones-form');
-    const fechaInicio = document.getElementById('vacaciones-fecha-inicio');
-    const fechaFin = document.getElementById('vacaciones-fecha-fin');
+  const form = document.getElementById('vacaciones-form');
+  const fechaInicio = document.getElementById('vacaciones-fecha-inicio');
+  const fechaFin = document.getElementById('vacaciones-fecha-fin');
 
-    // Calcular duración automáticamente
-    function actualizarPreview() {
-        if (fechaInicio.value && fechaFin.value) {
-            const inicio = new Date(fechaInicio.value);
-            const fin = new Date(fechaFin.value);
-            const diferencia = fin - inicio;
-            
-            if (diferencia > 0) {
-                const dias = Math.ceil(diferencia / (1000 * 60 * 60 * 24)) + 1;
-                const retorno = new Date(fin);
-                retorno.setDate(retorno.getDate() + 1);
-                
-                document.getElementById('vacaciones-preview').innerHTML = `
+  // Calcular duración automáticamente
+  function actualizarPreview() {
+    if (fechaInicio.value && fechaFin.value) {
+      const inicio = new Date(fechaInicio.value);
+      const fin = new Date(fechaFin.value);
+      const diferencia = fin - inicio;
+
+      if (diferencia > 0) {
+        const dias = Math.ceil(diferencia / (1000 * 60 * 60 * 24)) + 1;
+        const retorno = new Date(fin);
+        retorno.setDate(retorno.getDate() + 1);
+
+        document.getElementById('vacaciones-preview').innerHTML = `
                     <div class="preview-info">
                         <i class="fas fa-calculator"></i>
                         <strong>Duración:</strong> ${dias} días
                         <br><strong>Fecha de retorno:</strong> ${formatearFecha(retorno)}
                     </div>
                 `;
-            } else {
-                document.getElementById('vacaciones-preview').innerHTML = `
+      } else {
+        document.getElementById('vacaciones-preview').innerHTML = `
                     <div class="preview-error">
                         <i class="fas fa-exclamation-triangle"></i>
                         La fecha de fin debe ser posterior a la fecha de inicio
                     </div>
                 `;
-            }
-        }
+      }
     }
+  }
 
-    fechaInicio.addEventListener('change', actualizarPreview);
-    fechaFin.addEventListener('change', actualizarPreview);
+  fechaInicio.addEventListener('change', actualizarPreview);
+  fechaFin.addEventListener('change', actualizarPreview);
 
-    // Envío del formulario
-    form.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        await procesarNuevasVacaciones();
-    });
+  // Envío del formulario
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    await procesarNuevasVacaciones();
+  });
 }
 
 // Procesar formulario de nuevas vacaciones
 async function procesarNuevasVacaciones() {
-    const form = document.getElementById('vacaciones-form');
-    const formData = new FormData(form);
-    
-    const datosVacaciones = {
-        empleado_id: currentEmpleadoVacaciones.id,
-        fecha_inicio: formData.get('fecha_inicio'),
-        fecha_fin: formData.get('fecha_fin'),
-        tipo_vacaciones: formData.get('tipo_vacaciones'),
-        motivo: formData.get('motivo'),
-        notas: formData.get('notas')
-    };
+  const form = document.getElementById('vacaciones-form');
+  const formData = new FormData(form);
 
-    // Validaciones
-    if (!datosVacaciones.fecha_inicio || !datosVacaciones.fecha_fin) {
-        showNotification('Fechas de inicio y fin son requeridas', 'error');
-        return;
+  const datosVacaciones = {
+    empleado_id: currentEmpleadoVacaciones.id,
+    fecha_inicio: formData.get('fecha_inicio'),
+    fecha_fin: formData.get('fecha_fin'),
+    tipo_vacaciones: formData.get('tipo_vacaciones'),
+    motivo: formData.get('motivo'),
+    notas: formData.get('notas'),
+  };
+
+  // Validaciones
+  if (!datosVacaciones.fecha_inicio || !datosVacaciones.fecha_fin) {
+    showNotification('Fechas de inicio y fin son requeridas', 'error');
+    return;
+  }
+
+  const fechaInicio = new Date(datosVacaciones.fecha_inicio);
+  const fechaFin = new Date(datosVacaciones.fecha_fin);
+
+  if (fechaFin <= fechaInicio) {
+    showNotification(
+      'La fecha de fin debe ser posterior a la fecha de inicio',
+      'error'
+    );
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/vacaciones', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(datosVacaciones),
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      showNotification(
+        'Período de vacaciones programado exitosamente',
+        'success'
+      );
+      cerrarModalVacaciones();
+
+      // Recargar datos de empleados para actualizar la tabla
+      if (typeof loadEmployeesData === 'function') {
+        await loadEmployeesData();
+      }
+    } else {
+      showNotification('Error: ' + result.message, 'error');
     }
-
-    const fechaInicio = new Date(datosVacaciones.fecha_inicio);
-    const fechaFin = new Date(datosVacaciones.fecha_fin);
-
-    if (fechaFin <= fechaInicio) {
-        showNotification('La fecha de fin debe ser posterior a la fecha de inicio', 'error');
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/vacaciones', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(datosVacaciones)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            showNotification('Período de vacaciones programado exitosamente', 'success');
-            cerrarModalVacaciones();
-            
-            // Recargar datos de empleados para actualizar la tabla
-            if (typeof loadEmployeesData === 'function') {
-                await loadEmployeesData();
-            }
-        } else {
-            showNotification('Error: ' + result.message, 'error');
-        }
-
-    } catch (error) {
-        console.error('❌ Error programando vacaciones:', error);
-        showNotification('Error de conexión al programar vacaciones', 'error');
-    }
+  } catch (error) {
+    console.error('❌ Error programando vacaciones:', error);
+    showNotification('Error de conexión al programar vacaciones', 'error');
+  }
 }
 
 // Cerrar modal de vacaciones
 function cerrarModalVacaciones() {
-    const modal = document.getElementById('vacaciones-modal');
-    if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-        modal.remove();
-    }
-    currentEmpleadoVacaciones = null;
-    historialVacaciones = [];
+  const modal = document.getElementById('vacaciones-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    modal.remove();
+  }
+  currentEmpleadoVacaciones = null;
+  historialVacaciones = [];
 }
 
 // Función para limpiar registros antiguos (solo administradores)
 async function ejecutarLimpiezaVacaciones() {
-    if (!confirm('¿Está seguro de que desea archivar los registros de vacaciones antiguos (más de 2 años)? Esta acción no se puede deshacer.')) {
-        return;
+  if (
+    !confirm(
+      '¿Está seguro de que desea archivar los registros de vacaciones antiguos (más de 2 años)? Esta acción no se puede deshacer.'
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/vacaciones/limpiar-antiguos', {
+      method: 'POST',
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      showNotification(
+        `Se archivaron ${result.registrosArchivados} registros antiguos`,
+        'success'
+      );
+    } else {
+      showNotification('Error: ' + result.message, 'error');
     }
-
-    try {
-        const response = await fetch('/api/vacaciones/limpiar-antiguos', {
-            method: 'POST'
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            showNotification(`Se archivaron ${result.registrosArchivados} registros antiguos`, 'success');
-        } else {
-            showNotification('Error: ' + result.message, 'error');
-        }
-
-    } catch (error) {
-        console.error('❌ Error ejecutando limpieza:', error);
-        showNotification('Error de conexión al ejecutar limpieza', 'error');
-    }
+  } catch (error) {
+    console.error('❌ Error ejecutando limpieza:', error);
+    showNotification('Error de conexión al ejecutar limpieza', 'error');
+  }
 }
 
 // Cerrar modal con tecla ESC
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        cerrarModalVacaciones();
-    }
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') {
+    cerrarModalVacaciones();
+  }
 });

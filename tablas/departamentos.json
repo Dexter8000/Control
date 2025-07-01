@@ -1,1 +1,27 @@
-[{"id":"DEP001","nombre":"01-JEFATURA"},{"id":"DEP002","nombre":"JEFATURA"},{"id":"DEP003","nombre":"DEPARTAMENTO ADMINISTRATIVO"},{"id":"DEP004","nombre":"UNIDADES EN OTRA DEPENDENCIA"},{"id":"DEP005","nombre":"DEPARTAMENTO DE ENLACE Y MONITOREO DE INFORMACION AERONAVAL"},{"id":"DEP006","nombre":"DEPARTAMENTO DE OPERACIONES"},{"id":"DEP007","nombre":"TÉCNICOS OPERACIONALES"},{"id":"DEP008","nombre":"Departamento de Fusión Operacional de Inteligencia"},{"id":"DEP009","nombre":"INTELIGENCIA INSULAR"},{"id":"DEP010","nombre":"INTELIGENCIA AÉREA"},{"id":"DEP011","nombre":"Departamento de Análisis de Inteligencia"},{"id":"DEP012","nombre":"DEPARTAMENTO CANINO"},{"id":"DEP013","nombre":"DEPARTAMENTO DE INTELIGENCIA CRIMINAL"},{"id":"DEP014","nombre":"DEPARTAMENTO REGIONAL DE INTELIGENCIA AERONAVAL"},{"id":"DEP015","nombre":"[sin departamento]"},{"id":"DEP016","nombre":"DEPARTAMENTO sin recurso"}]
+[
+  { "id": "DEP001", "nombre": "01-JEFATURA" },
+  { "id": "DEP002", "nombre": "JEFATURA" },
+  { "id": "DEP003", "nombre": "DEPARTAMENTO ADMINISTRATIVO" },
+  { "id": "DEP004", "nombre": "UNIDADES EN OTRA DEPENDENCIA" },
+  {
+    "id": "DEP005",
+    "nombre": "DEPARTAMENTO DE ENLACE Y MONITOREO DE INFORMACION AERONAVAL"
+  },
+  { "id": "DEP006", "nombre": "DEPARTAMENTO DE OPERACIONES" },
+  { "id": "DEP007", "nombre": "TÉCNICOS OPERACIONALES" },
+  {
+    "id": "DEP008",
+    "nombre": "Departamento de Fusión Operacional de Inteligencia"
+  },
+  { "id": "DEP009", "nombre": "INTELIGENCIA INSULAR" },
+  { "id": "DEP010", "nombre": "INTELIGENCIA AÉREA" },
+  { "id": "DEP011", "nombre": "Departamento de Análisis de Inteligencia" },
+  { "id": "DEP012", "nombre": "DEPARTAMENTO CANINO" },
+  { "id": "DEP013", "nombre": "DEPARTAMENTO DE INTELIGENCIA CRIMINAL" },
+  {
+    "id": "DEP014",
+    "nombre": "DEPARTAMENTO REGIONAL DE INTELIGENCIA AERONAVAL"
+  },
+  { "id": "DEP015", "nombre": "[sin departamento]" },
+  { "id": "DEP016", "nombre": "DEPARTAMENTO sin recurso" }
+]

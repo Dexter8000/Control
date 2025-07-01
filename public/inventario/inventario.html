@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Control de Inventario</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="app-container">
+      <header class="app-header">
+        <h1><i class="fas fa-laptop"></i> Control de Inventario</h1>
+        <nav class="main-nav">
+          <button class="nav-btn active" data-view="principal">
+            <i class="fas fa-laptop"></i> Equipos
+          </button>
+          <button class="nav-btn" data-view="perifericos">
+            <i class="fas fa-desktop"></i> Periféricos
+          </button>
+          <button class="nav-btn" data-view="agrupado">
+            <i class="fas fa-layer-group"></i> Agrupado
+          </button>
+          <button class="nav-btn" data-view="general">
+            <i class="fas fa-table"></i> General
+          </button>
+        </nav>
+      </header>
+
+      <div class="search-filter-container">
+        <div class="search-box">
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Buscar equipos..."
+          />
+          <i class="fas fa-search"></i>
+        </div>
+        <div class="filter-container">
+          <select id="status-filter">
+            <option value="">Todos los estados</option>
+            <option value="Operativo">Operativo</option>
+            <option value="Inactivo">Inactivo</option>
+            <option value="En Reparación">En Reparación</option>
+            <option value="Obsoleto">Obsoleto</option>
+          </select>
+          <select id="type-filter">
+            <option value="">Todos los tipos</option>
+            <option value="principal">Equipo Principal</option>
+            <option value="periferico">Periférico</option>
+          </select>
+        </div>
+      </div>
+
+      <main class="main-content">
+        <div class="view-container" id="principal-view">
+          <div class="table-header">
+            <h2>Equipos Principales</h2>
+            <button class="add-btn" id="add-principal">
+              <i class="fas fa-plus"></i> Agregar Equipo
+            </button>
+          </div>
+          <div class="table-container">
+            <table id="principal-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Marca/Modelo</th>
+                  <th>Categoría</th>
+                  <th>Estado</th>
+                  <th>Ubicación</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Datos se cargarán dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="view-container hidden" id="perifericos-view">
+          <div class="table-header">
+            <h2>Periféricos</h2>
+            <button class="add-btn" id="add-periferico">
+              <i class="fas fa-plus"></i> Agregar Periférico
+            </button>
+          </div>
+          <div class="table-container">
+            <table id="perifericos-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Marca/Modelo</th>
+                  <th>Subcategoría</th>
+                  <th>Estado</th>
+                  <th>Equipo Principal</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Datos se cargarán dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="view-container hidden" id="agrupado-view">
+          <div class="table-header">
+            <h2>Inventario Agrupado</h2>
+            <button class="export-btn" id="export-pdf">
+              <i class="fas fa-file-pdf"></i> Exportar PDF
+            </button>
+          </div>
+          <div class="grouped-container" id="grouped-items">
+            <!-- Grupos se generarán dinámicamente -->
+          </div>
+        </div>
+
+        <div class="view-container hidden" id="general-view">
+          <div class="table-header">
+            <h2>Vista General del Inventario</h2>
+          </div>
+          <div class="table-container">
+            <table id="general-table">
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Marca/Modelo</th>
+                  <th>Categoría</th>
+                  <th>Estado</th>
+                  <th>Ubicación</th>
+                  <th>Responsable</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Datos se cargarán dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+
+      <!-- Modal para formularios -->
+      <div class="modal hidden" id="equipo-modal">
+        <div class="modal-content">
+          <span class="close-btn">&times;</span>
+          <h2 id="modal-title">Agregar Nuevo Equipo</h2>
+          <form id="equipo-form">
+            <input type="hidden" id="equipo-id" />
+            <input type="hidden" id="equipo-type" />
+
+            <div class="form-section">
+              <h3>Información Básica</h3>
+              <div class="form-group">
+                <label for="nombre">Nombre*</label>
+                <input type="text" id="nombre" required />
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="marca">Marca*</label>
+                  <input type="text" id="marca" required />
+                </div>
+                <div class="form-group">
+                  <label for="modelo">Modelo*</label>
+                  <input type="text" id="modelo" required />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="serie">Número de Serie</label>
+                <input type="text" id="serie" />
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Categorización</h3>
+              <div class="form-row">
+                <div class="form-group" id="categoria-group">
+                  <label for="categoria">Categoría*</label>
+                  <select id="categoria" required>
+                    <option value="">Seleccione...</option>
+                    <option value="Laptop">Laptop</option>
+                    <option value="Workstation">Workstation</option>
+                    <option value="Servidor">Servidor</option>
+                    <option value="Impresora">Impresora</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="subcategoria">Subcategoría</label>
+                  <select id="subcategoria">
+                    <option value="">Seleccione...</option>
+                    <!-- Opciones se llenarán dinámicamente -->
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Estado y Condición</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="estado">Estado*</label>
+                  <select id="estado" required>
+                    <option value="">Seleccione...</option>
+                    <option value="Operativo">Operativo</option>
+                    <option value="Inactivo">Inactivo</option>
+                    <option value="En Reparación">En Reparación</option>
+                    <option value="Obsoleto">Obsoleto</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="condicion">Condición*</label>
+                  <select id="condicion" required>
+                    <option value="">Seleccione...</option>
+                    <option value="Excelente">Excelente</option>
+                    <option value="Buena">Buena</option>
+                    <option value="Regular">Regular</option>
+                    <option value="Mala">Mala</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Adquisición y Asignación</h3>
+              <div class="form-group">
+                <label for="tipo-adquisicion">Tipo de Adquisición*</label>
+                <select id="tipo-adquisicion" required>
+                  <option value="">Seleccione...</option>
+                  <option value="Compra">Compra</option>
+                  <option value="Donación">Donación</option>
+                  <option value="Leasing">Leasing</option>
+                  <option value="Transferencia">Transferencia</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="departamento">Departamento*</label>
+                  <input type="text" id="departamento" required />
+                </div>
+                <div class="form-group">
+                  <label for="ubicacion">Ubicación*</label>
+                  <input type="text" id="ubicacion" required />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="responsable">Responsable*</label>
+                <input type="text" id="responsable" required />
+              </div>
+              <div class="form-group">
+                <label for="fecha-adquisicion">Fecha de Adquisición</label>
+                <input type="date" id="fecha-adquisicion" />
+              </div>
+            </div>
+
+            <div class="form-section">
+              <div class="form-group">
+                <label for="detalles">Detalles Adicionales</label>
+                <textarea id="detalles" rows="3"></textarea>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="cancel-btn">Cancelar</button>
+              <button type="submit" class="save-btn">Guardar</button>
+              <button type="button" class="add-another-btn hidden">
+                Guardar y Agregar Otro
+              </button>
+              <button type="button" class="finish-btn hidden">Finalizar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal de confirmación -->
+      <div class="modal hidden" id="confirm-modal">
+        <div class="modal-content small">
+          <h3 id="confirm-message">
+            ¿Está seguro que desea eliminar este equipo?
+          </h3>
+          <div class="confirm-actions">
+            <button class="cancel-btn">Cancelar</button>
+            <button class="confirm-btn">Confirmar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

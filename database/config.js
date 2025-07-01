@@ -5,35 +5,35 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 
 class Database {
-    constructor() {
-        this.db = null;
-        const assetsDir = path.join(__dirname, '../attached_assets');
-        if (!fs.existsSync(assetsDir)) {
-            fs.mkdirSync(assetsDir, { recursive: true });
+  constructor() {
+    this.db = null;
+    const assetsDir = path.join(__dirname, '../attached_assets');
+    if (!fs.existsSync(assetsDir)) {
+      fs.mkdirSync(assetsDir, { recursive: true });
+    }
+    this.dbPath = path.join(assetsDir, 'kilo.db');
+    console.log(' Usando base de datos principal: kilo.db');
+  }
+
+  // Conectar a la base de datos
+  connect() {
+    return new Promise((resolve, reject) => {
+      this.db = new sqlite3.Database(this.dbPath, (err) => {
+        if (err) {
+          console.error(' Error conectando a la base de datos:', err.message);
+          reject(err);
+        } else {
+          console.log(' Conectado a la base de datos SQLite');
+          this.initializeTables().then(resolve).catch(reject);
         }
-        this.dbPath = path.join(assetsDir, 'kilo.db');
-        console.log(' Usando base de datos principal: kilo.db');
-    }
+      });
+    });
+  }
 
-    // Conectar a la base de datos
-    connect() {
-        return new Promise((resolve, reject) => {
-            this.db = new sqlite3.Database(this.dbPath, (err) => {
-                if (err) {
-                    console.error(' Error conectando a la base de datos:', err.message);
-                    reject(err);
-                } else {
-                    console.log(' Conectado a la base de datos SQLite');
-                    this.initializeTables().then(resolve).catch(reject);
-                }
-            });
-        });
-    }
-
-    // Crear todas las tablas del sistema completo
-    async initializeTables() {
-        return new Promise((resolve, reject) => {
-            const createTables = `
+  // Crear todas las tablas del sistema completo
+  async initializeTables() {
+    return new Promise((resolve, reject) => {
+      const createTables = `
                 -- Tabla de usuarios (migrada de tu estructura original)
                 CREATE TABLE IF NOT EXISTS usuarios (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -204,97 +204,169 @@ class Database {
                 );
             `;
 
-            this.db.exec(createTables, (err) => {
-                if (err) {
-                    console.error(' Error creando tablas:', err.message);
-                    reject(err);
-                } else {
-                    console.log(' Tablas creadas/verificadas correctamente');
-                    this.insertMigratedData().then(resolve).catch(reject);
-                }
-            });
-        });
-    }
+      this.db.exec(createTables, (err) => {
+        if (err) {
+          console.error(' Error creando tablas:', err.message);
+          reject(err);
+        } else {
+          console.log(' Tablas creadas/verificadas correctamente');
+          this.insertMigratedData().then(resolve).catch(reject);
+        }
+      });
+    });
+  }
 
-    // Insertar datos migrados de tu base de datos original
-    async insertMigratedData() {
-        return new Promise(async (resolve, reject) => {
-            try {
-                // Verificar si ya existen datos
-                this.db.get("SELECT COUNT(*) as count FROM usuarios", async (err, row) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
+  // Insertar datos migrados de tu base de datos original
+  async insertMigratedData() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // Verificar si ya existen datos
+        this.db.get(
+          'SELECT COUNT(*) as count FROM usuarios',
+          async (err, row) => {
+            if (err) {
+              reject(err);
+              return;
+            }
 
-                    if (row.count === 0) {
-                        console.log(' Migrando datos de la base de datos original...');
+            if (row.count === 0) {
+              console.log(' Migrando datos de la base de datos original...');
 
-                        const dataDir = path.join(__dirname, '../tablas');
+              const dataDir = path.join(__dirname, '../tablas');
 
-                        const departamentos = JSON.parse(fs.readFileSync(path.join(dataDir, 'departamentos.json'), 'utf8'));
-                        for (const dep of departamentos) {
-                            await new Promise((resolve, reject) => {
-                                this.db.run(
-                                    'INSERT OR REPLACE INTO departamentos (id, nombre) VALUES (?, ?)',
-                                    [dep.id, dep.nombre],
-                                    (err) => (err ? reject(err) : resolve())
-                                );
-                            });
-                        }
-                        console.log(' Departamentos migrados');
+              const departamentos = JSON.parse(
+                fs.readFileSync(
+                  path.join(dataDir, 'departamentos.json'),
+                  'utf8'
+                )
+              );
+              for (const dep of departamentos) {
+                await new Promise((resolve, reject) => {
+                  this.db.run(
+                    'INSERT OR REPLACE INTO departamentos (id, nombre) VALUES (?, ?)',
+                    [dep.id, dep.nombre],
+                    (err) => (err ? reject(err) : resolve())
+                  );
+                });
+              }
+              console.log(' Departamentos migrados');
 
-                        const usuarios = JSON.parse(fs.readFileSync(path.join(dataDir, 'usuarios.json'), 'utf8'));
-                        for (const user of usuarios) {
-                            const hashed = await bcrypt.hash(user.contrasena, 10);
-                            await new Promise((resolve, reject) => {
-                                this.db.run(
-                                    'INSERT OR REPLACE INTO usuarios (id, usuario, contrasena, rol, nombre, email) VALUES (?, ?, ?, ?, ?, ?)',
-                                    [user.id, user.usuario, hashed, user.rol, user.nombre, user.email],
-                                    (err) => (err ? reject(err) : resolve())
-                                );
-                            });
-                        }
-                        console.log(' Usuarios migrados');
+              const usuarios = JSON.parse(
+                fs.readFileSync(path.join(dataDir, 'usuarios.json'), 'utf8')
+              );
+              for (const user of usuarios) {
+                const hashed = await bcrypt.hash(user.contrasena, 10);
+                await new Promise((resolve, reject) => {
+                  this.db.run(
+                    'INSERT OR REPLACE INTO usuarios (id, usuario, contrasena, rol, nombre, email) VALUES (?, ?, ?, ?, ?, ?)',
+                    [
+                      user.id,
+                      user.usuario,
+                      hashed,
+                      user.rol,
+                      user.nombre,
+                      user.email,
+                    ],
+                    (err) => (err ? reject(err) : resolve())
+                  );
+                });
+              }
+              console.log(' Usuarios migrados');
 
-                        const empleados = JSON.parse(fs.readFileSync(path.join(dataDir, 'empleados.json'), 'utf8'));
-                        for (const emp of empleados) {
-                            await new Promise((resolve, reject) => {
-                                this.db.run(
-                                    `INSERT OR REPLACE INTO empleados (id, placa, rango, nombre, apellido, departamento_id, correo_electronico, cedula, telefono, fecha_nacimiento) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                                    [emp.id, emp.placa, emp.rango, emp.nombre, emp.apellido, emp.departamento_id, emp.correo_electronico, emp.cedula, emp.telefono, emp.fecha_nacimiento],
-                                    (err) => (err ? reject(err) : resolve())
-                                );
-                            });
-                        }
-                        console.log(' Empleados migrados');
+              const empleados = JSON.parse(
+                fs.readFileSync(path.join(dataDir, 'empleados.json'), 'utf8')
+              );
+              for (const emp of empleados) {
+                await new Promise((resolve, reject) => {
+                  this.db.run(
+                    `INSERT OR REPLACE INTO empleados (id, placa, rango, nombre, apellido, departamento_id, correo_electronico, cedula, telefono, fecha_nacimiento) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [
+                      emp.id,
+                      emp.placa,
+                      emp.rango,
+                      emp.nombre,
+                      emp.apellido,
+                      emp.departamento_id,
+                      emp.correo_electronico,
+                      emp.cedula,
+                      emp.telefono,
+                      emp.fecha_nacimiento,
+                    ],
+                    (err) => (err ? reject(err) : resolve())
+                  );
+                });
+              }
+              console.log(' Empleados migrados');
 
-                        const inventarioPrincipal = JSON.parse(fs.readFileSync(path.join(dataDir, 'inventario_principal.json'), 'utf8'));
-                        for (const item of inventarioPrincipal) {
-                            await new Promise((resolve, reject) => {
-                                this.db.run(
-                                    `INSERT OR REPLACE INTO inventario_principal (id, nombre, marca, modelo, serie, categoria, subcategoria, estado, condicion, tipo_adquisicion, id_departamento_asignado, ubicacion_especifica, responsable_actual, fecha_creacion, fecha_adquisicion, detalles) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                                    [item.id, item.nombre, item.marca, item.modelo, item.serie, item.categoria, item.subcategoria, item.estado, item.condicion, item.tipo_adquisicion, item.id_departamento_asignado, item.ubicacion_especifica, item.responsable_actual, item.fecha_creacion, item.fecha_adquisicion, item.detalles],
-                                    (err) => (err ? reject(err) : resolve())
-                                );
-                            });
-                        }
-                        console.log(' Inventario principal migrado');
+              const inventarioPrincipal = JSON.parse(
+                fs.readFileSync(
+                  path.join(dataDir, 'inventario_principal.json'),
+                  'utf8'
+                )
+              );
+              for (const item of inventarioPrincipal) {
+                await new Promise((resolve, reject) => {
+                  this.db.run(
+                    `INSERT OR REPLACE INTO inventario_principal (id, nombre, marca, modelo, serie, categoria, subcategoria, estado, condicion, tipo_adquisicion, id_departamento_asignado, ubicacion_especifica, responsable_actual, fecha_creacion, fecha_adquisicion, detalles) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [
+                      item.id,
+                      item.nombre,
+                      item.marca,
+                      item.modelo,
+                      item.serie,
+                      item.categoria,
+                      item.subcategoria,
+                      item.estado,
+                      item.condicion,
+                      item.tipo_adquisicion,
+                      item.id_departamento_asignado,
+                      item.ubicacion_especifica,
+                      item.responsable_actual,
+                      item.fecha_creacion,
+                      item.fecha_adquisicion,
+                      item.detalles,
+                    ],
+                    (err) => (err ? reject(err) : resolve())
+                  );
+                });
+              }
+              console.log(' Inventario principal migrado');
 
-                        const inventarioPeriferico = JSON.parse(fs.readFileSync(path.join(dataDir, 'inventario_periferico.json'), 'utf8'));
-                        for (const per of inventarioPeriferico) {
-                            await new Promise((resolve, reject) => {
-                                this.db.run(
-                                    `INSERT OR REPLACE INTO inventario_periferico (id_periferico, nombre_periferico, marca_periferico, modelo_periferico, serie_periferico, estado_periferico, condicion_periferico, tipo_adquisicion_periferico, id_departamento_asignado_periferico, ubicacion_especifica_periferico, responsable_actual_periferico, fecha_creacion_periferico, fecha_adquisicion_periferico, detalles_periferico, id_inventario_principal) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                                    [per.id_periferico, per.nombre_periferico, per.marca_periferico, per.modelo_periferico, per.serie_periferico, per.estado_periferico, per.condicion_periferico, per.tipo_adquisicion_periferico, per.id_departamento_asignado_periferico, per.ubicacion_especifica_periferico, per.responsable_actual_periferico, per.fecha_creacion_periferico, per.fecha_adquisicion_periferico, per.detalles_periferico, per.id_inventario_principal],
-                                    (err) => (err ? reject(err) : resolve())
-                                );
-                            });
-                        }
-                        console.log(' Inventario periférico migrado');
+              const inventarioPeriferico = JSON.parse(
+                fs.readFileSync(
+                  path.join(dataDir, 'inventario_periferico.json'),
+                  'utf8'
+                )
+              );
+              for (const per of inventarioPeriferico) {
+                await new Promise((resolve, reject) => {
+                  this.db.run(
+                    `INSERT OR REPLACE INTO inventario_periferico (id_periferico, nombre_periferico, marca_periferico, modelo_periferico, serie_periferico, estado_periferico, condicion_periferico, tipo_adquisicion_periferico, id_departamento_asignado_periferico, ubicacion_especifica_periferico, responsable_actual_periferico, fecha_creacion_periferico, fecha_adquisicion_periferico, detalles_periferico, id_inventario_principal) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [
+                      per.id_periferico,
+                      per.nombre_periferico,
+                      per.marca_periferico,
+                      per.modelo_periferico,
+                      per.serie_periferico,
+                      per.estado_periferico,
+                      per.condicion_periferico,
+                      per.tipo_adquisicion_periferico,
+                      per.id_departamento_asignado_periferico,
+                      per.ubicacion_especifica_periferico,
+                      per.responsable_actual_periferico,
+                      per.fecha_creacion_periferico,
+                      per.fecha_adquisicion_periferico,
+                      per.detalles_periferico,
+                      per.id_inventario_principal,
+                    ],
+                    (err) => (err ? reject(err) : resolve())
+                  );
+                });
+              }
+              console.log(' Inventario periférico migrado');
 
-                        // 4. Insertar configuración inicial
-                        const insertConfig = `
+              // 4. Insertar configuración inicial
+              const insertConfig = `
                             INSERT INTO configuracion (clave, valor, descripcion) VALUES
                             ('max_intentos_login', '5', 'Máximo número de intentos de login fallidos'),
                             ('tiempo_bloqueo_minutos', '30', 'Tiempo de bloqueo en minutos tras exceder intentos'),
@@ -304,32 +376,33 @@ class Database {
                             ('empresa_nombre', 'Departamento de Inteligencia', 'Nombre de la organización');
                         `;
 
-                        await new Promise((resolve, reject) => {
-                            this.db.run(insertConfig, (err) => {
-                                if (err) reject(err);
-                                else {
-                                    console.log(' Configuración inicial creada');
-                                    resolve();
-                                }
-                            });
-                        });
-
-                        console.log(' Migración de datos completada exitosamente');
-                    } else {
-                        console.log(' Base de datos ya contiene datos migrados');
-                    }
+              await new Promise((resolve, reject) => {
+                this.db.run(insertConfig, (err) => {
+                  if (err) reject(err);
+                  else {
+                    console.log(' Configuración inicial creada');
                     resolve();
+                  }
                 });
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
+              });
 
-    // Obtener usuario por username (adaptado para el campo 'usuario')
-    getUser(identifier) {
-        return new Promise((resolve, reject) => {
-            const query = `
+              console.log(' Migración de datos completada exitosamente');
+            } else {
+              console.log(' Base de datos ya contiene datos migrados');
+            }
+            resolve();
+          }
+        );
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  // Obtener usuario por username (adaptado para el campo 'usuario')
+  getUser(identifier) {
+    return new Promise((resolve, reject) => {
+      const query = `
                 SELECT id, usuario as username, usuario, contrasena,
                        nombre, apellido, email, telefono, rol, activo, ultimo_acceso,
                        intentos_fallidos, bloqueado_hasta
@@ -337,73 +410,76 @@ class Database {
                 WHERE (usuario = ? OR email = ?) AND activo = 1
             `;
 
-            this.db.get(query, [identifier, identifier], (err, row) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(row);
-                }
-            });
-        });
-    }
+      this.db.get(query, [identifier, identifier], (err, row) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(row);
+        }
+      });
+    });
+  }
 
-    // Métodos para obtener datos del inventario
-    getDepartamentos() {
-        return new Promise((resolve, reject) => {
-            this.db.all("SELECT * FROM departamentos ORDER BY nombre", (err, rows) => {
-                if (err) reject(err);
-                else resolve(rows);
-            });
-        });
-    }
+  // Métodos para obtener datos del inventario
+  getDepartamentos() {
+    return new Promise((resolve, reject) => {
+      this.db.all(
+        'SELECT * FROM departamentos ORDER BY nombre',
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows);
+        }
+      );
+    });
+  }
 
-    // Crear nuevo departamento
-    createDepartamento(nombre) {
-        return new Promise((resolve, reject) => {
-            const id = crypto.randomUUID();
-            const query = 'INSERT INTO departamentos (id, nombre) VALUES (?, ?)';
-            this.db.run(query, [id, nombre], function(err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve({ id });
-                }
-            });
-        });
-    }
+  // Crear nuevo departamento
+  createDepartamento(nombre) {
+    return new Promise((resolve, reject) => {
+      const id = crypto.randomUUID();
+      const query = 'INSERT INTO departamentos (id, nombre) VALUES (?, ?)';
+      this.db.run(query, [id, nombre], function (err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ id });
+        }
+      });
+    });
+  }
 
-    // Actualizar departamento existente
-    updateDepartamento(id, nombre) {
-        return new Promise((resolve, reject) => {
-            const query = 'UPDATE departamentos SET nombre = ? WHERE id = ?';
-            this.db.run(query, [nombre, id], function(err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve({ changes: this.changes });
-                }
-            });
-        });
-    }
+  // Actualizar departamento existente
+  updateDepartamento(id, nombre) {
+    return new Promise((resolve, reject) => {
+      const query = 'UPDATE departamentos SET nombre = ? WHERE id = ?';
+      this.db.run(query, [nombre, id], function (err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ changes: this.changes });
+        }
+      });
+    });
+  }
 
-    // Eliminar departamento
-    deleteDepartamento(id) {
-        return new Promise((resolve, reject) => {
-            const query = 'DELETE FROM departamentos WHERE id = ?';
-            this.db.run(query, [id], function(err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve({ changes: this.changes });
-                }
-            });
-        });
-    }
+  // Eliminar departamento
+  deleteDepartamento(id) {
+    return new Promise((resolve, reject) => {
+      const query = 'DELETE FROM departamentos WHERE id = ?';
+      this.db.run(query, [id], function (err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ changes: this.changes });
+        }
+      });
+    });
+  }
 
-    // Obtener inventario principal completo (estructura real)
-    getInventarioPrincipal() {
-        return new Promise((resolve, reject) => {
-            const query = `
+  // Obtener inventario principal completo (estructura real)
+  getInventarioPrincipal() {
+    return new Promise((resolve, reject) => {
+      const query = `
                 SELECT ip.*, 
                        CASE 
                            WHEN ip.responsable_actual IS NOT NULL AND ip.responsable_actual != '' 
@@ -420,27 +496,30 @@ class Database {
                 ORDER BY ip.fecha_adquisicion DESC, ip.nombre
             `;
 
-            try {
-                this.db.all(query, (err, rows) => {
-                    if (err) {
-                        console.error('Error ejecutando getInventarioPrincipal:', err.message);
-                        console.error('SQL =>', query);
-                        reject(err);
-                    } else {
-                        resolve(rows);
-                    }
-                });
-            } catch (error) {
-                console.error('Excepción en getInventarioPrincipal:', error.message);
-                reject(error);
-            }
+      try {
+        this.db.all(query, (err, rows) => {
+          if (err) {
+            console.error(
+              'Error ejecutando getInventarioPrincipal:',
+              err.message
+            );
+            console.error('SQL =>', query);
+            reject(err);
+          } else {
+            resolve(rows);
+          }
         });
-    }
+      } catch (error) {
+        console.error('Excepción en getInventarioPrincipal:', error.message);
+        reject(error);
+      }
+    });
+  }
 
-    // Obtener inventario periférico completo (estructura real)
-    getInventarioPeriferico() {
-        return new Promise((resolve, reject) => {
-            const query = `
+  // Obtener inventario periférico completo (estructura real)
+  getInventarioPeriferico() {
+    return new Promise((resolve, reject) => {
+      const query = `
                 SELECT iph.*, 
                        ip.nombre as equipo_principal_nombre,
                        ip.marca as equipo_principal_marca,
@@ -460,27 +539,30 @@ class Database {
                 ORDER BY iph.fecha_adquisicion_periferico DESC, iph.nombre_periferico
             `;
 
-            try {
-                this.db.all(query, (err, rows) => {
-                    if (err) {
-                        console.error('Error ejecutando getInventarioPeriferico:', err.message);
-                        console.error('SQL =>', query);
-                        reject(err);
-                    } else {
-                        resolve(rows);
-                    }
-                });
-            } catch (error) {
-                console.error('Excepción en getInventarioPeriferico:', error.message);
-                reject(error);
-            }
+      try {
+        this.db.all(query, (err, rows) => {
+          if (err) {
+            console.error(
+              'Error ejecutando getInventarioPeriferico:',
+              err.message
+            );
+            console.error('SQL =>', query);
+            reject(err);
+          } else {
+            resolve(rows);
+          }
         });
-    }
+      } catch (error) {
+        console.error('Excepción en getInventarioPeriferico:', error.message);
+        reject(error);
+      }
+    });
+  }
 
-    // Obtener inventario principal junto con periféricos asociados
-    getInventarioCompleto() {
-        return new Promise((resolve, reject) => {
-            const query = `
+  // Obtener inventario principal junto con periféricos asociados
+  getInventarioCompleto() {
+    return new Promise((resolve, reject) => {
+      const query = `
                 SELECT ip.*,
                        COALESCE(json_group_array(
                            json_object(
@@ -506,143 +588,151 @@ class Database {
                 ORDER BY ip.fecha_adquisicion DESC, ip.nombre
             `;
 
-            try {
-                this.db.all(query, (err, rows) => {
-                    if (err) {
-                        console.error('Error ejecutando getInventarioCompleto:', err.message);
-                        console.error('SQL =>', query);
-                        reject(err);
-                    } else {
-                        const formatted = rows.map(row => ({
-                            ...row,
-                            perifericos: row.perifericos ? JSON.parse(row.perifericos) : []
-                        }));
-                        resolve(formatted);
-                    }
-                });
-            } catch (error) {
-                console.error('Excepción en getInventarioCompleto:', error.message);
-                reject(error);
-            }
+      try {
+        this.db.all(query, (err, rows) => {
+          if (err) {
+            console.error(
+              'Error ejecutando getInventarioCompleto:',
+              err.message
+            );
+            console.error('SQL =>', query);
+            reject(err);
+          } else {
+            const formatted = rows.map((row) => ({
+              ...row,
+              perifericos: row.perifericos ? JSON.parse(row.perifericos) : [],
+            }));
+            resolve(formatted);
+          }
         });
-    }
+      } catch (error) {
+        console.error('Excepción en getInventarioCompleto:', error.message);
+        reject(error);
+      }
+    });
+  }
 
-    getEmpleados() {
-        return new Promise((resolve, reject) => {
-            const query = `
+  getEmpleados() {
+    return new Promise((resolve, reject) => {
+      const query = `
                 SELECT e.*, d.nombre as departamento_nombre 
                 FROM empleados e 
                 LEFT JOIN departamentos d ON e.departamento_id = d.id 
                 WHERE e.activo = 1
                 ORDER BY e.nombre, e.apellido
             `;
-            try {
-                this.db.all(query, (err, rows) => {
-                    if (err) {
-                        console.error('Error ejecutando getEmpleados:', err.message);
-                        console.error('SQL =>', query);
-                        reject(err);
-                    } else {
-                        resolve(rows);
-                    }
-                });
-            } catch (error) {
-                console.error('Excepción en getEmpleados:', error.message);
-                reject(error);
-            }
+      try {
+        this.db.all(query, (err, rows) => {
+          if (err) {
+            console.error('Error ejecutando getEmpleados:', err.message);
+            console.error('SQL =>', query);
+            reject(err);
+          } else {
+            resolve(rows);
+          }
         });
-    }
+      } catch (error) {
+        console.error('Excepción en getEmpleados:', error.message);
+        reject(error);
+      }
+    });
+  }
 
-    // Obtener empleados completos con todas las columnas
-    getEmpleadosCompletos() {
-        return new Promise((resolve, reject) => {
-            const query = `
+  // Obtener empleados completos con todas las columnas
+  getEmpleadosCompletos() {
+    return new Promise((resolve, reject) => {
+      const query = `
                 SELECT e.*, d.nombre AS departamento_nombre
                 FROM empleados e
                 LEFT JOIN departamentos d ON e.departamento_id = d.id
                 ORDER BY e.id ASC
             `;
-            
-            try {
-                this.db.all(query, [], (err, rows) => {
-                    if (err) {
-                        console.error('Error obteniendo empleados completos:', err.message);
-                        console.error('SQL =>', query);
-                        reject(err);
-                    } else {
-                        console.log(` Obtenidos ${rows.length} empleados completos`);
-                        resolve(rows);
-                    }
-                });
-            } catch (error) {
-                console.error('Excepción en getEmpleadosCompletos:', error.message);
-                reject(error);
-            }
+
+      try {
+        this.db.all(query, [], (err, rows) => {
+          if (err) {
+            console.error('Error obteniendo empleados completos:', err.message);
+            console.error('SQL =>', query);
+            reject(err);
+          } else {
+            console.log(` Obtenidos ${rows.length} empleados completos`);
+            resolve(rows);
+          }
         });
-    }
+      } catch (error) {
+        console.error('Excepción en getEmpleadosCompletos:', error.message);
+        reject(error);
+      }
+    });
+  }
 
-    // Crear nuevo empleado
-    createEmpleado(empleadoData) {
-        return new Promise((resolve, reject) => {
-            // Generar ID único utilizando UUID
-            const id = crypto.randomUUID();
+  // Crear nuevo empleado
+  createEmpleado(empleadoData) {
+    return new Promise((resolve, reject) => {
+      // Generar ID único utilizando UUID
+      const id = crypto.randomUUID();
 
-            const query = `
+      const query = `
                 INSERT INTO empleados (
                     id, placa, rango, nombre, apellido, departamento_id, 
                     correo_electronico, cedula, telefono, fecha_creacion, fecha_ingreso
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `;
 
-            const values = [
-                id,
-                empleadoData.placa || null,
-                empleadoData.rango || null,
-                empleadoData.nombre,
-                empleadoData.apellido,
-                empleadoData.departamento_id || null,
-                empleadoData.correo_electronico || null,
-                empleadoData.cedula || null,
-                empleadoData.telefono || null,
-                new Date().toISOString(),
-                null // fecha_ingreso se establece como NULL por defecto
-            ];
+      const values = [
+        id,
+        empleadoData.placa || null,
+        empleadoData.rango || null,
+        empleadoData.nombre,
+        empleadoData.apellido,
+        empleadoData.departamento_id || null,
+        empleadoData.correo_electronico || null,
+        empleadoData.cedula || null,
+        empleadoData.telefono || null,
+        new Date().toISOString(),
+        null, // fecha_ingreso se establece como NULL por defecto
+      ];
 
-            console.log(' Creando empleado con datos:', empleadoData);
-            console.log(' Valores SQL:', values);
+      console.log(' Creando empleado con datos:', empleadoData);
+      console.log(' Valores SQL:', values);
 
-            this.db.run(query, values, function(err) {
-                if (err) {
-                    console.error(' Error creando empleado:', err);
-                    reject(err);
-                } else {
-                    console.log(' Empleado creado exitosamente con ID:', id);
-                    resolve({ id: id });
-                }
-            });
-        });
-    }
+      this.db.run(query, values, function (err) {
+        if (err) {
+          console.error(' Error creando empleado:', err);
+          reject(err);
+        } else {
+          console.log(' Empleado creado exitosamente con ID:', id);
+          resolve({ id: id });
+        }
+      });
+    });
+  }
 
-    // Actualizar empleado existente
-    updateEmpleado(id, empleadoData) {
-        return new Promise((resolve, reject) => {
-            // Verificar que el empleado existe antes de actualizar
-            const checkQuery = 'SELECT id, nombre, apellido FROM empleados WHERE id = ?';
-            
-            this.db.get(checkQuery, [id], (err, existingEmpleado) => {
-                if (err) {
-                    console.error(' Error verificando empleado:', err);
-                    return reject(err);
-                }
-                
-                if (!existingEmpleado) {
-                    console.error(' Empleado no encontrado para actualizar:', id);
-                    return reject(new Error(`Empleado con ID ${id} no encontrado`));
-                }
-                
-                console.log(' Empleado encontrado para actualizar:', existingEmpleado.nombre, existingEmpleado.apellido);
-                
-                const query = `
+  // Actualizar empleado existente
+  updateEmpleado(id, empleadoData) {
+    return new Promise((resolve, reject) => {
+      // Verificar que el empleado existe antes de actualizar
+      const checkQuery =
+        'SELECT id, nombre, apellido FROM empleados WHERE id = ?';
+
+      this.db.get(checkQuery, [id], (err, existingEmpleado) => {
+        if (err) {
+          console.error(' Error verificando empleado:', err);
+          return reject(err);
+        }
+
+        if (!existingEmpleado) {
+          console.error(' Empleado no encontrado para actualizar:', id);
+          return reject(new Error(`Empleado con ID ${id} no encontrado`));
+        }
+
+        console.log(
+          ' Empleado encontrado para actualizar:',
+          existingEmpleado.nombre,
+          existingEmpleado.apellido
+        );
+
+        const query = `
                     UPDATE empleados SET 
                         placa = ?, rango = ?, nombre = ?, apellido = ?, 
                         departamento_id = ?, correo_electronico = ?, cedula = ?, 
@@ -650,58 +740,59 @@ class Database {
                     WHERE id = ?
                 `;
 
-                const values = [
-                    empleadoData.placa || null,
-                    empleadoData.rango || null,
-                    empleadoData.nombre,
-                    empleadoData.apellido,
-                    empleadoData.departamento_id || null,
-                    empleadoData.correo_electronico || null,
-                    empleadoData.cedula || null,
-                    empleadoData.telefono || null,
-                    id
-                ];
+        const values = [
+          empleadoData.placa || null,
+          empleadoData.rango || null,
+          empleadoData.nombre,
+          empleadoData.apellido,
+          empleadoData.departamento_id || null,
+          empleadoData.correo_electronico || null,
+          empleadoData.cedula || null,
+          empleadoData.telefono || null,
+          id,
+        ];
 
-                console.log(' Actualizando empleado ID:', id);
-                console.log(' Nuevos datos:', empleadoData);
+        console.log(' Actualizando empleado ID:', id);
+        console.log(' Nuevos datos:', empleadoData);
 
-                this.db.run(query, values, function(err) {
-                    if (err) {
-                        console.error(' Error SQL actualizando empleado:', err);
-                        reject(err);
-                    } else {
-                        console.log(' Empleado actualizado exitosamente. Filas afectadas:', this.changes);
-                        if (this.changes === 0) {
-                            console.warn(' No se actualizó ninguna fila - verificar ID');
-                        }
-                        resolve({ changes: this.changes, id: id });
-                    }
-                });
-            });
+        this.db.run(query, values, function (err) {
+          if (err) {
+            console.error(' Error SQL actualizando empleado:', err);
+            reject(err);
+          } else {
+            console.log(
+              ' Empleado actualizado exitosamente. Filas afectadas:',
+              this.changes
+            );
+            if (this.changes === 0) {
+              console.warn(' No se actualizó ninguna fila - verificar ID');
+            }
+            resolve({ changes: this.changes, id: id });
+          }
         });
-    }
+      });
+    });
+  }
 
-    // Eliminar empleado (soft delete)
-    deleteEmpleado(id) {
-        return new Promise((resolve, reject) => {
-            const query = 'UPDATE empleados SET activo = 0 WHERE id = ?';
+  // Eliminar empleado (soft delete)
+  deleteEmpleado(id) {
+    return new Promise((resolve, reject) => {
+      const query = 'UPDATE empleados SET activo = 0 WHERE id = ?';
 
-            this.db.run(query, [id], function(err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve({ changes: this.changes });
-                }
-            });
-        });
-    }
+      this.db.run(query, [id], function (err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ changes: this.changes });
+        }
+      });
+    });
+  }
 
-
-
-    // Resto de métodos existentes...
-    updateLoginSuccess(userId) {
-        return new Promise((resolve, reject) => {
-            const query = `
+  // Resto de métodos existentes...
+  updateLoginSuccess(userId) {
+    return new Promise((resolve, reject) => {
+      const query = `
                 UPDATE usuarios 
                 SET ultimo_acceso = CURRENT_TIMESTAMP, 
                     intentos_fallidos = 0, 
@@ -709,19 +800,19 @@ class Database {
                 WHERE id = ?
             `;
 
-            this.db.run(query, [userId], (err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
-    }
+      this.db.run(query, [userId], (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
 
-    incrementFailedAttempts(userId) {
-        return new Promise((resolve, reject) => {
-            const query = `
+  incrementFailedAttempts(userId) {
+    return new Promise((resolve, reject) => {
+      const query = `
                 UPDATE usuarios 
                 SET intentos_fallidos = intentos_fallidos + 1,
                     bloqueado_hasta = CASE 
@@ -732,63 +823,69 @@ class Database {
                 WHERE id = ?
             `;
 
-            this.db.run(query, [userId], (err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
-    }
+      this.db.run(query, [userId], (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
 
-    logAccess(userId, accion, ipAddress, userAgent, exitoso, detalles = null) {
-        return new Promise((resolve, reject) => {
-            const query = `
+  logAccess(userId, accion, ipAddress, userAgent, exitoso, detalles = null) {
+    return new Promise((resolve, reject) => {
+      const query = `
                 INSERT INTO logs_acceso (usuario_id, accion, ip_address, user_agent, exitoso, detalles)
                 VALUES (?, ?, ?, ?, ?, ?)
             `;
 
-            this.db.run(query, [userId, accion, ipAddress, userAgent, exitoso, detalles], (err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
-    }
-
-    // Transaction helpers
-    beginTransaction() {
-        return new Promise((resolve, reject) => {
-            this.db.run('BEGIN TRANSACTION', err => (err ? reject(err) : resolve()));
-        });
-    }
-
-    commitTransaction() {
-        return new Promise((resolve, reject) => {
-            this.db.run('COMMIT', err => (err ? reject(err) : resolve()));
-        });
-    }
-
-    rollbackTransaction() {
-        return new Promise((resolve, reject) => {
-            this.db.run('ROLLBACK', err => (err ? reject(err) : resolve()));
-        });
-    }
-
-    close() {
-        if (this.db) {
-            this.db.close((err) => {
-                if (err) {
-                    console.error(' Error cerrando la base de datos:', err.message);
-                } else {
-                    console.log(' Conexión a la base de datos cerrada');
-                }
-            });
+      this.db.run(
+        query,
+        [userId, accion, ipAddress, userAgent, exitoso, detalles],
+        (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
         }
+      );
+    });
+  }
+
+  // Transaction helpers
+  beginTransaction() {
+    return new Promise((resolve, reject) => {
+      this.db.run('BEGIN TRANSACTION', (err) =>
+        err ? reject(err) : resolve()
+      );
+    });
+  }
+
+  commitTransaction() {
+    return new Promise((resolve, reject) => {
+      this.db.run('COMMIT', (err) => (err ? reject(err) : resolve()));
+    });
+  }
+
+  rollbackTransaction() {
+    return new Promise((resolve, reject) => {
+      this.db.run('ROLLBACK', (err) => (err ? reject(err) : resolve()));
+    });
+  }
+
+  close() {
+    if (this.db) {
+      this.db.close((err) => {
+        if (err) {
+          console.error(' Error cerrando la base de datos:', err.message);
+        } else {
+          console.log(' Conexión a la base de datos cerrada');
+        }
+      });
     }
+  }
 }
 
 module.exports = Database;

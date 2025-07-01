@@ -8,7 +8,11 @@ async function migrateSeedPasswords() {
 
   for (const user of usuarios) {
     const pass = user.contrasena || '';
-    if (!pass.startsWith('$2a$') && !pass.startsWith('$2b$') && !pass.startsWith('$2y$')) {
+    if (
+      !pass.startsWith('$2a$') &&
+      !pass.startsWith('$2b$') &&
+      !pass.startsWith('$2y$')
+    ) {
       user.contrasena = await bcrypt.hash(pass, 10);
     }
   }
@@ -18,7 +22,7 @@ async function migrateSeedPasswords() {
 }
 
 if (require.main === module) {
-  migrateSeedPasswords().catch(err => {
+  migrateSeedPasswords().catch((err) => {
     console.error('Error en migración:', err);
   });
 }

@@ -1,3 +1,14 @@
+# Environment variables
 .env
-attached_assets/
-node_modules/
+
+# Dependencies
+/node_modules
+
+# Generated assets and databases
+/attached_assets/
+
+# Log files
+*.log
+
+# Local scripts
+setup_env.bat

@@ -1,218 +1,310 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Panel de Control</title>
-    <link rel="stylesheet" href="/dashboard.css">
-    <link rel="stylesheet" href="/panel-control.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-</head>
-<body>
+    <link rel="stylesheet" href="/dashboard.css" />
+    <link rel="stylesheet" href="/panel-control.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"
+    />
+  </head>
+  <body>
     <header class="pc-header">
-        <h1>Panel de Control de Base de Datos</h1>
-        <a href="/dashboard" class="btn-back">Volver al Dashboard</a>
+      <h1>Panel de Control de Base de Datos</h1>
+      <a href="/dashboard" class="btn-back">Volver al Dashboard</a>
     </header>
     <main class="pc-main">
-        <div class="cards-grid">
-            <div class="pc-card" data-table="usuarios"><i class="fas fa-users"></i><span>Usuarios</span></div>
-            <div class="pc-card" data-table="departamentos"><i class="fas fa-building"></i><span>Departamentos</span></div>
-            <div class="pc-card" data-table="empleados"><i class="fas fa-user-tie"></i><span>Empleados</span></div>
-            <div class="pc-card" data-table="inventario_principal"><i class="fas fa-desktop"></i><span>Inventario Principal</span></div>
-            <div class="pc-card" data-table="inventario_periferico"><i class="fas fa-keyboard"></i><span>Inventario Periférico</span></div>
-            <div class="pc-card" data-table="configuracion"><i class="fas fa-cogs"></i><span>Configuración</span></div>
-            <div class="pc-card" data-table="logs_acceso"><i class="fas fa-list"></i><span>Logs de Acceso</span></div>
-            <div class="pc-card" data-table="historial_asignaciones"><i class="fas fa-history"></i><span>Historial de Asignaciones</span></div>
+      <div class="cards-grid">
+        <div class="pc-card" data-table="usuarios">
+          <i class="fas fa-users"></i><span>Usuarios</span>
         </div>
-        <div class="table-wrapper">
-            <table id="control-table" class="display" style="width:100%"></table>
+        <div class="pc-card" data-table="departamentos">
+          <i class="fas fa-building"></i><span>Departamentos</span>
         </div>
-        <div id="empleados-actions" class="pc-actions">
-            <button class="btn-modern btn-secondary" onclick="showMassUploadModal()">
-                <i class="fas fa-upload"></i>
-                <span>Carga Masiva</span>
-            </button>
-            <button class="btn-modern btn-primary" onclick="showNuevoEmpleadoModal()">
-                <i class="fas fa-user-plus"></i>
-                <span>Agregar Empleado</span>
-            </button>
+        <div class="pc-card" data-table="empleados">
+          <i class="fas fa-user-tie"></i><span>Empleados</span>
         </div>
-        <div id="departamentos-actions" class="pc-actions">
-            <button class="btn-modern btn-primary" id="btn-add-departamento">
-                <i class="fas fa-plus"></i>
-                <span>Agregar Nuevo Departamento</span>
-            </button>
+        <div class="pc-card" data-table="inventario_principal">
+          <i class="fas fa-desktop"></i><span>Inventario Principal</span>
         </div>
-        <div id="usuarios-actions" class="pc-actions">
-            <button class="btn-modern btn-primary" id="btn-add-usuario">
-                <i class="fas fa-user-plus"></i>
-                <span>Nuevo Usuario</span>
-            </button>
+        <div class="pc-card" data-table="inventario_periferico">
+          <i class="fas fa-keyboard"></i><span>Inventario Periférico</span>
         </div>
+        <div class="pc-card" data-table="configuracion">
+          <i class="fas fa-cogs"></i><span>Configuración</span>
+        </div>
+        <div class="pc-card" data-table="logs_acceso">
+          <i class="fas fa-list"></i><span>Logs de Acceso</span>
+        </div>
+        <div class="pc-card" data-table="historial_asignaciones">
+          <i class="fas fa-history"></i><span>Historial de Asignaciones</span>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table id="control-table" class="display" style="width: 100%"></table>
+      </div>
+      <div id="empleados-actions" class="pc-actions">
+        <button
+          class="btn-modern btn-secondary"
+          onclick="showMassUploadModal()"
+        >
+          <i class="fas fa-upload"></i>
+          <span>Carga Masiva</span>
+        </button>
+        <button
+          class="btn-modern btn-primary"
+          onclick="showNuevoEmpleadoModal()"
+        >
+          <i class="fas fa-user-plus"></i>
+          <span>Agregar Empleado</span>
+        </button>
+      </div>
+      <div id="departamentos-actions" class="pc-actions">
+        <button class="btn-modern btn-primary" id="btn-add-departamento">
+          <i class="fas fa-plus"></i>
+          <span>Agregar Nuevo Departamento</span>
+        </button>
+      </div>
+      <div id="usuarios-actions" class="pc-actions">
+        <button class="btn-modern btn-primary" id="btn-add-usuario">
+          <i class="fas fa-user-plus"></i>
+          <span>Nuevo Usuario</span>
+        </button>
+      </div>
 
-        <!-- Modal Crear/Editar Departamento -->
-        <div id="departamento-modal" class="modal" style="display:none;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="departamento-modal-title">Nuevo Departamento</h2>
-                    <button class="close" onclick="closeDepartamentoModal()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <form id="departamento-form" onsubmit="event.preventDefault(); saveDepartamento();">
-                        <div class="form-group">
-                            <label for="departamento-id">ID</label>
-                            <input type="text" id="departamento-id" name="id" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label for="departamento-nombre">Nombre</label>
-                            <input type="text" id="departamento-nombre" name="nombre" required>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn-modern btn-secondary" onclick="closeDepartamentoModal()">Cancelar</button>
-                    <button class="btn-modern btn-primary" onclick="saveDepartamento()">Guardar</button>
-                </div>
+      <!-- Modal Crear/Editar Departamento -->
+      <div id="departamento-modal" class="modal" style="display: none">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 id="departamento-modal-title">Nuevo Departamento</h2>
+            <button class="close" onclick="closeDepartamentoModal()">
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <form
+              id="departamento-form"
+              onsubmit="event.preventDefault(); saveDepartamento();"
+            >
+              <div class="form-group">
+                <label for="departamento-id">ID</label>
+                <input type="text" id="departamento-id" name="id" readonly />
+              </div>
+              <div class="form-group">
+                <label for="departamento-nombre">Nombre</label>
+                <input
+                  type="text"
+                  id="departamento-nombre"
+                  name="nombre"
+                  required
+                />
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              class="btn-modern btn-secondary"
+              onclick="closeDepartamentoModal()"
+            >
+              Cancelar
+            </button>
+            <button class="btn-modern btn-primary" onclick="saveDepartamento()">
+              Guardar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Confirmar Eliminación -->
+      <div id="departamento-delete-modal" class="modal" style="display: none">
+        <div class="modal-content" style="max-width: 450px">
+          <div class="modal-header">
+            <h2>
+              <i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación
+            </h2>
+            <button class="close" onclick="closeDeleteDepartamentoModal()">
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <p id="delete-depto-text"></p>
+            <div class="form-group">
+              <label for="confirm-delete-depto"
+                >Escriba el ID para confirmar</label
+              >
+              <input type="text" id="confirm-delete-depto" placeholder="ID" />
             </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              class="btn-modern btn-secondary"
+              onclick="closeDeleteDepartamentoModal()"
+            >
+              Cancelar
+            </button>
+            <button
+              class="btn-modern btn-danger"
+              onclick="confirmDeleteDepartamento()"
+            >
+              Eliminar
+            </button>
+          </div>
         </div>
+      </div>
 
-        <!-- Modal Confirmar Eliminación -->
-        <div id="departamento-delete-modal" class="modal" style="display:none;">
-            <div class="modal-content" style="max-width:450px;">
-                <div class="modal-header">
-                    <h2><i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación</h2>
-                    <button class="close" onclick="closeDeleteDepartamentoModal()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p id="delete-depto-text"></p>
-                    <div class="form-group">
-                        <label for="confirm-delete-depto">Escriba el ID para confirmar</label>
-                        <input type="text" id="confirm-delete-depto" placeholder="ID">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn-modern btn-secondary" onclick="closeDeleteDepartamentoModal()">Cancelar</button>
-                    <button class="btn-modern btn-danger" onclick="confirmDeleteDepartamento()">Eliminar</button>
-                </div>
+      <!-- Modal para Nuevo/Editar Usuario -->
+      <div id="user-modal-container"></div>
+      <script>
+        fetch('/partials/user-modal.html')
+          .then((res) => res.text())
+          .then((html) => {
+            document.getElementById('user-modal-container').innerHTML = html;
+          });
+      </script>
+
+      <!-- Modal de Empleado (creación rápida) -->
+      <div id="empleado-modal" class="modal" style="display: none">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div class="modal-title" id="modal-title">
+              <i data-feather="user-plus"></i>
+              Agregar Empleado
             </div>
+            <button class="modal-close" onclick="closeEmpleadoModal()">
+              <i data-feather="x"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form
+              id="empleado-form"
+              class="form-grid"
+              onsubmit="event.preventDefault(); saveEmpleado();"
+            >
+              <div class="form-section">
+                <div class="form-section-title">
+                  <i data-feather="user"></i>
+                  Información Personal
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Nombre *</label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      name="nombre"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Apellido *</label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      name="apellido"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Cédula</label>
+                    <input type="text" class="form-input" name="cedula" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Fecha de Nacimiento</label>
+                    <input
+                      type="date"
+                      class="form-input"
+                      name="fecha_nacimiento"
+                    />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Email *</label>
+                    <input
+                      type="email"
+                      class="form-input"
+                      name="correo_electronico"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Teléfono</label>
+                    <input type="tel" class="form-input" name="telefono" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <div class="form-section-title">
+                  <i data-feather="briefcase"></i>
+                  Información Laboral
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Placa</label>
+                    <input type="text" class="form-input" name="placa" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Rango *</label>
+                    <select class="form-select" name="rango" required>
+                      <option value="">Seleccionar rango</option>
+                      <option value="AGENTE">AGENTE</option>
+                      <option value="CABO 2DO.">CABO 2DO.</option>
+                      <option value="CABO 1RO.">CABO 1RO.</option>
+                      <option value="SGTO. 2DO.">SGTO. 2DO.</option>
+                      <option value="SGTO. 1RO.">SGTO. 1RO.</option>
+                      <option value="SUBTENIENTE">SUBTENIENTE</option>
+                      <option value="TENIENTE">TENIENTE</option>
+                      <option value="CAPITÁN">CAPITÁN</option>
+                      <option value="MAYOR">MAYOR</option>
+                      <option value="SUBCOMISIONADO">SUBCOMISIONADO</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Departamento *</label>
+                  <select class="form-select" name="departamento" required>
+                    <option value="">Seleccionar departamento</option>
+                  </select>
+                </div>
+              </div>
+              <input type="hidden" name="id" id="empleado-id" />
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              class="btn-modern btn-cancel"
+              type="button"
+              onclick="closeEmpleadoModal()"
+            >
+              <i data-feather="x"></i>
+              Cancelar
+            </button>
+            <button
+              class="btn-modern btn-save"
+              type="submit"
+              form="empleado-form"
+            >
+              <i data-feather="save"></i>
+              Guardar Empleado
+            </button>
+          </div>
         </div>
-
-        <!-- Modal para Nuevo/Editar Usuario -->
-        <div id="user-modal-container"></div>
-        <script>
-            fetch('/partials/user-modal.html')
-                .then(res => res.text())
-                .then(html => {
-                    document.getElementById('user-modal-container').innerHTML = html;
-                });
-        </script>
-
-        <!-- Modal de Empleado (creación rápida) -->
-        <div id="empleado-modal" class="modal" style="display:none;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <div class="modal-title" id="modal-title">
-                        <i data-feather="user-plus"></i>
-                        Agregar Empleado
-                    </div>
-                    <button class="modal-close" onclick="closeEmpleadoModal()">
-                        <i data-feather="x"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="empleado-form" class="form-grid" onsubmit="event.preventDefault(); saveEmpleado();">
-                        <div class="form-section">
-                            <div class="form-section-title">
-                                <i data-feather="user"></i>
-                                Información Personal
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Nombre *</label>
-                                    <input type="text" class="form-input" name="nombre" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Apellido *</label>
-                                    <input type="text" class="form-input" name="apellido" required>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Cédula</label>
-                                    <input type="text" class="form-input" name="cedula">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Fecha de Nacimiento</label>
-                                    <input type="date" class="form-input" name="fecha_nacimiento">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Email *</label>
-                                    <input type="email" class="form-input" name="correo_electronico" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Teléfono</label>
-                                    <input type="tel" class="form-input" name="telefono">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-section">
-                            <div class="form-section-title">
-                                <i data-feather="briefcase"></i>
-                                Información Laboral
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Placa</label>
-                                    <input type="text" class="form-input" name="placa">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Rango *</label>
-                                    <select class="form-select" name="rango" required>
-                                        <option value="">Seleccionar rango</option>
-                                        <option value="AGENTE">AGENTE</option>
-                                        <option value="CABO 2DO.">CABO 2DO.</option>
-                                        <option value="CABO 1RO.">CABO 1RO.</option>
-                                        <option value="SGTO. 2DO.">SGTO. 2DO.</option>
-                                        <option value="SGTO. 1RO.">SGTO. 1RO.</option>
-                                        <option value="SUBTENIENTE">SUBTENIENTE</option>
-                                        <option value="TENIENTE">TENIENTE</option>
-                                        <option value="CAPITÁN">CAPITÁN</option>
-                                        <option value="MAYOR">MAYOR</option>
-                                        <option value="SUBCOMISIONADO">SUBCOMISIONADO</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Departamento *</label>
-                                <select class="form-select" name="departamento" required>
-                                    <option value="">Seleccionar departamento</option>
-                                </select>
-                            </div>
-                        </div>
-                        <input type="hidden" name="id" id="empleado-id">
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn-modern btn-cancel" type="button" onclick="closeEmpleadoModal()">
-                        <i data-feather="x"></i>
-                        Cancelar
-                    </button>
-                    <button class="btn-modern btn-save" type="submit" form="empleado-form">
-                        <i data-feather="save"></i>
-                        Guardar Empleado
-                    </button>
-                </div>
-            </div>
-        </div>
+      </div>
     </main>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="/departamentos-utils.js"></script>
     <script src="/panel-control.js"></script>
-</body>
+  </body>
 </html>
