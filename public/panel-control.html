@@ -99,66 +99,14 @@
         </div>
 
         <!-- Modal para Nuevo/Editar Usuario -->
-        <div id="user-modal" class="modal" style="display: none;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="user-modal-title">Nuevo Usuario</h2>
-                    <span class="close" onclick="closeUserModal()">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <form id="user-form" onsubmit="saveUser(event)">
-                        <!-- Campos Obligatorios -->
-                        <div class="form-section">
-                            <h3 class="section-title">Datos Obligatorios</h3>
-                            <div class="form-group">
-                                <label for="user-username">Usuario</label>
-                                <input type="text" id="user-username" name="username" required
-                                       placeholder="Ingrese nombre de usuario" pattern="[a-zA-Z0-9_]+"
-                                       title="Solo letras, números y guiones bajos">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="user-password">Contraseña</label>
-                                <input type="password" id="user-password" name="password" required
-                                       placeholder="Ingrese contraseña" minlength="6">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="user-role">Rol</label>
-                                <select id="user-role" name="role" required>
-                                    <option value="">Seleccione un rol</option>
-                                    <option value="administrador">Administrador</option>
-                                    <option value="no administrador">No Administrador</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Campos Opcionales -->
-                        <div class="form-section">
-                            <h3 class="section-title">Información Adicional</h3>
-                            <div class="form-group">
-                                <label for="user-name">Nombre Completo</label>
-                                <input type="text" id="user-name" name="name" placeholder="Nombre completo">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="user-email">Correo Electrónico</label>
-                                <input type="email" id="user-email" name="email" placeholder="correo@ejemplo.com">
-                            </div>
-                        </div>
-
-                        <input type="hidden" id="user-id" name="id">
-                    </form>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn-secondary" onclick="closeUserModal()">Cancelar</button>
-                    <button type="submit" form="user-form" class="btn-primary">
-                        <i class="fas fa-save"></i> Guardar
-                    </button>
-                </div>
-            </div>
-        </div>
+        <div id="user-modal-container"></div>
+        <script>
+            fetch('/partials/user-modal.html')
+                .then(res => res.text())
+                .then(html => {
+                    document.getElementById('user-modal-container').innerHTML = html;
+                });
+        </script>
 
         <!-- Modal de Empleado (creación rápida) -->
         <div id="empleado-modal" class="modal" style="display:none;">
