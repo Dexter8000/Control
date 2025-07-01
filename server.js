@@ -4,8 +4,12 @@ const session = require('express-session');
 const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
+const http = require('http');
+const WebSocket = require('ws');
 const Database = require('./database/config');
 const VacacionesManager = require('./database/vacaciones');
+
+let wss; // WebSocket server (solo cuando se ejecuta directamente)
 
 // Verificar si se proporcionó la cadena de conexión a PostgreSQL
 const HAS_DATABASE_URL = Boolean(process.env.DATABASE_URL);
@@ -18,6 +22,16 @@ if (!HAS_DATABASE_URL) {
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+function broadcast(event, data) {
+  if (!wss) return;
+  const message = JSON.stringify({ event, data });
+  wss.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  });
+}
 
 // Middleware
 app.use(express.json());
@@ -537,7 +551,7 @@ app.post('/api/empleados', requireAuth, async (req, res) => {
     await db.beginTransaction();
     const resultado = await db.createEmpleado(empleadoData);
     await db.commitTransaction();
-
+    broadcast('employees-changed');
     res.status(201).json({ success: true, message: 'Empleado creado exitosamente', empleadoId: resultado.id });
   } catch (error) {
     await db.rollbackTransaction();
@@ -596,6 +610,7 @@ app.put('/api/empleados/:id', requireAuth, async (req, res) => {
     await db.beginTransaction();
     await db.updateEmpleado(id, empleadoData);
     await db.commitTransaction();
+    broadcast('employees-changed');
 
     res.json({ success: true, message: 'Empleado actualizado exitosamente' });
   } catch (error) {
@@ -611,6 +626,7 @@ app.delete('/api/empleados/:id', requireAuth, async (req, res) => {
 
   try {
     await db.deleteEmpleado(id);
+    broadcast('employees-changed');
     res.json({ success: true, message: 'Empleado eliminado exitosamente' });
   } catch (error) {
     console.error('❌ Error eliminando empleado:', error);
@@ -1020,9 +1036,10 @@ app.post('/api/usuarios', requireAuth, requireRole('administrador'), async (req,
     // Log de creación
     await db.logAccess(req.session.user.id, 'USER_CREATED', req.ip, req.get('User-Agent'), true, `Usuario creado: ${usuario}`);
     await db.commitTransaction();
+    broadcast('users-changed');
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       message: 'Usuario creado exitosamente',
       userId: newUserId
     });
@@ -1139,10 +1156,11 @@ app.put('/api/usuarios/:id', requireAuth, async (req, res) => {
     // Log de actualización
     await db.logAccess(req.session.user.id, 'USER_UPDATED', req.ip, req.get('User-Agent'), true, `Usuario actualizado: ${usuario}`);
     await db.commitTransaction();
+    broadcast('users-changed');
 
-    res.json({ 
-      success: true, 
-      message: 'Usuario actualizado exitosamente' 
+    res.json({
+      success: true,
+      message: 'Usuario actualizado exitosamente'
     });
 
   } catch (error) {
@@ -1303,8 +1321,10 @@ app.delete('/api/usuarios/:id', requireAuth, requireRole('administrador'), async
 
     console.log(`✅ Usuario eliminado y verificado: ${existingUser.usuario} (ID: ${id})`);
 
-    res.json({ 
-      success: true, 
+    broadcast('users-changed');
+
+    res.json({
+      success: true,
       message: 'Usuario eliminado exitosamente',
       verificado: true
     });
@@ -1687,12 +1707,17 @@ if (require.main === module) {
       console.error('❌ Error inicializando el sistema:', err);
     });
 
-  // Iniciar servidor
-  app.listen(PORT, '0.0.0.0', () => {
+  // Iniciar servidor HTTP y WebSocket
+  const server = http.createServer(app);
+  wss = new WebSocket.Server({ server });
+  app.set('wss', wss);
+
+  server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor Express ejecutándose en http://0.0.0.0:${PORT}`);
     console.log('✅ Sesiones configuradas');
     console.log('✅ Autenticación lista');
     console.log('✅ Archivos estáticos en /public');
+    console.log('📣 WebSocket listo');
   });
 }
 

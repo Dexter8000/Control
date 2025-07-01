@@ -14,6 +14,29 @@ let filteredUsers = [];
 let currentEditingUserId = null;
 let currentDeletingUserId = null;
 
+let ws;
+
+function setupWebSocket() {
+    try {
+        ws = new WebSocket(`ws://${location.host}`);
+        ws.addEventListener('message', ev => {
+            try {
+                const msg = JSON.parse(ev.data);
+                if (msg.event === 'users-changed') {
+                    loadUsers();
+                }
+                if (msg.event === 'employees-changed') {
+                    loadEmployeesData();
+                }
+            } catch (err) {
+                console.error('WS message error', err);
+            }
+        });
+    } catch (err) {
+        console.error('WebSocket connection failed', err);
+    }
+}
+
 // Cache de departamentos para evitar solicitudes repetidas
 // Obtener lista de departamentos utilizando utilidades compartidas
 async function fetchDepartamentos() {
@@ -41,6 +64,7 @@ async function initializeDashboard() {
 
         // Cargar datos del dashboard
         await loadDashboardData();
+        setupWebSocket();
         console.log('🎯 Dashboard inicializado exitosamente');
     } catch (error) {
         console.error('❌ Error inicializando dashboard:', error);
