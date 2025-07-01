@@ -1,6 +1,7 @@
 let dataTable;
 let editingDepartamentoId = null;
 let deletingDepartamentoId = null;
+let currentTableRequest = 0;
 
 function parseRows(res) {
     if (Array.isArray(res)) return res;
@@ -10,9 +11,11 @@ function parseRows(res) {
 }
 
 async function loadTable(tableName) {
+    const requestToken = ++currentTableRequest;
     try {
         const response = await fetch(`/api/${tableName}`);
         const result = await response.json();
+        if (requestToken !== currentTableRequest) return;
         const rows = parseRows(result);
         let columns = rows.length
             ? Object.keys(rows[0]).map(k => ({ title: k, data: k }))
@@ -37,6 +40,7 @@ async function loadTable(tableName) {
             $table.DataTable().clear().destroy();
             $table.empty();
         }
+        if (requestToken !== currentTableRequest) return;
         dataTable = $table.DataTable({ data: rows, columns });
 
         if (tableName === 'departamentos') {
