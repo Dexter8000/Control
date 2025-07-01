@@ -3,6 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const fs = require('fs');
+const bcrypt = require('bcryptjs');
 const Database = require('./database/config');
 const VacacionesManager = require('./database/vacaciones');
 
@@ -126,8 +127,8 @@ app.post('/api/login', async (req, res) => {
       });
     }
 
-    // Verificar password directamente (sin hashing por ahora)
-    const passwordValido = (password === usuario.contrasena);
+    // Comparar contraseña usando bcrypt
+    const passwordValido = await bcrypt.compare(password, usuario.contrasena);
 
     if (!passwordValido) {
       // Incrementar intentos fallidos
@@ -996,18 +997,24 @@ app.post('/api/usuarios', requireAuth, requireRole('administrador'), async (req,
 
     await db.beginTransaction();
 
-    // Insertar nuevo usuario con contraseña sin hash
+    // Hash de la contraseña antes de insertar
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const newUserId = await new Promise((resolve, reject) => {
-      db.db.run(`
+      db.db.run(
+        `
         INSERT INTO usuarios (usuario, contrasena, rol, nombre, email, activo, fecha_creacion)
         VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
-      `, [usuario, password, rol, nombre || null, email || null], function(err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(this.lastID);
+        `,
+        [usuario, hashedPassword, rol, nombre || null, email || null],
+        function (err) {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(this.lastID);
+          }
         }
-      });
+      );
     });
 
     // Log de creación
@@ -1110,8 +1117,9 @@ app.put('/api/usuarios/:id', requireAuth, async (req, res) => {
 
     // Si se proporciona nueva contraseña
     if (password && password.trim() !== '') {
+      const hashed = await bcrypt.hash(password, 10);
       updateFields.push('contrasena = ?');
-      updateValues.push(password);
+      updateValues.push(hashed);
     }
 
     updateValues.push(id);
