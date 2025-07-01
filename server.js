@@ -1217,6 +1217,7 @@ app.post('/api/usuarios/mass-upload', requireAuth, requireRole('administrador'),
         continue;
       }
 
+      const hashed = await bcrypt.hash(usuario.password, 10);
       // Insertar usuario
       await new Promise((resolve, reject) => {
         db.db.run(`
@@ -1224,7 +1225,7 @@ app.post('/api/usuarios/mass-upload', requireAuth, requireRole('administrador'),
           VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
         `, [
           usuario.usuario,
-          usuario.password,
+          hashed,
           usuario.rol,
           usuario.nombre || null,
           usuario.email || null

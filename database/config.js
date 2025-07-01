@@ -2,6 +2,7 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 
 class Database {
     constructor() {
@@ -245,10 +246,11 @@ class Database {
 
                         const usuarios = JSON.parse(fs.readFileSync(path.join(dataDir, 'usuarios.json'), 'utf8'));
                         for (const user of usuarios) {
+                            const hashed = await bcrypt.hash(user.contrasena, 10);
                             await new Promise((resolve, reject) => {
                                 this.db.run(
                                     'INSERT OR REPLACE INTO usuarios (id, usuario, contrasena, rol, nombre, email) VALUES (?, ?, ?, ?, ?, ?)',
-                                    [user.id, user.usuario, user.contrasena, user.rol, user.nombre, user.email],
+                                    [user.id, user.usuario, hashed, user.rol, user.nombre, user.email],
                                     (err) => (err ? reject(err) : resolve())
                                 );
                             });
