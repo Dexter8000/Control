@@ -365,7 +365,11 @@ async function confirmDeleteUser() {
 }
 
 // Cerrar modal de usuario
-function closeUserModal() {
+function closeUserModal(e) {
+    if (e) {
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
     const modal = document.getElementById('user-modal');
     if (modal) {
         modal.style.display = 'none';
