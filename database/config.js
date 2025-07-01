@@ -418,10 +418,20 @@ class Database {
                 ORDER BY ip.fecha_adquisicion DESC, ip.nombre
             `;
 
-            this.db.all(query, (err, rows) => {
-                if (err) reject(err);
-                else resolve(rows);
-            });
+            try {
+                this.db.all(query, (err, rows) => {
+                    if (err) {
+                        console.error('Error ejecutando getInventarioPrincipal:', err.message);
+                        console.error('SQL =>', query);
+                        reject(err);
+                    } else {
+                        resolve(rows);
+                    }
+                });
+            } catch (error) {
+                console.error('Excepción en getInventarioPrincipal:', error.message);
+                reject(error);
+            }
         });
     }
 
@@ -439,18 +449,29 @@ class Database {
                            THEN e.nombre || ' ' || e.apellido
                            ELSE 'Sin asignar'
                        END as responsable_nombre,
-                       d.nombre as departamento_nombre
+                       COALESCE(d2.nombre, d.nombre) as departamento_nombre
                 FROM inventario_periferico iph
                 LEFT JOIN inventario_principal ip ON iph.id_inventario_principal = ip.id
                 LEFT JOIN empleados e ON iph.responsable_actual_periferico = e.id
                 LEFT JOIN departamentos d ON e.departamento_id = d.id
+                LEFT JOIN departamentos d2 ON iph.id_departamento_asignado_periferico = d2.id
                 ORDER BY iph.fecha_adquisicion_periferico DESC, iph.nombre_periferico
             `;
 
-            this.db.all(query, (err, rows) => {
-                if (err) reject(err);
-                else resolve(rows);
-            });
+            try {
+                this.db.all(query, (err, rows) => {
+                    if (err) {
+                        console.error('Error ejecutando getInventarioPeriferico:', err.message);
+                        console.error('SQL =>', query);
+                        reject(err);
+                    } else {
+                        resolve(rows);
+                    }
+                });
+            } catch (error) {
+                console.error('Excepción en getInventarioPeriferico:', error.message);
+                reject(error);
+            }
         });
     }
 
@@ -483,16 +504,24 @@ class Database {
                 ORDER BY ip.fecha_adquisicion DESC, ip.nombre
             `;
 
-            this.db.all(query, (err, rows) => {
-                if (err) reject(err);
-                else {
-                    const formatted = rows.map(row => ({
-                        ...row,
-                        perifericos: row.perifericos ? JSON.parse(row.perifericos) : []
-                    }));
-                    resolve(formatted);
-                }
-            });
+            try {
+                this.db.all(query, (err, rows) => {
+                    if (err) {
+                        console.error('Error ejecutando getInventarioCompleto:', err.message);
+                        console.error('SQL =>', query);
+                        reject(err);
+                    } else {
+                        const formatted = rows.map(row => ({
+                            ...row,
+                            perifericos: row.perifericos ? JSON.parse(row.perifericos) : []
+                        }));
+                        resolve(formatted);
+                    }
+                });
+            } catch (error) {
+                console.error('Excepción en getInventarioCompleto:', error.message);
+                reject(error);
+            }
         });
     }
 
@@ -505,10 +534,20 @@ class Database {
                 WHERE e.activo = 1
                 ORDER BY e.nombre, e.apellido
             `;
-            this.db.all(query, (err, rows) => {
-                if (err) reject(err);
-                else resolve(rows);
-            });
+            try {
+                this.db.all(query, (err, rows) => {
+                    if (err) {
+                        console.error('Error ejecutando getEmpleados:', err.message);
+                        console.error('SQL =>', query);
+                        reject(err);
+                    } else {
+                        resolve(rows);
+                    }
+                });
+            } catch (error) {
+                console.error('Excepción en getEmpleados:', error.message);
+                reject(error);
+            }
         });
     }
 
@@ -522,15 +561,21 @@ class Database {
                 ORDER BY e.id ASC
             `;
             
-            this.db.all(query, [], (err, rows) => {
-                if (err) {
-                    console.error(' Error obteniendo empleados completos:', err.message);
-                    reject(err);
-                } else {
-                    console.log(` Obtenidos ${rows.length} empleados completos`);
-                    resolve(rows);
-                }
-            });
+            try {
+                this.db.all(query, [], (err, rows) => {
+                    if (err) {
+                        console.error('Error obteniendo empleados completos:', err.message);
+                        console.error('SQL =>', query);
+                        reject(err);
+                    } else {
+                        console.log(` Obtenidos ${rows.length} empleados completos`);
+                        resolve(rows);
+                    }
+                });
+            } catch (error) {
+                console.error('Excepción en getEmpleadosCompletos:', error.message);
+                reject(error);
+            }
         });
     }
 
