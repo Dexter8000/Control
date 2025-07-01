@@ -84,6 +84,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 closeDeleteDepartamentoModal();
             } else if (e.target.id === 'user-modal') {
                 closeUserModal();
+            } else if (e.target.id === 'empleado-modal') {
+                closeEmpleadoModal();
+            } else if (e.target.id === 'mass-upload-modal') {
+                closeMassUploadModal();
             }
         }
     });
@@ -93,6 +97,8 @@ document.addEventListener('DOMContentLoaded', () => {
             closeDepartamentoModal();
             closeDeleteDepartamentoModal();
             closeUserModal();
+            closeEmpleadoModal();
+            closeMassUploadModal();
         }
     });
 });
@@ -276,3 +282,236 @@ function showNotification(message, type = 'info') {
 window.showNewUserModal = showNewUserModal;
 window.closeUserModal = closeUserModal;
 window.saveUser = saveUser;
+
+// ==== Gestión Rápida de Empleados ====
+async function showNuevoEmpleadoModal() {
+    const modal = document.getElementById('empleado-modal');
+    if (!modal) return;
+    document.getElementById('empleado-form').reset();
+    document.getElementById('empleado-id').value = '';
+    await updateEmpleadoDepartmentSelector();
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    if (window.feather) feather.replace();
+}
+
+function closeEmpleadoModal() {
+    const modal = document.getElementById('empleado-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+async function updateEmpleadoDepartmentSelector(selected = '') {
+    const select = document.querySelector('#empleado-modal select[name="departamento"]');
+    if (!select || typeof getDepartamentosList !== 'function') return;
+    let departamentos = await getDepartamentosList();
+    const options = departamentos.map(d => {
+        const sel = d.nombre === selected ? 'selected' : '';
+        return `<option value="${d.nombre}" ${sel}>${d.nombre}</option>`;
+    }).join('');
+    select.innerHTML = '<option value="">Seleccionar departamento</option>' + options;
+    if (selected) select.value = selected;
+}
+
+async function saveEmpleado() {
+    const form = document.getElementById('empleado-form');
+    const data = Object.fromEntries(new FormData(form));
+    if (!data.nombre || !data.apellido || !data.correo_electronico || !data.rango || !data.departamento) {
+        showNotification('Complete los campos obligatorios', 'error');
+        return;
+    }
+    const btn = document.querySelector('#empleado-modal .btn-save');
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando';
+    try {
+        const res = await fetch('/api/empleados', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error('Error creando empleado');
+        const result = await res.json();
+        if (result.success) {
+            showNotification('Empleado creado exitosamente', 'success');
+            closeEmpleadoModal();
+            await loadTable('empleados');
+        } else {
+            throw new Error(result.message || 'Error');
+        }
+    } catch (err) {
+        console.error(err);
+        showNotification(err.message || 'Error', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
+    }
+}
+
+function showMassUploadModal() {
+    const existing = document.getElementById('mass-upload-modal');
+    if (existing) existing.remove();
+    const modalHTML = `
+        <div id="mass-upload-modal" class="modal" style="display:flex;">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h2><i class="fas fa-upload"></i> Carga Masiva de Empleados</h2>
+                    <span class="close" onclick="closeMassUploadModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="upload-section">
+                        <div class="upload-info">
+                            <h3><i class="fas fa-info-circle"></i> Instrucciones</h3>
+                            <ul>
+                                <li>El archivo debe estar en formato CSV</li>
+                                <li>La primera fila debe contener los encabezados</li>
+                                <li>Columnas requeridas: nombre, apellido, correo_electronico, rango, departamento_id, fecha_ingreso</li>
+                                <li>Columnas opcionales: cedula, telefono, placa, fecha_nacimiento</li>
+                            </ul>
+                        </div>
+                        <div class="upload-controls">
+                            <div class="form-group">
+                                <label>Seleccionar archivo CSV:</label>
+                                <input type="file" id="csv-file" accept=".csv" onchange="previewCSV()">
+                            </div>
+                            <div class="template-download">
+                                <button type="button" class="btn-info" onclick="downloadTemplate()">
+                                    <i class="fas fa-download"></i> Descargar Plantilla
+                                </button>
+                            </div>
+                        </div>
+                        <div id="upload-preview" style="display:none;">
+                            <h4>Vista Previa:</h4>
+                            <div id="preview-content"></div>
+                        </div>
+                        <div id="upload-results" style="display:none;">
+                            <h4>Resultados:</h4>
+                            <div id="results-content"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeMassUploadModal()">Cancelar</button>
+                    <button type="button" class="btn-primary" id="upload-btn" onclick="uploadCSV()" style="display:none;">
+                        <i class="fas fa-upload"></i> Subir Empleados
+                    </button>
+                </div>
+            </div>
+        </div>`;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    document.body.style.overflow = 'hidden';
+}
+
+function closeMassUploadModal() {
+    const modal = document.getElementById('mass-upload-modal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = 'auto';
+    }
+}
+
+function downloadTemplate() {
+    const csvContent = `nombre,apellido,cedula,telefono,correo_electronico,placa,rango,departamento_id,fecha_ingreso,fecha_nacimiento\n` +
+        `Juan,Pérez,12345678,555-1234,juan.perez@ejemplo.com,P001,AGENTE,1,2023-01-15,1990-05-20\n` +
+        `María,González,87654321,555-5678,maria.gonzalez@ejemplo.com,P002,CABO 1RO.,2,2023-02-10,1988-08-12`;
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.href = url;
+    a.download = 'plantilla_empleados.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showNotification('Plantilla descargada exitosamente', 'success');
+}
+
+function previewCSV() {
+    const fileInput = document.getElementById('csv-file');
+    const file = fileInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const csv = e.target.result;
+        const lines = csv.split('\n');
+        const headers = lines[0].split(',');
+        let previewHTML = '<div class="upload-preview">';
+        previewHTML += `<p><strong>Archivo:</strong> ${file.name}</p>`;
+        previewHTML += `<p><strong>Filas detectadas:</strong> ${lines.length - 1}</p>`;
+        previewHTML += '<table class="preview-table"><thead><tr>' + headers.map(h => `<th>${h.trim()}</th>`).join('') + '</tr></thead><tbody>';
+        for (let i = 1; i <= Math.min(3, lines.length - 1); i++) {
+            if (lines[i].trim()) {
+                const cells = lines[i].split(',');
+                previewHTML += '<tr>' + cells.map(c => `<td>${c.trim()}</td>`).join('') + '</tr>';
+            }
+        }
+        previewHTML += '</tbody></table></div>';
+        document.getElementById('preview-content').innerHTML = previewHTML;
+        document.getElementById('upload-preview').style.display = 'block';
+        document.getElementById('upload-btn').style.display = 'inline-flex';
+    };
+    reader.readAsText(file);
+}
+
+async function uploadCSV() {
+    const fileInput = document.getElementById('csv-file');
+    const file = fileInput.files[0];
+    if (!file) {
+        showNotification('Por favor seleccione un archivo', 'error');
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const csv = e.target.result;
+        const lines = csv.split('\n');
+        const headers = lines[0].split(',').map(h => h.trim());
+        let successCount = 0;
+        let errorCount = 0;
+        let errors = [];
+        for (let i = 1; i < lines.length; i++) {
+            if (!lines[i].trim()) continue;
+            const cells = lines[i].split(',').map(c => c.trim());
+            const data = {};
+            headers.forEach((h, idx) => { data[h] = cells[idx] || ''; });
+            try {
+                const res = await fetch('/api/empleados', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    successCount++;
+                } else {
+                    errorCount++;
+                    const err = await res.json();
+                    errors.push(`Fila ${i}: ${err.message}`);
+                }
+            } catch {
+                errorCount++;
+                errors.push(`Fila ${i}: Error de conexión`);
+            }
+        }
+        let resultHTML = `<div class="upload-success"><p><strong>✅ Empleados creados exitosamente:</strong> ${successCount}</p></div>`;
+        if (errorCount > 0) {
+            resultHTML += `<div class="upload-error"><p><strong>❌ Errores encontrados:</strong> ${errorCount}</p><div class="error-list"><ul>${errors.map(e => `<li>${e}</li>`).join('')}</ul></div></div>`;
+        }
+        document.getElementById('results-content').innerHTML = resultHTML;
+        document.getElementById('upload-results').style.display = 'block';
+        if (successCount > 0) {
+            await loadTable('empleados');
+            showNotification(`${successCount} empleados cargados exitosamente`, 'success');
+        }
+    };
+    reader.readAsText(file);
+}
+
+window.showNuevoEmpleadoModal = showNuevoEmpleadoModal;
+window.closeEmpleadoModal = closeEmpleadoModal;
+window.saveEmpleado = saveEmpleado;
+window.showMassUploadModal = showMassUploadModal;
+window.closeMassUploadModal = closeMassUploadModal;
+window.previewCSV = previewCSV;
+window.uploadCSV = uploadCSV;
+window.downloadTemplate = downloadTemplate;
