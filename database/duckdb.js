@@ -31,6 +31,7 @@ async function createInventoryTables() {
         id TEXT PRIMARY KEY,
         nombre TEXT NOT NULL
     )`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_departamentos_id ON departamentos(id)`,
     `CREATE TABLE IF NOT EXISTS empleados (
         id TEXT PRIMARY KEY,
         placa TEXT UNIQUE,
