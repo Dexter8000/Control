@@ -24,7 +24,8 @@
     "python-shell": "^5.0.0",
     "sqlite3": "^5.1.7",
     "superagent": "^10.2.1",
-    "ws": "^8.16.0"
+    "ws": "^8.16.0",
+    "@duckdb/node-api": "^0.10.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
