@@ -1,9 +1,10 @@
 // Esperar a que el DOM esté completamente cargado
 document.addEventListener('DOMContentLoaded', function () {
   // Variables globales
-  let equipos = JSON.parse(localStorage.getItem('inventario-equipos')) || [];
-  let perifericos =
-    JSON.parse(localStorage.getItem('inventario-perifericos')) || [];
+  let equipos = [];
+  let perifericos = [];
+  const API_PRINCIPAL = '/api/inventario-principal';
+  const API_PERIFERICOS = '/api/inventario-periferico';
   let currentView = 'principal';
   let equipoPrincipalSeleccionado = null;
 
@@ -32,17 +33,47 @@ document.addEventListener('DOMContentLoaded', function () {
   // Inicializar la aplicación
   init();
 
-  function init() {
-    // Cargar datos iniciales si no hay nada en localStorage
-    if (equipos.length === 0 && perifericos.length === 0) {
-      loadSampleData();
-    }
-
-    // Mostrar la vista inicial
+  async function init() {
+    await loadInventario();
     showView(currentView);
-
-    // Configurar event listeners
     setupEventListeners();
+  }
+
+  async function loadInventario() {
+    await Promise.all([loadEquipos(), loadPerifericos()]);
+  }
+
+  async function loadEquipos() {
+    try {
+      const res = await fetch(API_PRINCIPAL);
+      const data = await res.json();
+      equipos = data.inventario || data.data || [];
+    } catch (err) {
+      console.error('Error cargando inventario principal:', err);
+      equipos = [];
+    }
+  }
+
+  async function loadPerifericos() {
+    try {
+      const res = await fetch(API_PERIFERICOS);
+      const data = await res.json();
+      perifericos = data.inventario || data.data || [];
+    } catch (err) {
+      console.error('Error cargando periféricos:', err);
+      perifericos = [];
+    }
+  }
+
+  async function deleteItem(id, type) {
+    const url =
+      type === 'principal'
+        ? `${API_PRINCIPAL}/${id}`
+        : `${API_PERIFERICOS}/${id}`;
+    const res = await fetch(url, { method: 'DELETE' });
+    if (!res.ok) {
+      throw new Error('Error eliminando elemento');
+    }
   }
 
   function setupEventListeners() {
@@ -372,23 +403,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const id = confirmModal.dataset.id;
     const type = confirmModal.dataset.type;
 
-    if (type === 'principal') {
-      // Eliminar el equipo principal y sus periféricos asociados
-      equipos = equipos.filter((e) => e.id !== id);
-      perifericos = perifericos.filter((p) => p.equipoPrincipalId !== id);
-    } else {
-      // Eliminar solo el periférico
-      perifericos = perifericos.filter((p) => p.id !== id);
-    }
-
-    // Guardar en localStorage
-    saveData();
-
-    // Volver a renderizar la vista actual
-    showView(currentView);
-
-    // Cerrar el modal de confirmación
-    confirmModal.classList.remove('show');
+    deleteItem(id, type)
+      .then(loadInventario)
+      .then(() => showView(currentView))
+      .catch((err) => console.error('Error eliminando elemento:', err))
+      .finally(() => {
+        confirmModal.classList.remove('show');
+      });
   }
 
   function filterItems() {
@@ -709,7 +730,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  function handleFormSubmit(event, action = 'save') {
+  async function handleFormSubmit(event, action = 'save') {
     event.preventDefault();
 
     const type = document.getElementById('equipo-type').value;
@@ -722,7 +743,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Crear objeto con los datos del formulario
     const formData = {
-      id: id || generateId(),
       nombre: document.getElementById('nombre').value,
       marca: document.getElementById('marca').value,
       modelo: document.getElementById('modelo').value,
@@ -738,7 +758,6 @@ document.addEventListener('DOMContentLoaded', function () {
       fechaAdquisicion:
         document.getElementById('fecha-adquisicion').value || null,
       detalles: document.getElementById('detalles').value || null,
-      fechaCreacion: id ? null : new Date().toISOString(),
     };
 
     if (type === 'periferico') {
@@ -758,33 +777,26 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
 
-    // Guardar o actualizar el item
-    if (type === 'principal') {
-      if (id) {
-        // Actualizar equipo existente
-        const index = equipos.findIndex((e) => e.id === id);
-        if (index !== -1) {
-          equipos[index] = formData;
-        }
-      } else {
-        // Agregar nuevo equipo
-        equipos.push(formData);
-      }
-    } else {
-      if (id) {
-        // Actualizar periférico existente
-        const index = perifericos.findIndex((p) => p.id === id);
-        if (index !== -1) {
-          perifericos[index] = formData;
-        }
-      } else {
-        // Agregar nuevo periférico
-        perifericos.push(formData);
-      }
-    }
+    // Guardar o actualizar el item en el servidor
 
-    // Guardar en localStorage
-    saveData();
+    let method = id ? 'PUT' : 'POST';
+    let url = type === 'principal' ? API_PRINCIPAL : API_PERIFERICOS;
+    if (id) url += `/${id}`;
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text);
+      }
+      await loadInventario();
+    } catch (err) {
+      console.error('Error guardando elemento:', err);
+    }
 
     // Manejar la acción después de guardar
     if (action === 'add-another') {
@@ -833,7 +845,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // Cerrar el modal
       closeModal();
 
-      // Volver a renderizar la vista actual
+      await loadInventario();
       showView(currentView);
     }
   }
@@ -877,8 +889,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function saveData() {
-    localStorage.setItem('inventario-equipos', JSON.stringify(equipos));
-    localStorage.setItem('inventario-perifericos', JSON.stringify(perifericos));
+    // Persistencia manejada en el servidor
   }
 
   function getBadgeClass(status) {
