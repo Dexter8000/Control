@@ -29,6 +29,9 @@ document.addEventListener('DOMContentLoaded', function () {
   const cancelConfirmBtn = document.querySelector(
     '.confirm-actions .cancel-btn'
   );
+  const duckdbTableSelect = document.getElementById('duckdb-table-select');
+  const duckdbTotalTables = document.getElementById('duckdb-total-tables');
+  const duckdbRowCount = document.getElementById('duckdb-row-count');
 
   // Inicializar la aplicación
   init();
@@ -129,6 +132,12 @@ document.addEventListener('DOMContentLoaded', function () {
       handleFormSubmit(new Event('submit'), 'finish');
     });
 
+    if (duckdbTableSelect) {
+      duckdbTableSelect.addEventListener('change', () => {
+        loadDuckdbTable(duckdbTableSelect.value);
+      });
+    }
+
     // Cambios en categoría para actualizar subcategorías
     document
       .getElementById('categoria')
@@ -157,6 +166,9 @@ document.addEventListener('DOMContentLoaded', function () {
         break;
       case 'general':
         renderGeneral();
+        break;
+      case 'duckdb-panel':
+        renderDuckdbPanel();
         break;
     }
   }
@@ -1010,6 +1022,44 @@ document.addEventListener('DOMContentLoaded', function () {
     ];
 
     saveData();
+  }
+
+  async function loadDuckdbTables() {
+    try {
+      const res = await fetch('/api/analytics-panel/tables');
+      const data = await res.json();
+      duckdbTotalTables.textContent = `Tablas: ${data.tables.length}`;
+      duckdbTableSelect.innerHTML = data.tables
+        .map((t) => `<option value="${t}">${t}</option>`) 
+        .join('');
+      if (data.tables.length) {
+        await loadDuckdbTable(data.tables[0]);
+      }
+    } catch (err) {
+      console.error('Error cargando tablas DuckDB:', err);
+    }
+  }
+
+  async function loadDuckdbTable(name) {
+    try {
+      const res = await fetch(`/api/analytics-panel/table/${encodeURIComponent(name)}`);
+      const data = await res.json();
+      duckdbRowCount.textContent = `Filas: ${data.rows.length}`;
+      const thead = document.querySelector('#duckdb-table-preview thead');
+      const tbody = document.querySelector('#duckdb-table-preview tbody');
+      thead.innerHTML = `<tr>${data.columns
+        .map((c) => `<th>${c}</th>`)
+        .join('')}</tr>`;
+      tbody.innerHTML = data.rows
+        .map((row) => `<tr>${row.map((v) => `<td>${v}</td>`).join('')}</tr>`)
+        .join('');
+    } catch (err) {
+      console.error('Error cargando datos de tabla:', err);
+    }
+  }
+
+  function renderDuckdbPanel() {
+    loadDuckdbTables();
   }
 
   function exportToPdf() {

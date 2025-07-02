@@ -28,6 +28,9 @@
           <button class="nav-btn" data-view="general">
             <i class="fas fa-table"></i> General
           </button>
+          <button class="nav-btn" id="nav-btn-duckdb-panel" data-view="duckdb-panel">
+            <i class="fas fa-database"></i> Analytics
+          </button>
         </nav>
       </header>
 
@@ -145,6 +148,23 @@
               <tbody>
                 <!-- Datos se cargarán dinámicamente -->
               </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="view-container hidden" id="duckdb-panel-view">
+          <div class="table-header">
+            <h2>Panel de Analytics</h2>
+          </div>
+          <div class="analytics-summary">
+            <span id="duckdb-total-tables">Tablas: 0</span>
+            <span id="duckdb-row-count">Filas: 0</span>
+          </div>
+          <div class="table-container">
+            <select id="duckdb-table-select"></select>
+            <table id="duckdb-table-preview">
+              <thead></thead>
+              <tbody></tbody>
             </table>
           </div>
         </div>

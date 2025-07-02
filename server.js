@@ -1053,6 +1053,28 @@ app.get('/api/historial_asignaciones', requireAuth, (req, res) => {
   );
 });
 
+// === Endpoints para panel de analytics (DuckDB) ===
+app.get('/api/analytics-panel/tables', requireAuth, async (req, res) => {
+  try {
+    const tables = await analyticsDB.listTables();
+    res.json({ tables });
+  } catch (err) {
+    console.error('❌ Error listando tablas DuckDB:', err);
+    res.status(500).json({ error: 'Error listando tablas' });
+  }
+});
+
+app.get('/api/analytics-panel/table/:name', requireAuth, async (req, res) => {
+  const { name } = req.params;
+  try {
+    const data = await analyticsDB.getTablePreview(name);
+    res.json(data);
+  } catch (err) {
+    console.error('❌ Error obteniendo datos de tabla:', err);
+    res.status(500).json({ error: 'Error obteniendo datos' });
+  }
+});
+
 // Registrar préstamo de equipo
 app.post('/api/prestamo', requireAuth, async (req, res) => {
   const { equipoId, tipoEquipo, empleadoId, observaciones } = req.body;

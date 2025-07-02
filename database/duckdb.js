@@ -137,4 +137,24 @@ async function createInventoryTables() {
 }
 
 connection.createInventoryTables = createInventoryTables;
+
+async function listTables() {
+  const reader = await connection.runAndReadAll(
+    "SELECT table_name FROM information_schema.tables WHERE table_schema='main'"
+  );
+  return reader.getRows().map((r) => r[0]);
+}
+
+async function getTablePreview(tableName, limit = 20) {
+  const reader = await connection.runAndReadAll(
+    `SELECT * FROM ${tableName} LIMIT ${limit}`
+  );
+  return {
+    columns: reader.columnNames(),
+    rows: reader.getRows(),
+  };
+}
+
+connection.listTables = listTables;
+connection.getTablePreview = getTablePreview;
 module.exports = connection;
