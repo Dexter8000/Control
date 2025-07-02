@@ -26,6 +26,13 @@ if (!HAS_DATABASE_URL) {
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+if (!process.env.SESSION_SECRET) {
+  console.error(
+    '❌ La variable de entorno SESSION_SECRET es requerida para la seguridad de las sesiones.'
+  );
+  process.exit(1);
+}
+
 function broadcast(event, data) {
   if (!wss) return;
   const message = JSON.stringify({ event, data });
@@ -45,7 +52,7 @@ app.use('/attached_assets', express.static('attached_assets')); // Para servir v
 // Configurar sesiones
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || 'mi-secreto-super-seguro-123',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
