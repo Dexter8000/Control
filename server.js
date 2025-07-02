@@ -8,6 +8,7 @@ const http = require('http');
 const WebSocket = require('ws');
 const Database = require('./database/config');
 const VacacionesManager = require('./database/vacaciones');
+const analyticsDB = require('./database/duckdb');
 
 let wss; // WebSocket server (solo cuando se ejecuta directamente)
 
@@ -379,12 +380,10 @@ app.get('/api/equipos-disponibles', requireAuth, async (req, res) => {
     res.json({ success: true, equipos });
   } catch (error) {
     console.error('❌ Error obteniendo equipos disponibles:', error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: 'Error obteniendo equipos disponibles',
-      });
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo equipos disponibles',
+    });
   }
 });
 
@@ -648,23 +647,19 @@ app.post('/api/empleados', requireAuth, async (req, res) => {
     const resultado = await db.createEmpleado(empleadoData);
     await db.commitTransaction();
     broadcast('employees-changed');
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: 'Empleado creado exitosamente',
-        empleadoId: resultado.id,
-      });
+    res.status(201).json({
+      success: true,
+      message: 'Empleado creado exitosamente',
+      empleadoId: resultado.id,
+    });
   } catch (error) {
     await db.rollbackTransaction();
     console.error('❌ Error creando empleado:', error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: 'Error creando empleado',
-        details: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: 'Error creando empleado',
+      details: error.message,
+    });
   }
 });
 
@@ -745,13 +740,11 @@ app.put('/api/empleados/:id', requireAuth, async (req, res) => {
   } catch (error) {
     await db.rollbackTransaction();
     console.error('❌ Error actualizando empleado:', error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: 'Error actualizando empleado',
-        details: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: 'Error actualizando empleado',
+      details: error.message,
+    });
   }
 });
 
@@ -840,12 +833,10 @@ app.get('/api/inventario-principal', requireAuth, async (req, res) => {
     res.json({ success: true, inventario });
   } catch (error) {
     console.error('❌ Error obteniendo inventario principal:', error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: 'Error obteniendo inventario principal',
-      });
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo inventario principal',
+    });
   }
 });
 
@@ -856,12 +847,10 @@ app.get('/api/inventario-periferico', requireAuth, async (req, res) => {
     res.json({ success: true, inventario });
   } catch (error) {
     console.error('❌ Error obteniendo inventario periférico:', error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: 'Error obteniendo inventario periférico',
-      });
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo inventario periférico',
+    });
   }
 });
 
@@ -872,12 +861,10 @@ app.get('/api/inventario-completo', requireAuth, async (req, res) => {
     res.json({ success: true, inventario });
   } catch (error) {
     console.error('❌ Error obteniendo inventario completo:', error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: 'Error obteniendo inventario completo',
-      });
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo inventario completo',
+    });
   }
 });
 
@@ -899,12 +886,10 @@ app.post('/api/departamentos', requireAuth, async (req, res) => {
   const { nombre } = req.body;
 
   if (!nombre || typeof nombre !== 'string') {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        message: 'Nombre de departamento es requerido y debe ser texto',
-      });
+    return res.status(400).json({
+      success: false,
+      message: 'Nombre de departamento es requerido y debe ser texto',
+    });
   }
 
   try {
@@ -929,23 +914,19 @@ app.post('/api/departamentos', requireAuth, async (req, res) => {
     const resultado = await db.createDepartamento(nombre);
     await db.commitTransaction();
 
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: 'Departamento creado',
-        departamentoId: resultado.id,
-      });
+    res.status(201).json({
+      success: true,
+      message: 'Departamento creado',
+      departamentoId: resultado.id,
+    });
   } catch (error) {
     await db.rollbackTransaction();
     console.error('❌ Error creando departamento:', error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: 'Error creando departamento',
-        details: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: 'Error creando departamento',
+      details: error.message,
+    });
   }
 });
 
@@ -955,12 +936,10 @@ app.put('/api/departamentos/:id', requireAuth, async (req, res) => {
   const { nombre } = req.body;
 
   if (!nombre || typeof nombre !== 'string') {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        message: 'Nombre de departamento es requerido y debe ser texto',
-      });
+    return res.status(400).json({
+      success: false,
+      message: 'Nombre de departamento es requerido y debe ser texto',
+    });
   }
 
   try {
@@ -993,13 +972,11 @@ app.put('/api/departamentos/:id', requireAuth, async (req, res) => {
   } catch (error) {
     await db.rollbackTransaction();
     console.error('❌ Error actualizando departamento:', error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: 'Error actualizando departamento',
-        details: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: 'Error actualizando departamento',
+      details: error.message,
+    });
   }
 });
 
@@ -1030,12 +1007,10 @@ app.get('/api/inventario_principal', requireAuth, async (req, res) => {
     res.json({ success: true, data });
   } catch (error) {
     console.error('❌ Error obteniendo inventario principal:', error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: 'Error obteniendo inventario principal',
-      });
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo inventario principal',
+    });
   }
 });
 
@@ -1045,12 +1020,10 @@ app.get('/api/inventario_periferico', requireAuth, async (req, res) => {
     res.json({ success: true, data });
   } catch (error) {
     console.error('❌ Error obteniendo inventario periférico:', error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: 'Error obteniendo inventario periférico',
-      });
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo inventario periférico',
+    });
   }
 });
 
@@ -1089,12 +1062,10 @@ app.get('/api/historial_asignaciones', requireAuth, (req, res) => {
     (err, rows) => {
       if (err) {
         console.error('❌ Error obteniendo historial asignaciones:', err);
-        return res
-          .status(500)
-          .json({
-            success: false,
-            message: 'Error obteniendo historial asignaciones',
-          });
+        return res.status(500).json({
+          success: false,
+          message: 'Error obteniendo historial asignaciones',
+        });
       }
       res.json({ success: true, data: rows });
     }
@@ -2052,6 +2023,11 @@ if (require.main === module) {
     .then(() => {
       console.log('📦 Sistema de préstamos inicializado');
       return initializeVacacionesSystem();
+    })
+    .then(() => {
+      return analyticsDB.createInventoryTables().then(() => {
+        console.log('🦆 Tablas de DuckDB verificadas');
+      });
     })
     .catch((err) => {
       console.error('❌ Error inicializando el sistema:', err);
