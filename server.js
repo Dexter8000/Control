@@ -1007,32 +1007,6 @@ app.delete('/api/departamentos/:id', requireAuth, async (req, res) => {
   }
 });
 
-// Endpoints de solo lectura para el panel de control
-app.get('/api/inventario_principal', requireAuth, async (req, res) => {
-  try {
-    const data = await db.getInventarioPrincipal();
-    res.json({ success: true, data });
-  } catch (error) {
-    console.error('❌ Error obteniendo inventario principal:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error obteniendo inventario principal',
-    });
-  }
-});
-
-app.get('/api/inventario_periferico', requireAuth, async (req, res) => {
-  try {
-    const data = await db.getInventarioPeriferico();
-    res.json({ success: true, data });
-  } catch (error) {
-    console.error('❌ Error obteniendo inventario periférico:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error obteniendo inventario periférico',
-    });
-  }
-});
 
 app.get('/api/configuracion', requireAuth, (req, res) => {
   db.db.all('SELECT * FROM configuracion', [], (err, rows) => {
@@ -1941,29 +1915,6 @@ app.get('/api/empleados-completos', requireAuth, async (req, res) => {
       success: false,
       message: 'Error interno del servidor: ' + error.message,
     });
-  }
-});
-
-// Obtener todos los empleados básico
-app.get('/api/empleados', requireAuth, async (req, res) => {
-  try {
-    console.log('🔍 Obteniendo empleados desde la base de datos...');
-    const empleados = await db.getEmpleadosCompletos();
-    console.log(`✅ Obtenidos ${empleados.length} empleados`);
-    // Transformar datos para compatibilidad con frontend
-    const empleadosFormateados = empleados.map((emp) => ({
-      ...emp,
-      departamento:
-        emp.departamento_nombre || emp.departamento || 'Sin departamento',
-    }));
-    console.log('✅ Datos transformados, enviando respuesta...');
-    res.json(empleadosFormateados);
-  } catch (error) {
-    console.error('❌ Error obteniendo empleados:', error.message);
-    console.error('❌ Stack trace:', error.stack);
-    res
-      .status(500)
-      .json({ error: 'Error obteniendo empleados', details: error.message });
   }
 });
 
