@@ -112,14 +112,14 @@ describe('Panel control inventario endpoints', () => {
     jest.clearAllMocks();
   });
 
-  test('GET /api/inventario_principal returns inventory list', async () => {
-    const res = await request(app).get('/api/inventario_principal');
+  test('GET /api/inventario-principal returns inventory list', async () => {
+    const res = await request(app).get('/api/inventario-principal');
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ success: true, data: [{ id: 'p1' }] });
   });
 
-  test('GET /api/inventario_periferico returns inventory list', async () => {
-    const res = await request(app).get('/api/inventario_periferico');
+  test('GET /api/inventario-periferico returns inventory list', async () => {
+    const res = await request(app).get('/api/inventario-periferico');
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       success: true,
