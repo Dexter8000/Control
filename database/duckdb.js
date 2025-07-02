@@ -98,6 +98,32 @@ async function createInventoryTables() {
         FOREIGN KEY (id_departamento_asignado) REFERENCES departamentos(id),
         FOREIGN KEY (responsable_actual) REFERENCES empleados(id)
     )`,
+    `CREATE TABLE IF NOT EXISTS movimientos_prestamos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        inventario_id TEXT NOT NULL,
+        tipo_inventario TEXT NOT NULL,
+        empleado_id TEXT NOT NULL,
+        usuario_id INTEGER,
+        fecha_prestamo TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        observaciones TEXT
+    )`,
+    `CREATE TABLE IF NOT EXISTS movimientos_devoluciones (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        inventario_id TEXT NOT NULL,
+        tipo_inventario TEXT NOT NULL,
+        empleado_id TEXT NOT NULL,
+        usuario_id INTEGER,
+        fecha_devolucion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        observaciones TEXT
+    )`,
+    `CREATE TABLE IF NOT EXISTS historial_eventos_item (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        inventario_id TEXT NOT NULL,
+        tipo_evento TEXT NOT NULL,
+        descripcion TEXT,
+        usuario_id INTEGER,
+        fecha_evento TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
   ];
 
   for (const sql of statements) {
@@ -110,7 +136,5 @@ async function createInventoryTables() {
   }
 }
 
-module.exports = {
-  connection,
-  createInventoryTables,
-};
+connection.createInventoryTables = createInventoryTables;
+module.exports = connection;
