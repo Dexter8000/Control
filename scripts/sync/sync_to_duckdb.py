@@ -33,7 +33,8 @@ def sync_table(sqlite_conn, duckdb_conn, table_name):
             return 0
         
         duckdb_conn.register("temp_df", df)
-        duckdb_conn.execute(f"CREATE OR REPLACE TABLE {table_name} AS SELECT * FROM temp_df")
+        duckdb_conn.execute(f"DELETE FROM {table_name}")
+        duckdb_conn.execute(f"INSERT INTO {table_name} SELECT * FROM temp_df")
         write_log(f"  [OK] Tabla '{table_name}' sincronizada con {len(df)} registros.")
         return len(df)
     except Exception as e:

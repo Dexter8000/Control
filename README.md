@@ -89,6 +89,8 @@ SESSION_SECRET=tu_clave_secreta_aqui_para_sesiones_seguras
 
 Antes de iniciar por primera vez, verifica que exista el directorio `attached_assets` en la raíz del proyecto. Allí se almacena la base de datos SQLite. Si no está presente, los scripts lo crearán automáticamente.
 
+Si has ejecutado el proyecto anteriormente, elimina el archivo `attached_assets/analytics.db` antes de la primera sincronización. Esto permite que `createInventoryTables` genere las tablas con todas sus restricciones de forma correcta.
+
 4. Inicializar Base de Datos
    Bash
 
