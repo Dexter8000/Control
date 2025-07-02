@@ -55,6 +55,14 @@ jest.mock('../database/vacaciones', () => {
   }));
 });
 
+jest.mock('../database/duckdb', () => ({
+  createInventoryTables: jest.fn(),
+  listTables: jest.fn(() => Promise.resolve([])),
+  getTablePreview: jest.fn(() => Promise.resolve({ columns: [], rows: [] })),
+}));
+
+process.env.SESSION_SECRET = 'test';
+
 const app = require('../server');
 // Bypass authentication middleware by providing a default session
 app.request.session = { user: { id: 'test', rol: 'admin' } };
@@ -115,7 +123,7 @@ describe('Panel control inventario endpoints', () => {
   test('GET /api/inventario-principal returns inventory list', async () => {
     const res = await request(app).get('/api/inventario-principal');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ success: true, data: [{ id: 'p1' }] });
+    expect(res.body).toEqual({ success: true, inventario: [{ id: 'p1' }] });
   });
 
   test('GET /api/inventario-periferico returns inventory list', async () => {
@@ -123,7 +131,7 @@ describe('Panel control inventario endpoints', () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       success: true,
-      data: [{ id_periferico: 'pf1' }],
+      inventario: [{ id_periferico: 'pf1' }],
     });
   });
 });

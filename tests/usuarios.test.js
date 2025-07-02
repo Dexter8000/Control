@@ -36,6 +36,14 @@ jest.mock('../database/vacaciones', () => {
   }));
 });
 
+jest.mock('../database/duckdb', () => ({
+  createInventoryTables: jest.fn(),
+  listTables: jest.fn(() => Promise.resolve([])),
+  getTablePreview: jest.fn(() => Promise.resolve({ columns: [], rows: [] })),
+}));
+
+process.env.SESSION_SECRET = 'test';
+
 const app = require('../server');
 app.request.session = { user: { id: 'admin', rol: 'administrador' } };
 
