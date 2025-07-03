@@ -5,7 +5,7 @@
 /node_modules
 
 # Generated assets and databases
-/attached_assets/
+
 
 # Log files
 *.log

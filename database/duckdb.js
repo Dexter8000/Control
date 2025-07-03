@@ -7,12 +7,10 @@ const dbPath =
   process.env.DUCKDB_PATH ||
   path.join(__dirname, '../attached_assets/analytics.db');
 
-let connection;
-
-async function createInventoryTables() {
+async function createAllTables(connection) {
   const statements = [
     `CREATE TABLE IF NOT EXISTS usuarios (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         usuario TEXT UNIQUE NOT NULL,
         contrasena TEXT NOT NULL,
         rol TEXT DEFAULT 'no administrador',
@@ -20,7 +18,7 @@ async function createInventoryTables() {
         apellido TEXT,
         email TEXT,
         telefono TEXT,
-        activo BOOLEAN DEFAULT 1,
+        activo BOOLEAN DEFAULT true,
         fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         ultimo_acceso TIMESTAMP,
         intentos_fallidos INTEGER DEFAULT 0,
@@ -49,7 +47,7 @@ async function createInventoryTables() {
         fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         fecha_adquisicion TIMESTAMP,
         detalles TEXT,
-        activo BOOLEAN DEFAULT 1,
+        activo BOOLEAN DEFAULT true,
         FOREIGN KEY (departamento_id) REFERENCES departamentos(id),
         FOREIGN KEY (responsable_actual) REFERENCES empleados(id)
     )`,
@@ -107,65 +105,111 @@ async function createInventoryTables() {
         fecha_prestamo TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         observaciones TEXT
     )`,
-    `CREATE TABLE IF NOT EXISTS movimientos_devoluciones (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        inventario_id TEXT NOT NULL,
-        tipo_inventario TEXT NOT NULL,
-        empleado_id TEXT NOT NULL,
-        usuario_id INTEGER,
-        fecha_devolucion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        observaciones TEXT
+    `CREATE TABLE IF NOT EXISTS sesiones (
+        id INTEGER PRIMARY KEY,
+        usuario_id INTEGER NOT NULL,
+        session_token VARCHAR(255) UNIQUE NOT NULL,
+        ip_address VARCHAR(45),
+        user_agent TEXT,
+        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        fecha_expiracion TIMESTAMP NOT NULL,
+        activa BOOLEAN DEFAULT true,
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
     )`,
-    `CREATE TABLE IF NOT EXISTS historial_eventos_item (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        inventario_id TEXT NOT NULL,
-        tipo_evento TEXT NOT NULL,
+    `CREATE TABLE IF NOT EXISTS configuracion (
+        id INTEGER PRIMARY KEY,
+        clave VARCHAR(100) UNIQUE NOT NULL,
+        valor TEXT,
         descripcion TEXT,
-        usuario_id INTEGER,
-        fecha_evento TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        fecha_modificacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
+    `CREATE TABLE IF NOT EXISTS logs_acceso (
+        id INTEGER PRIMARY KEY,
+        usuario_id INTEGER,
+        accion VARCHAR(50) NOT NULL,
+        tabla_afectada VARCHAR(50),
+        registro_id TEXT,
+        ip_address VARCHAR(45),
+        user_agent TEXT,
+        exitoso BOOLEAN DEFAULT true,
+        detalles TEXT,
+        fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS historial_asignaciones (
+        id INTEGER PRIMARY KEY,
+        tipo_inventario TEXT NOT NULL,
+        inventario_id TEXT NOT NULL,
+        empleado_anterior TEXT,
+        empleado_nuevo TEXT,
+        fecha_cambio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        motivo TEXT,
+        usuario_que_cambio INTEGER,
+        FOREIGN KEY (empleado_anterior) REFERENCES empleados(id),
+        FOREIGN KEY (empleado_nuevo) REFERENCES empleados(id),
+        FOREIGN KEY (usuario_que_cambio) REFERENCES usuarios(id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS historial_vacaciones (
+        id INTEGER PRIMARY KEY,
+        empleado_id TEXT NOT NULL,
+        fecha_inicio DATE NOT NULL,
+        fecha_fin DATE NOT NULL,
+        fecha_retorno DATE NOT NULL,
+        dias_totales INTEGER NOT NULL,
+        tipo_vacaciones TEXT DEFAULT 'anuales',
+        estado TEXT DEFAULT 'programadas',
+        motivo TEXT,
+        aprobado_por INTEGER,
+        fecha_solicitud TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        fecha_aprobacion TIMESTAMP,
+        notas TEXT,
+        anio_periodo INTEGER NOT NULL,
+        activo BOOLEAN DEFAULT true,
+        FOREIGN KEY (empleado_id) REFERENCES empleados(id),
+        FOREIGN KEY (aprobado_por) REFERENCES usuarios(id)
+    )`
   ];
 
-  for (const sql of statements) {
-    await new Promise((resolve, reject) => {
-      connection.run(sql, (err) => {
-        if (err) return reject(err);
-        resolve();
-      });
-    });
+  try {
+    for (const sql of statements) {
+      await connection.run(sql);
+    }
+    console.log('🎉 Todas las tablas han sido creadas exitosamente.');
+  } catch (err) {
+    console.error('❌ Error al crear las tablas:', err);
+    throw err;
   }
 }
 
-async function listTables() {
-  const reader = await connection.runAndReadAll(
-    "SELECT table_name FROM information_schema.tables WHERE table_schema='main'"
-  );
-  return reader.getRows().map((r) => r[0]);
-}
-
-async function getTablePreview(tableName, limit = 20) {
-  const reader = await connection.runAndReadAll(
-    `SELECT * FROM ${tableName} LIMIT ${limit}`
-  );
-  return {
-    columns: reader.columnNames(),
-    rows: reader.getRows(),
-  };
-}
-
-
 async function initializeDuckDB() {
+  const { DuckDBInstance } = duckdb;
   const assetsDir = path.dirname(dbPath);
   if (!fs.existsSync(assetsDir)) {
     fs.mkdirSync(assetsDir, { recursive: true });
   }
-  const db = new duckdb.Database(dbPath);
-  connection = db.connect();
-  connection.createInventoryTables = createInventoryTables;
-  connection.listTables = listTables;
-  connection.getTablePreview = getTablePreview;
-  await createInventoryTables();
-  return connection;
+  
+  let instance;
+  let connection;
+
+  try {
+    console.log(`🦆 Conectando a DuckDB en: ${dbPath}`);
+    instance = await DuckDBInstance.create(dbPath);
+    connection = await instance.connect();
+    console.log('✅ Conexión a DuckDB establecida.');
+
+    await createAllTables(connection);
+    
+    return { connection, instance };
+  } catch (err) {
+    console.error('❌ Fallo al inicializar DuckDB:', err);
+    if (connection) {
+      connection.closeSync();
+    }
+    if (instance) {
+      instance.closeSync();
+    }
+    throw err;
+  }
 }
 
-module.exports = { connection, initializeDuckDB };
+module.exports = { initializeDuckDB };
