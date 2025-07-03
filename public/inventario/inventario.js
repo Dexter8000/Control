@@ -3,8 +3,9 @@ document.addEventListener('DOMContentLoaded', function () {
   // Variables globales
   let equipos = [];
   let perifericos = [];
-  const API_PRINCIPAL = '/api/inventario-principal';
-  const API_PERIFERICOS = '/api/inventario-periferico';
+  // Endpoints CRUD de inventario
+  const API_INVENTARIO_PRINCIPAL = '/api/inventario-principal';
+  const API_INVENTARIO_PERIFERICO = '/api/inventario-periferico';
   let currentView = 'principal';
   let equipoPrincipalSeleccionado = null;
 
@@ -48,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   async function loadEquipos() {
     try {
-      const res = await fetch(API_PRINCIPAL);
+      const res = await fetch(API_INVENTARIO_PRINCIPAL);
       const data = await res.json();
       equipos = data.inventario || data.data || [];
     } catch (err) {
@@ -59,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   async function loadPerifericos() {
     try {
-      const res = await fetch(API_PERIFERICOS);
+      const res = await fetch(API_INVENTARIO_PERIFERICO);
       const data = await res.json();
       perifericos = data.inventario || data.data || [];
     } catch (err) {
@@ -71,8 +72,8 @@ document.addEventListener('DOMContentLoaded', function () {
   async function deleteItem(id, type) {
     const url =
       type === 'principal'
-        ? `${API_PRINCIPAL}/${id}`
-        : `${API_PERIFERICOS}/${id}`;
+        ? `${API_INVENTARIO_PRINCIPAL}/${id}`
+        : `${API_INVENTARIO_PERIFERICO}/${id}`;
     const res = await fetch(url, { method: 'DELETE' });
     if (!res.ok) {
       throw new Error('Error eliminando elemento');
@@ -792,7 +793,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // Guardar o actualizar el item en el servidor
 
     let method = id ? 'PUT' : 'POST';
-    let url = type === 'principal' ? API_PRINCIPAL : API_PERIFERICOS;
+    let url =
+      type === 'principal'
+        ? API_INVENTARIO_PRINCIPAL
+        : API_INVENTARIO_PERIFERICO;
     if (id) url += `/${id}`;
 
     try {
