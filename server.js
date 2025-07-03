@@ -8,7 +8,7 @@ const http = require('http');
 const WebSocket = require('ws');
 const Database = require('./database/config');
 const VacacionesManager = require('./database/vacaciones');
-const analyticsDB = require('./database/duckdb');
+const { connection: analyticsDB, initializeDuckDB } = require('./database/duckdb');
 
 let wss; // WebSocket server (solo cuando se ejecuta directamente)
 
@@ -2090,8 +2090,8 @@ if (require.main === module) {
       return initializeVacacionesSystem();
     })
     .then(() => {
-      return analyticsDB.createInventoryTables().then(() => {
-        console.log('🦆 Tablas de DuckDB verificadas');
+      return initializeDuckDB().then(() => {
+        console.log('🦆 DuckDB inicializado');
       });
     })
     .catch((err) => {

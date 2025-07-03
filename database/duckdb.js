@@ -1,14 +1,13 @@
 const duckdb = require('@duckdb/node-api');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const dbPath =
   process.env.DUCKDB_PATH ||
   path.join(__dirname, '../attached_assets/analytics.db');
 
-// Create DuckDB database and connection
-const db = new duckdb.Database(dbPath);
-const connection = db.connect();
+let connection;
 
 async function createInventoryTables() {
   const statements = [
@@ -137,8 +136,6 @@ async function createInventoryTables() {
   }
 }
 
-connection.createInventoryTables = createInventoryTables;
-
 async function listTables() {
   const reader = await connection.runAndReadAll(
     "SELECT table_name FROM information_schema.tables WHERE table_schema='main'"
@@ -156,6 +153,19 @@ async function getTablePreview(tableName, limit = 20) {
   };
 }
 
-connection.listTables = listTables;
-connection.getTablePreview = getTablePreview;
-module.exports = connection;
+
+async function initializeDuckDB() {
+  const assetsDir = path.dirname(dbPath);
+  if (!fs.existsSync(assetsDir)) {
+    fs.mkdirSync(assetsDir, { recursive: true });
+  }
+  const db = new duckdb.Database(dbPath);
+  connection = db.connect();
+  connection.createInventoryTables = createInventoryTables;
+  connection.listTables = listTables;
+  connection.getTablePreview = getTablePreview;
+  await createInventoryTables();
+  return connection;
+}
+
+module.exports = { connection, initializeDuckDB };
