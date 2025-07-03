@@ -23,9 +23,12 @@ jest.mock('../database/vacaciones', () => {
 });
 
 jest.mock('../database/duckdb', () => ({
-  createInventoryTables: jest.fn(),
-  listTables: jest.fn(() => Promise.resolve([])),
-  getTablePreview: jest.fn(() => Promise.resolve({ columns: [], rows: [] })),
+  connection: {
+    createInventoryTables: jest.fn(),
+    listTables: jest.fn(() => Promise.resolve([])),
+    getTablePreview: jest.fn(() => Promise.resolve({ columns: [], rows: [] })),
+  },
+  initializeDuckDB: jest.fn(),
 }));
 
 process.env.SESSION_SECRET = 'test';
