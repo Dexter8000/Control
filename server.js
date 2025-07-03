@@ -8,20 +8,11 @@ const http = require('http');
 const WebSocket = require('ws');
 const Database = require('./database/config');
 const VacacionesManager = require('./database/vacaciones');
-const analyticsDB = require('./database/duckdb');
+const { connection: analyticsDB, initializeDuckDB } = require('./database/duckdb');
 
 let wss; // WebSocket server (solo cuando se ejecuta directamente)
 
-// Verificar si se proporcionó la cadena de conexión a PostgreSQL
-const HAS_DATABASE_URL = Boolean(process.env.DATABASE_URL);
-if (!HAS_DATABASE_URL) {
-  console.error(
-    '⚠️  DATABASE_URL no está definido. Se omitirá la inicialización de PostgreSQL y se usará únicamente SQLite.'
-  );
-} else {
-  console.log('🔌 Conexión de PostgreSQL detectada a través de DATABASE_URL');
-  // Aquí se inicializaría PostgreSQL cuando esté disponible
-}
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -872,6 +863,100 @@ app.get('/api/inventario-completo', requireAuth, async (req, res) => {
       success: false,
       message: 'Error obteniendo inventario completo',
     });
+  }
+});
+
+// Crear equipo principal
+app.post('/api/inventario-principal', requireAuth, async (req, res) => {
+  try {
+    await db.beginTransaction();
+    const result = await db.createEquipoPrincipal(req.body);
+    await db.commitTransaction();
+    res.status(201).json({
+      success: true,
+      message: 'Equipo principal creado',
+      equipoId: result.id,
+    });
+  } catch (error) {
+    await db.rollbackTransaction();
+    console.error('❌ Error creando equipo principal:', error);
+    res.status(500).json({ success: false, message: 'Error creando equipo principal' });
+  }
+});
+
+// Actualizar equipo principal
+app.put('/api/inventario-principal/:id', requireAuth, async (req, res) => {
+  try {
+    await db.beginTransaction();
+    const result = await db.updateEquipoPrincipal(req.params.id, req.body);
+    await db.commitTransaction();
+    if (result.changes === 0) {
+      return res.status(404).json({ success: false, message: 'Equipo principal no encontrado' });
+    }
+    res.json({ success: true, message: 'Equipo principal actualizado' });
+  } catch (error) {
+    await db.rollbackTransaction();
+    console.error('❌ Error actualizando equipo principal:', error);
+    res.status(500).json({ success: false, message: 'Error actualizando equipo principal' });
+  }
+});
+
+// Eliminar equipo principal
+app.delete('/api/inventario-principal/:id', requireAuth, async (req, res) => {
+  try {
+    const result = await db.deleteEquipoPrincipal(req.params.id);
+    if (result.changes === 0) {
+      return res.status(404).json({ success: false, message: 'Equipo principal no encontrado' });
+    }
+    res.json({ success: true, message: 'Equipo principal eliminado' });
+  } catch (error) {
+    console.error('❌ Error eliminando equipo principal:', error);
+    res.status(500).json({ success: false, message: 'Error eliminando equipo principal' });
+  }
+});
+
+// Crear periférico
+app.post('/api/inventario-periferico', requireAuth, async (req, res) => {
+  try {
+    await db.beginTransaction();
+    const result = await db.createPeriferico(req.body);
+    await db.commitTransaction();
+    res.status(201).json({ success: true, message: 'Periférico creado', perifericoId: result.id });
+  } catch (error) {
+    await db.rollbackTransaction();
+    console.error('❌ Error creando periférico:', error);
+    res.status(500).json({ success: false, message: 'Error creando periférico' });
+  }
+});
+
+// Actualizar periférico
+app.put('/api/inventario-periferico/:id', requireAuth, async (req, res) => {
+  try {
+    await db.beginTransaction();
+    const result = await db.updatePeriferico(req.params.id, req.body);
+    await db.commitTransaction();
+    if (result.changes === 0) {
+      return res.status(404).json({ success: false, message: 'Periférico no encontrado' });
+    }
+    res.json({ success: true, message: 'Periférico actualizado' });
+  } catch (error) {
+    await db.rollbackTransaction();
+    console.error('❌ Error actualizando periférico:', error);
+    res.status(500).json({ success: false, message: 'Error actualizando periférico' });
+  }
+});
+
+// Eliminar periférico
+app.delete('/api/inventario-periferico/:id', requireAuth, async (req, res) => {
+  try {
+    const result = await db.deletePeriferico(req.params.id);
+    if (result.changes === 0) {
+      return res.status(404).json({ success: false, message: 'Periférico no encontrado' });
+    }
+    res.json({ success: true, message: 'Periférico eliminado' });
+  } catch (error) {
+    console.error('❌ Error eliminando periférico:', error);
+    res.status(500).json({ success: false, message: 'Error eliminando periférico' });
   }
 });
 
@@ -2005,8 +2090,8 @@ if (require.main === module) {
       return initializeVacacionesSystem();
     })
     .then(() => {
-      return analyticsDB.createInventoryTables().then(() => {
-        console.log('🦆 Tablas de DuckDB verificadas');
+      return initializeDuckDB().then(() => {
+        console.log('🦆 DuckDB inicializado');
       });
     })
     .catch((err) => {

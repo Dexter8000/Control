@@ -1,14 +1,13 @@
 const duckdb = require('@duckdb/node-api');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const dbPath =
   process.env.DUCKDB_PATH ||
   path.join(__dirname, '../attached_assets/analytics.db');
 
-// Create DuckDB database and connection
-const db = new duckdb.Database(dbPath);
-const connection = db.connect();
+let connection;
 
 async function createInventoryTables() {
   const statements = [
@@ -31,6 +30,7 @@ async function createInventoryTables() {
         id TEXT PRIMARY KEY,
         nombre TEXT NOT NULL
     )`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_departamentos_id ON departamentos(id)`,
     `CREATE TABLE IF NOT EXISTS empleados (
         id TEXT PRIMARY KEY,
         placa TEXT UNIQUE,
@@ -52,27 +52,6 @@ async function createInventoryTables() {
         activo BOOLEAN DEFAULT 1,
         FOREIGN KEY (departamento_id) REFERENCES departamentos(id),
         FOREIGN KEY (responsable_actual) REFERENCES empleados(id)
-    )`,
-    `CREATE TABLE IF NOT EXISTS inventario_periferico (
-        id_periferico TEXT PRIMARY KEY,
-        nombre_periferico TEXT,
-        marca_periferico TEXT,
-        modelo_periferico TEXT,
-        serie_periferico TEXT,
-        estado_periferico TEXT DEFAULT 'operativo',
-        condicion_periferico TEXT DEFAULT 'nuevo',
-        tipo_adquisicion_periferico TEXT,
-        id_departamento_asignado_periferico TEXT,
-        ubicacion_especifica_periferico TEXT,
-        responsable_actual_periferico TEXT,
-        fecha_creacion_periferico TEXT,
-        fecha_adquisicion_periferico TEXT,
-        detalles_periferico TEXT,
-        id_inventario_principal TEXT,
-        fecha_asignacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (id_departamento_asignado_periferico) REFERENCES departamentos(id),
-        FOREIGN KEY (responsable_actual_periferico) REFERENCES empleados(id),
-        FOREIGN KEY (id_inventario_principal) REFERENCES inventario_principal(id)
     )`,
     `CREATE TABLE IF NOT EXISTS inventario_principal (
         id TEXT PRIMARY KEY,
@@ -97,6 +76,27 @@ async function createInventoryTables() {
         garantia_hasta DATE,
         FOREIGN KEY (id_departamento_asignado) REFERENCES departamentos(id),
         FOREIGN KEY (responsable_actual) REFERENCES empleados(id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS inventario_periferico (
+        id_periferico TEXT PRIMARY KEY,
+        nombre_periferico TEXT,
+        marca_periferico TEXT,
+        modelo_periferico TEXT,
+        serie_periferico TEXT,
+        estado_periferico TEXT DEFAULT 'operativo',
+        condicion_periferico TEXT DEFAULT 'nuevo',
+        tipo_adquisicion_periferico TEXT,
+        id_departamento_asignado_periferico TEXT,
+        ubicacion_especifica_periferico TEXT,
+        responsable_actual_periferico TEXT,
+        fecha_creacion_periferico TEXT,
+        fecha_adquisicion_periferico TEXT,
+        detalles_periferico TEXT,
+        id_inventario_principal TEXT,
+        fecha_asignacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (id_departamento_asignado_periferico) REFERENCES departamentos(id),
+        FOREIGN KEY (responsable_actual_periferico) REFERENCES empleados(id),
+        FOREIGN KEY (id_inventario_principal) REFERENCES inventario_principal(id)
     )`,
     `CREATE TABLE IF NOT EXISTS movimientos_prestamos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -136,8 +136,6 @@ async function createInventoryTables() {
   }
 }
 
-connection.createInventoryTables = createInventoryTables;
-
 async function listTables() {
   const reader = await connection.runAndReadAll(
     "SELECT table_name FROM information_schema.tables WHERE table_schema='main'"
@@ -155,6 +153,19 @@ async function getTablePreview(tableName, limit = 20) {
   };
 }
 
-connection.listTables = listTables;
-connection.getTablePreview = getTablePreview;
-module.exports = connection;
+
+async function initializeDuckDB() {
+  const assetsDir = path.dirname(dbPath);
+  if (!fs.existsSync(assetsDir)) {
+    fs.mkdirSync(assetsDir, { recursive: true });
+  }
+  const db = new duckdb.Database(dbPath);
+  connection = db.connect();
+  connection.createInventoryTables = createInventoryTables;
+  connection.listTables = listTables;
+  connection.getTablePreview = getTablePreview;
+  await createInventoryTables();
+  return connection;
+}
+
+module.exports = { connection, initializeDuckDB };
