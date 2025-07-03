@@ -612,6 +612,206 @@ class Database {
     });
   }
 
+  // Crear equipo principal
+  createEquipoPrincipal(data) {
+    return new Promise((resolve, reject) => {
+      const id = crypto.randomUUID();
+      const query = `
+                INSERT INTO inventario_principal (
+                    id, nombre, marca, modelo, serie, categoria, subcategoria,
+                    estado, condicion, tipo_adquisicion, id_departamento_asignado,
+                    ubicacion_especifica, responsable_actual, fecha_creacion,
+                    fecha_adquisicion, detalles
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
+      const values = [
+        id,
+        data.nombre,
+        data.marca,
+        data.modelo,
+        data.serie || null,
+        data.categoria,
+        data.subcategoria || null,
+        data.estado,
+        data.condicion,
+        data.tipoAdquisicion,
+        data.departamento,
+        data.ubicacion,
+        data.responsable,
+        new Date().toISOString(),
+        data.fechaAdquisicion || null,
+        data.detalles || null,
+      ];
+
+      this.db.run(query, values, function (err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ id });
+        }
+      });
+    });
+  }
+
+  // Actualizar equipo principal
+  updateEquipoPrincipal(id, data) {
+    return new Promise((resolve, reject) => {
+      const query = `
+                UPDATE inventario_principal SET
+                    nombre = ?, marca = ?, modelo = ?, serie = ?,
+                    categoria = ?, subcategoria = ?, estado = ?, condicion = ?,
+                    tipo_adquisicion = ?, id_departamento_asignado = ?,
+                    ubicacion_especifica = ?, responsable_actual = ?,
+                    fecha_adquisicion = ?, detalles = ?
+                WHERE id = ?
+            `;
+
+      const values = [
+        data.nombre,
+        data.marca,
+        data.modelo,
+        data.serie || null,
+        data.categoria,
+        data.subcategoria || null,
+        data.estado,
+        data.condicion,
+        data.tipoAdquisicion,
+        data.departamento,
+        data.ubicacion,
+        data.responsable,
+        data.fechaAdquisicion || null,
+        data.detalles || null,
+        id,
+      ];
+
+      this.db.run(query, values, function (err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ changes: this.changes });
+        }
+      });
+    });
+  }
+
+  // Eliminar equipo principal
+  deleteEquipoPrincipal(id) {
+    return new Promise((resolve, reject) => {
+      const query = 'DELETE FROM inventario_principal WHERE id = ?';
+      this.db.run(query, [id], function (err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ changes: this.changes });
+        }
+      });
+    });
+  }
+
+  // Crear periférico
+  createPeriferico(data) {
+    return new Promise((resolve, reject) => {
+      const id = crypto.randomUUID();
+      const query = `
+                INSERT INTO inventario_periferico (
+                    id_periferico, nombre_periferico, marca_periferico,
+                    modelo_periferico, serie_periferico, estado_periferico,
+                    condicion_periferico, tipo_adquisicion_periferico,
+                    id_departamento_asignado_periferico,
+                    ubicacion_especifica_periferico,
+                    responsable_actual_periferico,
+                    fecha_creacion_periferico, fecha_adquisicion_periferico,
+                    detalles_periferico, id_inventario_principal
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
+
+      const values = [
+        id,
+        data.nombre,
+        data.marca,
+        data.modelo,
+        data.serie || null,
+        data.estado,
+        data.condicion,
+        data.tipoAdquisicion,
+        data.departamento,
+        data.ubicacion,
+        data.responsable,
+        new Date().toISOString(),
+        data.fechaAdquisicion || null,
+        data.detalles || null,
+        data.equipoPrincipalId,
+      ];
+
+      this.db.run(query, values, function (err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ id });
+        }
+      });
+    });
+  }
+
+  // Actualizar periférico
+  updatePeriferico(id, data) {
+    return new Promise((resolve, reject) => {
+      const query = `
+                UPDATE inventario_periferico SET
+                    nombre_periferico = ?, marca_periferico = ?,
+                    modelo_periferico = ?, serie_periferico = ?,
+                    estado_periferico = ?, condicion_periferico = ?,
+                    tipo_adquisicion_periferico = ?,
+                    id_departamento_asignado_periferico = ?,
+                    ubicacion_especifica_periferico = ?,
+                    responsable_actual_periferico = ?,
+                    fecha_adquisicion_periferico = ?,
+                    detalles_periferico = ?,
+                    id_inventario_principal = ?
+                WHERE id_periferico = ?
+            `;
+
+      const values = [
+        data.nombre,
+        data.marca,
+        data.modelo,
+        data.serie || null,
+        data.estado,
+        data.condicion,
+        data.tipoAdquisicion,
+        data.departamento,
+        data.ubicacion,
+        data.responsable,
+        data.fechaAdquisicion || null,
+        data.detalles || null,
+        data.equipoPrincipalId,
+        id,
+      ];
+
+      this.db.run(query, values, function (err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ changes: this.changes });
+        }
+      });
+    });
+  }
+
+  // Eliminar periférico
+  deletePeriferico(id) {
+    return new Promise((resolve, reject) => {
+      const query = 'DELETE FROM inventario_periferico WHERE id_periferico = ?';
+      this.db.run(query, [id], function (err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ changes: this.changes });
+        }
+      });
+    });
+  }
+
   getEmpleados() {
     return new Promise((resolve, reject) => {
       const query = `
