@@ -8,7 +8,7 @@ const http = require('http');
 const WebSocket = require('ws');
 const Database = require('./database/config');
 const VacacionesManager = require('./database/vacaciones');
-const { connection: analyticsDB, initializeDuckDB } = require('./database/duckdb');
+
 
 let wss; // WebSocket server (solo cuando se ejecuta directamente)
 

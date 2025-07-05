@@ -30,9 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const cancelConfirmBtn = document.querySelector(
     '.confirm-actions .cancel-btn'
   );
-  const duckdbTableSelect = document.getElementById('duckdb-table-select');
-  const duckdbTotalTables = document.getElementById('duckdb-total-tables');
-  const duckdbRowCount = document.getElementById('duckdb-row-count');
+
 
   // Inicializar la aplicación
   init();
@@ -133,11 +131,7 @@ document.addEventListener('DOMContentLoaded', function () {
       handleFormSubmit(new Event('submit'), 'finish');
     });
 
-    if (duckdbTableSelect) {
-      duckdbTableSelect.addEventListener('change', () => {
-        loadDuckdbTable(duckdbTableSelect.value);
-      });
-    }
+
 
     // Cambios en categoría para actualizar subcategorías
     document
@@ -168,9 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
       case 'general':
         renderGeneral();
         break;
-      case 'duckdb-panel':
-        renderDuckdbPanel();
-        break;
+
     }
   }
 
