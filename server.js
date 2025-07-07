@@ -685,32 +685,10 @@ app.get('/api/rangos', requireAuth, async (req, res) => {
 });
 
 // Endpoint para obtener el inventario principal
-app.get('/api/inventario_principal', requireAuth, async (req, res) => {
-  try {
-    const inventario = await db.getInventarioPrincipal();
-    res.json(inventario);
-  } catch (error) {
-    console.error('--- DETAILED ERROR in /api/inventario_principal ---');
-    console.error('Timestamp:', new Date().toISOString());
-    console.error('Error Object:', error);
-    console.error('--- END DETAILED ERROR ---');
-    res.status(500).json({ success: false, message: 'Error interno del servidor al obtener inventario principal.' });
-  }
-});
+// Eliminado. Use /api/inventario_general_activos
 
 // Endpoint para obtener el inventario perifÃ©rico
-app.get('/api/inventario_periferico', requireAuth, async (req, res) => {
-  try {
-    const inventario = await db.getInventarioPeriferico();
-    res.json(inventario);
-  } catch (error) {
-    console.error('--- DETAILED ERROR in /api/inventario_periferico ---');
-    console.error('Timestamp:', new Date().toISOString());
-    console.error('Error Object:', error);
-    console.error('--- END DETAILED ERROR ---');
-    res.status(500).json({ success: false, message: 'Error interno del servidor al obtener inventario perifÃ©rico.' });
-  }
-});
+// Eliminado. Use /api/inventario_general_activos
 
 app.put('/api/empleados/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
@@ -891,18 +869,6 @@ app.get('/api/inventario-principal-deprecado', requireAuth, async (req, res) => 
   }
 });
 
-app.get('/api/inventario_periferico', requireAuth, async (req, res) => {
-  try {
-    const inventario = await db.getInventarioPeriferico();
-    res.json({ success: true, inventario });
-  } catch (error) {
-    console.error('âŒ Error obteniendo inventario de perifÃ©ricos:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error obteniendo inventario de perifÃ©ricos',
-    });
-  }
-});
 
 // Obtener inventario perifÃ©rico completo
 app.get('/api/inventario-periferico', requireAuth, async (req, res) => {
