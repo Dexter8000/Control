@@ -1121,19 +1121,6 @@ app.get('/api/logs_acceso', requireAuth, requireRole('administrador'), async (re
     res.status(500).json({ success: false, message: 'Error obteniendo logs de acceso' });
   }
 });
-
-// Obtener historial de asignaciones (temporalmente devuelve array vacÃ­o)
-app.get('/api/historial_asignaciones', requireAuth, async (req, res) => {
-  try {
-    // Por ahora devolvemos un array vacÃ­o ya que esta funcionalidad no estÃ¡ implementada
-    console.log('âš ï¸ Endpoint historial_asignaciones: devolviendo array vacÃ­o temporal');
-    res.json({ success: true, historial: [] });
-  } catch (error) {
-    console.error('âŒ Error obteniendo historial de asignaciones:', error);
-    res.status(500).json({ success: false, message: 'Error obteniendo historial de asignaciones' });
-  }
-});
-
 // ===== ENDPOINTS PARA DEPARTAMENTOS =====
 
 // Obtener todos los departamentos
