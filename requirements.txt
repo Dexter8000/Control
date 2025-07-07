@@ -1,10 +1,3 @@
-C:\Users\Dexter\Control
-bcryptjs==3.0.2
-cors==2.8.5
-dotenv==16.6.1
-express-session==1.18.1
-express==5.1.0
-python-shell==5.0.0
-sqlite3==5.1.7
-superagent==10.2.1
-ws==8.18.3
+flask==3.1.1
+pandas==2.3.0
+openpyxl==3.1.55
