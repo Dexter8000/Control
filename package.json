@@ -23,7 +23,6 @@
 
     "express": "^5.1.0",
     "express-session": "^1.18.1",
-    "python-shell": "^5.0.0",
     "sqlite3": "^5.1.7",
     "superagent": "^10.2.1",
     "ws": "^8.16.0"
