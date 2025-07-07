@@ -9,7 +9,6 @@
 
 ### Principales
 
-- `@duckdb/node-api`: ^0.10.0 (Cliente Node.js para DuckDB)
 - `superagent`: ^9.0.0 (Cliente HTTP para Node.js)
 
 ## Estructura de Base de Datos
@@ -70,16 +69,15 @@ CREATE TABLE perifericos (
 
 1. Instalar dependencias:
 
-   ```bash
-   npm install @duckdb/node-api superagent@latest
-   ```
+```bash
+npm install superagent@latest
+```
 
 2. Crear archivo de configuración `.env` en la raíz del proyecto:
 
    ```env
    # Configuración de Base de Datos
-   DB_PATH=./attached_assets/kilo.db
-   DUCKDB_PATH=./attached_assets/analytics.db
+    DB_PATH=./attached_assets/kilo.db
 
    # Configuración del Servidor
    PORT=3000
@@ -104,6 +102,5 @@ npm run dev
 
 ### 2025-07-01
 
-- Instalado @duckdb/node-api
 - Actualizado superagent a la versión 9.0.0+
 - Configurada la estructura inicial de la base de datos
