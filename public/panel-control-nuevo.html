@@ -48,19 +48,10 @@
     </header>
     <main class="pc-main">
       <div class="cards-grid">
-        <div class="pc-card" data-table="usuarios">
-          <i class="fas fa-users"></i><span>Usuarios</span>
-        </div>
         <div class="pc-card" data-table="departamentos">
           <i class="fas fa-building"></i><span>Departamentos</span>
         </div>
-        <div class="pc-card" data-table="empleados">
-          <i class="fas fa-user-tie"></i><span>Empleados</span>
-        </div>
         <!-- Tarjetas de inventario eliminadas para preparar nueva estructura -->
-        <div class="pc-card" data-table="inventario_general_activos">
-          <i class="fas fa-boxes"></i><span>Inventario General</span>
-        </div>
         <div class="pc-card" data-table="configuracion">
           <i class="fas fa-cogs"></i><span>Configuración</span>
         </div>
@@ -82,33 +73,16 @@
       </div>
       
       <!-- Botones de acción para cada tabla -->
-      <div id="empleados-actions" class="pc-actions">
-        <button class="btn-modern btn-primary" onclick="window.location.href='/empleados.html'">
-          <i class="fas fa-user-plus"></i>
-          <span>Gestionar Empleados</span>
-        </button>
-      </div>
       
       <div id="departamentos-actions" class="pc-actions">
-        <button class="btn-modern btn-primary" onclick="showDepartamentoModal()">
+        <button id="btn-add-departamento" class="btn-modern btn-primary">
           <i class="fas fa-plus"></i>
           <span>Agregar Nuevo Departamento</span>
         </button>
       </div>
-      
-      <div id="usuarios-actions" class="pc-actions">
-        <button class="btn-modern btn-info" onclick="window.location.href='/usuarios.html'">
-          <i class="fas fa-users"></i>
-          <span>Ver Usuarios</span>
-        </button>
       </div>
       
-      <div id="inventario_general_activos-actions" class="pc-actions">
-        <button class="btn-modern btn-primary" onclick="window.location.href='/inventario-general.html'">
-          <i class="fas fa-boxes"></i>
-          <span>Gestionar Inventario General</span>
-        </button>
-      </div>
+      
       
       <!-- Acciones de inventario eliminadas para preparar nueva estructura -->
 
@@ -153,9 +127,29 @@
           </div>
         </div>
       </div>
+      <!-- Modal Confirmar Eliminación -->
+      <div id="departamento-delete-modal" class="modal" style="display: none">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Confirmar Eliminación</h2>
+            <button class="close" onclick="closeDeleteDepartamentoModal()">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p id="delete-depto-text"></p>
+            <div class="form-group">
+              <label for="confirm-delete-depto">Escribe el ID para confirmar</label>
+              <input type="text" id="confirm-delete-depto" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-modern btn-cancel" onclick="closeDeleteDepartamentoModal()">Cancelar</button>
+            <button type="button" class="btn-modern btn-danger" onclick="confirmDeleteDepartamento()">Eliminar</button>
+          </div>
+        </div>
+      </div>
     </main>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="/panel-control-nuevo.js"></script>
+    <script src="/panel-control.js"></script>
   </body>
 </html>
