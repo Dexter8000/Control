@@ -670,10 +670,10 @@ class Database {
     return new Promise((resolve, reject) => {
       const query = `
         SELECT
-            e.id, e.placa, e.rango, e.nombre, e.apellido, e.departamento, 
-            e.correo_electronico, e.cedula, e.telefono, e.jefe_inmediato, 
-            e.tel_jefe, e.fecha_creacion
+            e.*,
+            d.nombre AS departamento_nombre
         FROM empleados e
+        LEFT JOIN departamentos d ON e.departamento_id = d.id
         ORDER BY e.nombre, e.apellido
       `;
       this.db.all(query, [], (err, rows) => {

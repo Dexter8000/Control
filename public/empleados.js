@@ -484,8 +484,7 @@ function updateKPIs(datosRangos = []) {
   // Recuadro 3: Departamento con Más Personal
   const deptCount = {};
   empleadosActivos.forEach((emp) => {
-    const dept =
-      emp.departamento_nombre || emp.departamento || '[Sin Departamento]';
+    const dept = emp.departamento_nombre || '[Sin Departamento]';
     deptCount[dept] = (deptCount[dept] || 0) + 1;
   });
 
@@ -599,9 +598,7 @@ function applyFilters() {
 
     // Filtro de departamento
     const matchesDepartamento =
-      !departamento ||
-      empleado.departamento === departamento ||
-      empleado.departamento_nombre === departamento;
+      !departamento || empleado.departamento_nombre === departamento;
 
     // Filtro de rango
     const matchesRango = !rango || empleado.rango === rango;
@@ -665,7 +662,7 @@ function renderEmpleados() {
             </td>
             <td>
                 <span class="employee-badge badge-departamento">
-                    ${empleado.departamento_nombre || empleado.departamento || 'Sin departamento'}
+                    ${empleado.departamento_nombre || 'Sin departamento'}
                 </span>
             </td>
             <td>
@@ -755,8 +752,8 @@ function sortTable(column) {
     }
 
     if (column === 'departamento') {
-      aVal = a.departamento_nombre || a.departamento || '';
-      bVal = b.departamento_nombre || b.departamento || '';
+      aVal = a.departamento_nombre || '';
+      bVal = b.departamento_nombre || '';
     }
 
     if (column === 'email') {
@@ -882,7 +879,7 @@ async function editEmpleado(empleadoId) {
       document.querySelector('[name="placa"]').value = empleado.placa || '';
       document.querySelector('[name="rango"]').value = empleado.rango || '';
       document.querySelector('[name="departamento"]').value =
-        empleado.departamento || empleado.departamento_nombre || '';
+        empleado.departamento_nombre || '';
       document.getElementById('empleado-id').value = empleadoId;
 
       // Actualizar texto del botón de guardar
@@ -891,7 +888,7 @@ async function editEmpleado(empleadoId) {
 
       // Actualizar selector de departamentos antes de mostrar
       await updateModalDepartmentSelector(
-        empleado.departamento || empleado.departamento_nombre || ''
+        empleado.departamento_nombre || ''
       );
 
       // Mostrar modal
@@ -935,7 +932,7 @@ function deleteEmpleado(empleadoId) {
     `${empleado.nombre || 'Sin nombre'} ${empleado.apellido || 'Sin apellido'}`;
 
   document.getElementById('delete-employee-details').textContent =
-    `${empleado.rango || 'Sin rango'} • ${empleado.departamento_nombre || empleado.departamento || 'Sin departamento'}`;
+    `${empleado.rango || 'Sin rango'} • ${empleado.departamento_nombre || 'Sin departamento'}`;
 
   // Mostrar modal
   document.getElementById('delete-modal').style.display = 'flex';

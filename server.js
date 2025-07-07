@@ -406,8 +406,7 @@ app.get('/api/empleados-asignacion', requireAuth, async (req, res) => {
     // Transformar datos para compatibilidad con frontend
     const empleadosFormateados = empleados.map((emp) => ({
       ...emp,
-      // Usamos directamente el campo departamento que ya existe
-      departamento: emp.departamento || 'Sin departamento',
+      departamento_nombre: emp.departamento_nombre || 'Sin departamento',
     }));
     console.log('âœ… Datos transformados, enviando respuesta...');
     res.json(empleadosFormateados);
