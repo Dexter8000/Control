@@ -923,18 +923,6 @@ app.get('/api/inventario-periferico', requireAuth, async (req, res) => {
 // Endpoints de inventario eliminados para preparar nueva estructura
 // Los nuevos endpoints se implementarÃ¡n con la nueva estructura mejorada
 
-// Obtener departamentos
-app.get('/api/departamentos', async (req, res) => {
-  try {
-    const departamentos = await db.getDepartamentos();
-    res.json({ success: true, departamentos });
-  } catch (error) {
-    console.error('âŒ Error obteniendo departamentos:', error);
-    res
-      .status(500)
-      .json({ success: false, message: 'Error obteniendo departamentos' });
-  }
-});
 
 // Obtener usuarios
 app.get('/api/usuarios', requireAuth, requireRole('administrador'), async (req, res) => {
@@ -1119,76 +1107,6 @@ app.get('/api/logs_acceso', requireAuth, requireRole('administrador'), async (re
   } catch (error) {
     console.error('âŒ Error obteniendo logs de acceso:', error);
     res.status(500).json({ success: false, message: 'Error obteniendo logs de acceso' });
-  }
-});
-// ===== ENDPOINTS PARA DEPARTAMENTOS =====
-
-// Obtener todos los departamentos
-app.get('/api/departamentos', requireAuth, async (req, res) => {
-  try {
-    const departamentos = await db.all('SELECT * FROM departamentos ORDER BY nombre');
-    res.json({ success: true, departamentos });
-  } catch (error) {
-    console.error('❌ Error obteniendo departamentos:', error);
-    res.status(500).json({ success: false, message: 'Error obteniendo departamentos' });
-  }
-});
-
-// Obtener un departamento por ID
-app.get('/api/departamentos/:id', requireAuth, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const departamento = await db.get('SELECT * FROM departamentos WHERE id = ?', [id]);
-    if (!departamento) {
-      return res.status(404).json({ success: false, message: 'Departamento no encontrado' });
-    }
-    res.json({ success: true, departamento });
-  } catch (error) {
-    console.error('❌ Error obteniendo departamento:', error);
-    res.status(500).json({ success: false, message: 'Error obteniendo departamento' });
-  }
-});
-
-// Crear un nuevo departamento
-app.post('/api/departamentos', requireAuth, async (req, res) => {
-  try {
-    const { nombre } = req.body;
-    if (!nombre) {
-      return res.status(400).json({ success: false, message: 'El nombre del departamento es requerido' });
-    }
-    const result = await db.run('INSERT INTO departamentos (nombre) VALUES (?)', [nombre]);
-    res.json({ success: true, id: result.lastID });
-  } catch (error) {
-    console.error('❌ Error creando departamento:', error);
-    res.status(500).json({ success: false, message: 'Error creando departamento' });
-  }
-});
-
-// Actualizar un departamento
-app.put('/api/departamentos/:id', requireAuth, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { nombre } = req.body;
-    if (!nombre) {
-      return res.status(400).json({ success: false, message: 'El nombre del departamento es requerido' });
-    }
-    await db.run('UPDATE departamentos SET nombre = ? WHERE id = ?', [nombre, id]);
-    res.json({ success: true });
-  } catch (error) {
-    console.error('❌ Error actualizando departamento:', error);
-    res.status(500).json({ success: false, message: 'Error actualizando departamento' });
-  }
-});
-
-// Eliminar un departamento
-app.delete('/api/departamentos/:id', requireAuth, async (req, res) => {
-  try {
-    const { id } = req.params;
-    await db.run('DELETE FROM departamentos WHERE id = ?', [id]);
-    res.json({ success: true });
-  } catch (error) {
-    console.error('❌ Error eliminando departamento:', error);
-    res.status(500).json({ success: false, message: 'Error eliminando departamento' });
   }
 });
 
@@ -1426,6 +1344,34 @@ app.get('/api/rangos', requireAuth, (req, res) => {
     const rangos = rows.map(row => row.rango);
     res.json({ success: true, rangos });
   });
+});
+
+// Obtener departamentos
+app.get('/api/departamentos', requireAuth, async (req, res) => {
+  try {
+    const departamentos = await db.getDepartamentos();
+    res.json({ success: true, departamentos });
+  } catch (error) {
+    console.error('Error obteniendo departamentos:', error);
+    res
+      .status(500)
+      .json({ success: false, message: 'Error obteniendo departamentos' });
+  }
+});
+
+// Obtener un departamento por ID
+app.get('/api/departamentos/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const departamento = await db.get('SELECT * FROM departamentos WHERE id = ?', [id]);
+    if (!departamento) {
+      return res.status(404).json({ success: false, message: 'Departamento no encontrado' });
+    }
+    res.json({ success: true, departamento });
+  } catch (error) {
+    console.error('Error obteniendo departamento:', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo departamento' });
+  }
 });
 
 // Crear departamento
