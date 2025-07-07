@@ -830,6 +830,19 @@ class Database {
     });
   }
 
+  // Wrapper utilitario para obtener una sola fila
+  get(query, params = []) {
+    return new Promise((resolve, reject) => {
+      this.db.get(query, params, (err, row) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(row);
+        }
+      });
+    });
+  }
+
   // Transaction helpers
   beginTransaction() {
     return new Promise((resolve, reject) => {

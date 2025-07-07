@@ -3,6 +3,7 @@ const request = require('supertest');
 // Prepare mocks for database module
 const mockDbGet = jest.fn();
 const mockDbAll = jest.fn();
+const mockDbGetAsync = jest.fn(() => Promise.resolve(null));
 const mockGetDepartamentos = jest.fn(() =>
   Promise.resolve([{ id: '1', nombre: 'TI' }])
 );
@@ -28,6 +29,7 @@ const mockGetInventarioGeneralActivos = jest.fn(() =>
 jest.mock('../database/config', () => {
   return jest.fn().mockImplementation(() => ({
     db: { get: mockDbGet, all: mockDbAll },
+    get: mockDbGetAsync,
     connect: jest.fn(() => Promise.resolve()),
     beginTransaction: mockBeginTransaction,
     commitTransaction: mockCommitTransaction,
@@ -71,6 +73,7 @@ describe('Departamento CRUD API', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockDbGet.mockImplementation((q, p, cb) => cb(null, null));
+    mockDbGetAsync.mockResolvedValue(null);
   });
 
   test('GET /api/departamentos returns department list', async () => {
@@ -102,6 +105,16 @@ describe('Departamento CRUD API', () => {
     expect(res.body).toEqual({
       success: true,
       message: 'Departamento actualizado',
+    });
+  });
+
+  test('GET /api/departamentos/:id returns department', async () => {
+    mockDbGetAsync.mockResolvedValueOnce({ id: 'dep1', nombre: 'Soporte' });
+    const res = await request(app).get('/api/departamentos/dep1');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      success: true,
+      departamento: { id: 'dep1', nombre: 'Soporte' },
     });
   });
 
