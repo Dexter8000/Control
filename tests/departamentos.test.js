@@ -21,6 +21,9 @@ const mockGetInventarioPeriferico = jest.fn(() =>
 const mockGetInventarioCompleto = jest.fn(() =>
   Promise.resolve([{ id: 'ip1', perifericos: [] }])
 );
+const mockGetInventarioGeneralActivos = jest.fn(() =>
+  Promise.resolve([{ id: 'ip1', perifericos: [] }])
+);
 
 jest.mock('../database/config', () => {
   return jest.fn().mockImplementation(() => ({
@@ -36,6 +39,7 @@ jest.mock('../database/config', () => {
     getInventarioPrincipal: mockGetInventarioPrincipal,
     getInventarioPeriferico: mockGetInventarioPeriferico,
     getInventarioCompleto: mockGetInventarioCompleto,
+    getInventarioGeneralActivos: mockGetInventarioGeneralActivos,
     getUser: jest.fn(),
     logAccess: jest.fn(),
   }));
@@ -154,12 +158,9 @@ describe('Modal inventory endpoints', () => {
     expect(Array.isArray(res.body)).toBe(true);
   });
 
-  test('GET /api/inventario-completo returns joined inventory', async () => {
-    const res = await request(app).get('/api/inventario-completo');
+  test('GET /api/inventario_general_activos returns inventory', async () => {
+    const res = await request(app).get('/api/inventario_general_activos');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({
-      success: true,
-      inventario: [{ id: 'ip1', perifericos: [] }],
-    });
+    expect(res.body).toEqual({ success: true, inventario: [{ id: 'ip1', perifericos: [] }] });
   });
 });
