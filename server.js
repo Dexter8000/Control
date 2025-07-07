@@ -17,9 +17,7 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 if (!process.env.SESSION_SECRET) {
-  console.error(
-    'âŒ La variable de entorno SESSION_SECRET es requerida para la seguridad de las sesiones.'
-  );
+  console.error('La variable de entorno SESSION_SECRET es requerida para la seguridad de las sesiones.');
   process.exit(1);
 }
 
