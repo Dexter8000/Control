@@ -13,8 +13,9 @@ async function loadTable(tableName) {
     // Obtener datos de la API
     const response = await fetch(`/api/${tableName}`);
     const data = await response.json();
-    
-    if (!data || data.length === 0) {
+    const rows = Array.isArray(data) ? data : data.data || [];
+
+    if (!rows || rows.length === 0) {
       tableContainer.innerHTML = '<div class="no-data">No hay datos disponibles</div>';
       return;
     }
@@ -27,7 +28,7 @@ async function loadTable(tableName) {
             <tr>`;
     
     // Crear encabezados de la tabla
-    const headers = Object.keys(data[0]);
+    const headers = Object.keys(rows[0] || {});
     headers.forEach(header => {
       tableHtml += `<th>${header.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</th>`;
     });
@@ -38,7 +39,7 @@ async function loadTable(tableName) {
           <tbody>`;
     
     // Llenar la tabla con datos
-    data.forEach(row => {
+    rows.forEach(row => {
       tableHtml += '<tr>';
       headers.forEach(header => {
         // Formatear fechas si es necesario
