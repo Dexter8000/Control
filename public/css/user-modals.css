@@ -1,0 +1,106 @@
+/* Estilos para los modales de usuario */
+
+/* Estilos para el modal de visualización de usuario */
+.user-details {
+  padding: 10px;
+}
+
+.form-section {
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 15px;
+  background-color: #f9f9f9;
+}
+
+.form-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #333;
+  display: flex;
+  align-items: center;
+}
+
+.form-section-title i {
+  margin-right: 8px;
+  color: #5a5a9f;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -10px;
+}
+
+.form-group {
+  flex: 1;
+  padding: 0 10px;
+  margin-bottom: 15px;
+  min-width: 200px;
+}
+
+.form-label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 5px;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.form-value {
+  padding: 8px 10px;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  min-height: 20px;
+}
+
+/* Estilos para el modal informativo */
+.info-message {
+  background-color: #e8f4ff;
+  border-left: 4px solid #4a89dc;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+}
+
+.info-message i {
+  color: #4a89dc;
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+.info-message p {
+  margin: 8px 0;
+  color: #333;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  margin-top: 15px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th, .table td {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.table th {
+  background-color: #f2f2f2;
+  font-weight: 600;
+}
+
+.table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.table tbody tr:hover {
+  background-color: #f0f0f0;
+}

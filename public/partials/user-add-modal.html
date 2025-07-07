@@ -1,0 +1,113 @@
+<div id="user-add-modal" class="modal" style="display: none">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i data-feather="user-plus"></i>
+        <span id="user-add-modal-title">Agregar Nuevo Usuario</span>
+      </div>
+      <button class="modal-close" id="btn-close-user-add-modal">
+        <i data-feather="x"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="info-message">
+        <i class="fas fa-info-circle"></i>
+        <p>La creación y edición de usuarios se realiza mediante SQLite Studio u otras herramientas de administración directa de la base de datos.</p>
+        <p>Este panel solo permite visualizar la información de los usuarios existentes.</p>
+        <p>Para agregar un nuevo usuario, utilice las herramientas de administración de base de datos.</p>
+      </div>
+      
+      <div class="form-section">
+        <div class="form-section-title">
+          <i data-feather="database"></i>
+          Estructura de la tabla de usuarios
+        </div>
+        <div class="table-responsive">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Campo</th>
+                <th>Tipo</th>
+                <th>Descripción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>id</td>
+                <td>INTEGER</td>
+                <td>Identificador único (PRIMARY KEY)</td>
+              </tr>
+              <tr>
+                <td>usuario</td>
+                <td>TEXT</td>
+                <td>Nombre de usuario para acceso</td>
+              </tr>
+              <tr>
+                <td>password</td>
+                <td>TEXT</td>
+                <td>Contraseña (almacenada con hash)</td>
+              </tr>
+              <tr>
+                <td>rol</td>
+                <td>TEXT</td>
+                <td>Rol del usuario (administrador, usuario, etc.)</td>
+              </tr>
+              <tr>
+                <td>nombre</td>
+                <td>TEXT</td>
+                <td>Nombre real del usuario</td>
+              </tr>
+              <tr>
+                <td>apellido</td>
+                <td>TEXT</td>
+                <td>Apellido del usuario</td>
+              </tr>
+              <tr>
+                <td>email</td>
+                <td>TEXT</td>
+                <td>Correo electrónico</td>
+              </tr>
+              <tr>
+                <td>telefono</td>
+                <td>TEXT</td>
+                <td>Número de teléfono</td>
+              </tr>
+              <tr>
+                <td>activo</td>
+                <td>INTEGER</td>
+                <td>Estado del usuario (1=activo, 0=inactivo)</td>
+              </tr>
+              <tr>
+                <td>fecha_creacion</td>
+                <td>TEXT</td>
+                <td>Fecha de creación del usuario</td>
+              </tr>
+              <tr>
+                <td>ultimo_acceso</td>
+                <td>TEXT</td>
+                <td>Fecha del último acceso</td>
+              </tr>
+              <tr>
+                <td>intentos_fallidos</td>
+                <td>INTEGER</td>
+                <td>Número de intentos fallidos de inicio de sesión</td>
+              </tr>
+              <tr>
+                <td>bloqueado_hasta</td>
+                <td>TEXT</td>
+                <td>Fecha hasta la que el usuario está bloqueado</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-modern btn-cancel" id="btn-cancel-user-add">
+        <i data-feather="x"></i>
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,7 +1,7 @@
 {
   "name": "workspace",
   "version": "1.0.0",
-  "description": "Servidor Node.js con Express, SQLite, DuckDB y herramientas de desarrollo.",
+  "description": "Servidor Node.js con Express, SQLite y herramientas de desarrollo.",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {

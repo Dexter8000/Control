@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel de Control</title>
+    <link rel="stylesheet" href="/dashboard.css" />
+    <link rel="stylesheet" href="/panel-control.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"
+    />
+    <style>
+      /* Estilos adicionales para el panel simplificado */
+      .loading-indicator {
+        display: none;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        font-size: 18px;
+      }
+      .loading-indicator i {
+        margin-right: 10px;
+        font-size: 24px;
+      }
+      .error-message {
+        background-color: #ffebee;
+        color: #c62828;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 10px 0;
+        display: none;
+      }
+      .table-container {
+        position: relative;
+        min-height: 200px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="pc-header">
+      <h1>Panel de Control de Base de Datos</h1>
+      <a href="/dashboard" class="btn-back">Volver al Dashboard</a>
+    </header>
+    <main class="pc-main">
+      <div class="cards-grid">
+        <div class="pc-card" data-table="usuarios">
+          <i class="fas fa-users"></i><span>Usuarios</span>
+        </div>
+        <div class="pc-card" data-table="departamentos">
+          <i class="fas fa-building"></i><span>Departamentos</span>
+        </div>
+        <div class="pc-card" data-table="empleados">
+          <i class="fas fa-user-tie"></i><span>Empleados</span>
+        </div>
+        <!-- Tarjetas de inventario eliminadas para preparar nueva estructura -->
+        <div class="pc-card" data-table="inventario_general_activos">
+          <i class="fas fa-boxes"></i><span>Inventario General</span>
+        </div>
+        <div class="pc-card" data-table="configuracion">
+          <i class="fas fa-cogs"></i><span>Configuración</span>
+        </div>
+        <div class="pc-card" data-table="logs_acceso">
+          <i class="fas fa-list"></i><span>Logs de Acceso</span>
+        </div>
+        <div class="pc-card" data-table="historial_asignaciones">
+          <i class="fas fa-history"></i><span>Historial de Asignaciones</span>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <div id="table-container" class="table-container">
+          <div id="table-error-message" class="error-message"></div>
+          <div class="loading-indicator">
+            <i class="fas fa-spinner fa-spin"></i> Cargando datos...
+          </div>
+          <table id="control-table" class="display" style="width: 100%"></table>
+        </div>
+      </div>
+      
+      <!-- Botones de acción para cada tabla -->
+      <div id="empleados-actions" class="pc-actions">
+        <button class="btn-modern btn-primary" onclick="window.location.href='/empleados.html'">
+          <i class="fas fa-user-plus"></i>
+          <span>Gestionar Empleados</span>
+        </button>
+      </div>
+      
+      <div id="departamentos-actions" class="pc-actions">
+        <button class="btn-modern btn-primary" onclick="showDepartamentoModal()">
+          <i class="fas fa-plus"></i>
+          <span>Agregar Nuevo Departamento</span>
+        </button>
+      </div>
+      
+      <div id="usuarios-actions" class="pc-actions">
+        <button class="btn-modern btn-info" onclick="window.location.href='/usuarios.html'">
+          <i class="fas fa-users"></i>
+          <span>Ver Usuarios</span>
+        </button>
+      </div>
+      
+      <div id="inventario_general_activos-actions" class="pc-actions">
+        <button class="btn-modern btn-primary" onclick="window.location.href='/inventario-general.html'">
+          <i class="fas fa-boxes"></i>
+          <span>Gestionar Inventario General</span>
+        </button>
+      </div>
+      
+      <!-- Acciones de inventario eliminadas para preparar nueva estructura -->
+
+      <!-- Modal Crear/Editar Departamento -->
+      <div id="departamento-modal" class="modal" style="display: none">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 id="departamento-modal-title">Nuevo Departamento</h2>
+            <button class="close" onclick="closeDepartamentoModal()">
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <form
+              id="departamento-form"
+              onsubmit="event.preventDefault(); saveDepartamento();"
+            >
+              <input type="hidden" id="departamento-id" value="" />
+              <div class="form-group">
+                <label for="departamento-nombre">Nombre del Departamento</label>
+                <input
+                  type="text"
+                  id="departamento-nombre"
+                  name="nombre"
+                  required
+                  placeholder="Ej: Recursos Humanos"
+                />
+              </div>
+              <div class="form-actions">
+                <button
+                  type="button"
+                  class="btn-modern btn-cancel"
+                  onclick="closeDepartamentoModal()"
+                >
+                  Cancelar
+                </button>
+                <button type="submit" class="btn-modern btn-primary">
+                  Guardar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="/panel-control-nuevo.js"></script>
+  </body>
+</html>

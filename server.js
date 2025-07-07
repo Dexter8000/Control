@@ -9,17 +9,16 @@ const WebSocket = require('ws');
 const Database = require('./database/config');
 const VacacionesManager = require('./database/vacaciones');
 
-
 let wss; // WebSocket server (solo cuando se ejecuta directamente)
 
 
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 if (!process.env.SESSION_SECRET) {
   console.error(
-    '❌ La variable de entorno SESSION_SECRET es requerida para la seguridad de las sesiones.'
+    'âŒ La variable de entorno SESSION_SECRET es requerida para la seguridad de las sesiones.'
   );
   process.exit(1);
 }
@@ -37,8 +36,8 @@ function broadcast(event, data) {
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public')); // Para servir archivos estáticos
-app.use('/attached_assets', express.static('attached_assets')); // Para servir videos e imágenes
+app.use(express.static('public')); // Para servir archivos estÃ¡ticos
+app.use('/attached_assets', express.static('attached_assets')); // Para servir videos e imÃ¡genes
 
 // Configurar sesiones
 app.use(
@@ -47,30 +46,27 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // true en producción con HTTPS
+      secure: false, // true en producciÃ³n con HTTPS
       maxAge: 24 * 60 * 60 * 1000, // 24 horas
     },
   })
 );
 
-// Inicializar base de datos y sistema de préstamos
+// Inicializar base de datos y sistema de prÃ©stamos
 const db = new Database();
 const SistemaPrestamos = require('./database/prestamos');
 const prestamos = new SistemaPrestamos();
 
-db.connect()
-  .then(() => {
-    console.log(
-      '🎯 Sistema SQLite de base de datos inicializado correctamente'
-    );
-    return prestamos.conectar();
-  })
-  .then(() => {
-    console.log('📦 Sistema de préstamos inicializado');
-  })
-  .catch((err) => {
-    console.error('❌ Error inicializando el sistema:', err);
-  });
+(async () => {
+  try {
+    await db.connect();
+    await prestamos.conectar();
+    console.log('âœ… Todos los sistemas inicializados y listos.');
+  } catch (err) {
+    console.error('âŒ Error fatal durante la inicializaciÃ³n. El servidor no puede arrancar.', err);
+    process.exit(1);
+  }
+})();
 
 // Sistema RBAC - Middleware de permisos
 function requireRole(roles) {
@@ -99,7 +95,7 @@ function requireRole(roles) {
 
 // RUTAS
 
-// Ruta principal - servir página de login
+// Ruta principal - servir pÃ¡gina de login
 app.get('/', (req, res) => {
   if (req.session.user) {
     return res.redirect('/dashboard');
@@ -115,7 +111,7 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// API de autenticación (compatible con migración)
+// API de autenticaciÃ³n (compatible con migraciÃ³n)
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   const clientIP = req.ip || req.connection.remoteAddress;
@@ -133,7 +129,7 @@ app.post('/api/login', async (req, res) => {
     const usuario = await db.getUser(username);
 
     if (!usuario) {
-      // Log intento fallido sin usuario válido
+      // Log intento fallido sin usuario vÃ¡lido
       await db.logAccess(
         null,
         'LOGIN_FAILED',
@@ -148,7 +144,7 @@ app.post('/api/login', async (req, res) => {
       });
     }
 
-    // Verificar si el usuario está bloqueado
+    // Verificar si el usuario estÃ¡ bloqueado
     if (
       usuario.bloqueado_hasta &&
       new Date(usuario.bloqueado_hasta) > new Date()
@@ -163,11 +159,11 @@ app.post('/api/login', async (req, res) => {
       );
       return res.status(423).json({
         success: false,
-        message: 'Usuario temporalmente bloqueado. Intente más tarde.',
+        message: 'Usuario temporalmente bloqueado. Intente mÃ¡s tarde.',
       });
     }
 
-    // Comparar contraseña usando bcrypt
+    // Comparar contraseÃ±a usando bcrypt
     const passwordValido = await bcrypt.compare(password, usuario.contrasena);
 
     if (!passwordValido) {
@@ -179,7 +175,7 @@ app.post('/api/login', async (req, res) => {
         clientIP,
         userAgent,
         false,
-        'Contraseña incorrecta'
+        'ContraseÃ±a incorrecta'
       );
 
       return res.status(401).json({
@@ -199,7 +195,7 @@ app.post('/api/login', async (req, res) => {
       'Login exitoso'
     );
 
-    // Crear sesión
+    // Crear sesiÃ³n
     req.session.user = {
       id: usuario.id,
       username: usuario.usuario || usuario.username,
@@ -215,7 +211,7 @@ app.post('/api/login', async (req, res) => {
       user: req.session.user,
     });
   } catch (error) {
-    console.error('❌ Error en login:', error);
+    console.error('âŒ Error en login:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -223,7 +219,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// Dashboard (después del login) - Redirigir al dashboard ejecutivo
+// Dashboard (despuÃ©s del login) - Redirigir al dashboard ejecutivo
 app.get('/dashboard', (req, res) => {
   if (!req.session.user) {
     return res.redirect('/login');
@@ -233,7 +229,7 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-// Panel completo de análisis
+// Panel completo de anÃ¡lisis
 app.get('/panel-completo', (req, res) => {
   if (!req.session.user) {
     return res.redirect('/login');
@@ -242,10 +238,15 @@ app.get('/panel-completo', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'panel-completo.html'));
 });
 
-// Panel de control de tablas
-app.get('/panel-control', requireAuth, (req, res) =>
-  res.sendFile(path.join(__dirname, 'public', 'panel-control.html'))
-);
+// Ruta para el panel de control
+app.get('/panel-control', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'panel-control.html'));
+});
+
+// Ruta para el nuevo panel de control
+app.get('/panel-control-nuevo', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'panel-control-nuevo.html'));
+});
 
 // Ruta para acceder a la interfaz de empleados
 app.get('/empleados', requireAuth, (req, res) =>
@@ -265,12 +266,11 @@ app.get('/api/dashboard/total-empleados', (req, res) => {
 
 app.get('/api/dashboard/rangos-por-departamento', (req, res) => {
   const query = `
-    SELECT e.rango AS rango_nombre, d.nombre AS departamento_nombre, COUNT(*) AS cantidad
+    SELECT e.rango AS rango_nombre, 'General' AS departamento_nombre, COUNT(*) AS cantidad
     FROM empleados e
-    LEFT JOIN departamentos d ON e.departamento_id = d.id
     WHERE e.rango IS NOT NULL AND e.rango != ''
-    GROUP BY e.rango, d.nombre
-    ORDER BY cantidad DESC, rango_nombre, departamento_nombre;
+    GROUP BY e.rango
+    ORDER BY cantidad DESC, rango_nombre;
   `;
   db.db.all(query, [], (err, rows) => {
     if (err) {
@@ -310,11 +310,10 @@ app.get('/api/dashboard/total-departamentos', (req, res) => {
 
 app.get('/api/dashboard/datos-incompletos', (req, res) => {
   const query = `
-    SELECT id, nombre, rango, departamento_id
+    SELECT id, nombre, rango
     FROM empleados
     WHERE nombre IS NULL OR nombre = ''
-       OR rango IS NULL OR rango = ''
-       OR departamento_id IS NULL OR departamento_id = '';
+       OR rango IS NULL OR rango = '';
   `;
   db.db.all(query, [], (err, rows) => {
     if (err) {
@@ -351,17 +350,17 @@ app.post('/api/logout', async (req, res) => {
       if (err) {
         return res
           .status(500)
-          .json({ success: false, message: 'Error al cerrar sesión' });
+          .json({ success: false, message: 'Error al cerrar sesiÃ³n' });
       }
-      res.json({ success: true, message: 'Sesión cerrada' });
+      res.json({ success: true, message: 'SesiÃ³n cerrada' });
     });
   } catch (error) {
-    console.error('❌ Error en logout:', error);
-    res.status(500).json({ success: false, message: 'Error al cerrar sesión' });
+    console.error('âŒ Error en logout:', error);
+    res.status(500).json({ success: false, message: 'Error al cerrar sesiÃ³n' });
   }
 });
 
-// Middleware para verificar autenticación
+// Middleware para verificar autenticaciÃ³n
 function requireAuth(req, res, next) {
   if (!req.session.user) {
     return res.redirect('/login');
@@ -369,15 +368,15 @@ function requireAuth(req, res, next) {
   next();
 }
 
-// RUTAS API PARA PRÉSTAMOS Y DEVOLUCIONES
+// RUTAS API PARA PRÃ‰STAMOS Y DEVOLUCIONES
 
-// Obtener equipos disponibles para préstamo
+// Obtener equipos disponibles para prÃ©stamo
 app.get('/api/equipos-disponibles', requireAuth, async (req, res) => {
   try {
     const equipos = await prestamos.obtenerEquiposDisponibles();
     res.json({ success: true, equipos });
   } catch (error) {
-    console.error('❌ Error obteniendo equipos disponibles:', error);
+    console.error('âŒ Error obteniendo equipos disponibles:', error);
     res.status(500).json({
       success: false,
       message: 'Error obteniendo equipos disponibles',
@@ -385,45 +384,45 @@ app.get('/api/equipos-disponibles', requireAuth, async (req, res) => {
   }
 });
 
-// Obtener equipos asignados para devolución
+// Obtener equipos asignados para devoluciÃ³n
 app.get('/api/equipos-asignados', requireAuth, async (req, res) => {
   try {
     const equipos = await prestamos.obtenerEquiposAsignados();
     res.json({ success: true, equipos });
   } catch (error) {
-    console.error('❌ Error obteniendo equipos asignados:', error);
+    console.error('âŒ Error obteniendo equipos asignados:', error);
     res
       .status(500)
       .json({ success: false, message: 'Error obteniendo equipos asignados' });
   }
 });
 
-// Obtener empleados para asignación
-app.get('/api/empleados', requireAuth, async (req, res) => {
+// Obtener empleados para asignaciÃ³n
+app.get('/api/empleados-asignacion', requireAuth, async (req, res) => {
   try {
-    console.log('🔍 Obteniendo empleados desde la base de datos...');
+    console.log('ðŸ” Obteniendo empleados desde la base de datos...');
     const empleados = await db.getEmpleadosCompletos();
-    console.log(`✅ Obtenidos ${empleados.length} empleados`);
+    console.log(`âœ… Obtenidos ${empleados.length} empleados`);
     // Transformar datos para compatibilidad con frontend
     const empleadosFormateados = empleados.map((emp) => ({
       ...emp,
-      departamento:
-        emp.departamento_nombre || emp.departamento || 'Sin departamento',
+      // Usamos directamente el campo departamento que ya existe
+      departamento: emp.departamento || 'Sin departamento',
     }));
-    console.log('✅ Datos transformados, enviando respuesta...');
+    console.log('âœ… Datos transformados, enviando respuesta...');
     res.json(empleadosFormateados);
   } catch (error) {
-    console.error('❌ Error obteniendo empleados:', error.message);
-    console.error('❌ Stack trace:', error.stack);
+    console.error('âŒ Error obteniendo empleados:', error.message);
+    console.error('âŒ Stack trace:', error.stack);
     res
       .status(500)
       .json({ error: 'Error obteniendo empleados', details: error.message });
   }
 });
 
-// Obtener estadísticas de empleados para el dashboard
+// Obtener estadÃ­sticas de empleados para el dashboard
 app.get('/api/empleados-estadisticas', requireAuth, async (req, res) => {
-  console.log('📊 Calculando estadísticas de empleados...');
+  console.log('ðŸ“Š Calculando estadÃ­sticas de empleados...');
 
   try {
     const queries = {
@@ -484,13 +483,13 @@ app.get('/api/empleados-estadisticas', requireAuth, async (req, res) => {
       rangos_por_departamento: resultados.rangosPorDepartamento || [],
     };
 
-    console.log('✅ Estadísticas calculadas:', estadisticas);
+    console.log('âœ… EstadÃ­sticas calculadas:', estadisticas);
     res.json({ success: true, estadisticas });
   } catch (error) {
-    console.error('❌ Error calculando estadísticas:', error);
+    console.error('âŒ Error calculando estadÃ­sticas:', error);
     res.status(500).json({
       success: false,
-      message: 'Error calculando estadísticas de empleados',
+      message: 'Error calculando estadÃ­sticas de empleados',
     });
   }
 });
@@ -516,7 +515,7 @@ app.post(
       detalles: [],
     };
 
-    // Cargar departamentos para validación
+    // Cargar departamentos para validaciÃ³n
     const departamentos = await db.getDepartamentos();
 
     for (let i = 0; i < empleados.length; i++) {
@@ -524,7 +523,7 @@ app.post(
       const fila = i + 2;
 
       try {
-        // Validaciones básicas
+        // Validaciones bÃ¡sicas
         if (!empleado.nombre || !empleado.apellido || !empleado.rango) {
           resultados.errores++;
           resultados.detalles.push(
@@ -533,7 +532,7 @@ app.post(
           continue;
         }
 
-        // Buscar departamento_id si se proporcionó nombre de departamento
+        // Buscar departamento_id si se proporcionÃ³ nombre de departamento
         if (empleado.departamento && !empleado.departamento_id) {
           const deptoEncontrado = departamentos.find(
             (d) => d.nombre === empleado.departamento
@@ -563,7 +562,7 @@ app.post(
     }
 
     console.log(
-      `📊 Carga masiva empleados completada: ${resultados.exitosos} exitosos, ${resultados.errores} errores`
+      `ðŸ“Š Carga masiva empleados completada: ${resultados.exitosos} exitosos, ${resultados.errores} errores`
     );
 
     res.json({
@@ -594,7 +593,7 @@ app.post('/api/empleados', requireAuth, async (req, res) => {
   }
 
   try {
-    // Buscar departamento_id si se envió nombre de departamento
+    // Buscar departamento_id si se enviÃ³ nombre de departamento
     if (empleadoData.departamento && !empleadoData.departamento_id) {
       const departamentos = await db.getDepartamentos();
       const deptoEncontrado = departamentos.find(
@@ -605,7 +604,7 @@ app.post('/api/empleados', requireAuth, async (req, res) => {
       }
     }
 
-    // Validar unicidad de placa y cédula
+    // Validar unicidad de placa y cÃ©dula
     if (empleadoData.placa) {
       const placaExists = await new Promise((resolve, reject) => {
         db.db.get(
@@ -620,7 +619,7 @@ app.post('/api/empleados', requireAuth, async (req, res) => {
       if (placaExists) {
         return res
           .status(409)
-          .json({ success: false, message: 'La placa ya está registrada' });
+          .json({ success: false, message: 'La placa ya estÃ¡ registrada' });
       }
     }
     if (empleadoData.cedula) {
@@ -637,7 +636,7 @@ app.post('/api/empleados', requireAuth, async (req, res) => {
       if (cedulaExists) {
         return res
           .status(409)
-          .json({ success: false, message: 'La cédula ya está registrada' });
+          .json({ success: false, message: 'La cÃ©dula ya estÃ¡ registrada' });
       }
     }
 
@@ -652,7 +651,7 @@ app.post('/api/empleados', requireAuth, async (req, res) => {
     });
   } catch (error) {
     await db.rollbackTransaction();
-    console.error('❌ Error creando empleado:', error);
+    console.error('âŒ Error creando empleado:', error);
     res.status(500).json({
       success: false,
       message: 'Error creando empleado',
@@ -662,11 +661,65 @@ app.post('/api/empleados', requireAuth, async (req, res) => {
 });
 
 // Actualizar empleado existente
+// Obtener todos los empleados (para la tabla principal de GestiÃ³n de Personal)
+app.get('/api/empleados', requireAuth, async (req, res) => {
+  try {
+    const empleados = await db.getEmpleadosCompletos();
+    console.log(`âœ… Enviando ${empleados.length} empleados completos con todas las columnas correctas`);
+    res.json({ success: true, empleados });
+  } catch (error) {
+    console.error('--- DETAILED ERROR in /api/empleados ---');
+    console.error('Timestamp:', new Date().toISOString());
+    console.error('Error Object:', error);
+    console.error('--- END DETAILED ERROR ---');
+    res.status(500).json({ success: false, message: 'Error interno del servidor al obtener empleados.' });
+  }
+});
+
+// Endpoint para obtener la lista de rangos para filtros
+app.get('/api/rangos', requireAuth, async (req, res) => {
+  try {
+    const rangos = await db.getRangos();
+    res.json(rangos);
+  } catch (error) {
+    console.error('Error al obtener rangos:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
+// Endpoint para obtener el inventario principal
+app.get('/api/inventario_principal', requireAuth, async (req, res) => {
+  try {
+    const inventario = await db.getInventarioPrincipal();
+    res.json(inventario);
+  } catch (error) {
+    console.error('--- DETAILED ERROR in /api/inventario_principal ---');
+    console.error('Timestamp:', new Date().toISOString());
+    console.error('Error Object:', error);
+    console.error('--- END DETAILED ERROR ---');
+    res.status(500).json({ success: false, message: 'Error interno del servidor al obtener inventario principal.' });
+  }
+});
+
+// Endpoint para obtener el inventario perifÃ©rico
+app.get('/api/inventario_periferico', requireAuth, async (req, res) => {
+  try {
+    const inventario = await db.getInventarioPeriferico();
+    res.json(inventario);
+  } catch (error) {
+    console.error('--- DETAILED ERROR in /api/inventario_periferico ---');
+    console.error('Timestamp:', new Date().toISOString());
+    console.error('Error Object:', error);
+    console.error('--- END DETAILED ERROR ---');
+    res.status(500).json({ success: false, message: 'Error interno del servidor al obtener inventario perifÃ©rico.' });
+  }
+});
+
 app.put('/api/empleados/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
   const empleadoData = req.body;
 
-  // Validar campos básicos
+  // Validar campos bÃ¡sicos
   if (
     !empleadoData.nombre ||
     typeof empleadoData.nombre !== 'string' ||
@@ -682,7 +735,7 @@ app.put('/api/empleados/:id', requireAuth, async (req, res) => {
   }
 
   try {
-    // Buscar departamento_id si se envió nombre de departamento
+    // Buscar departamento_id si se enviÃ³ nombre de departamento
     if (empleadoData.departamento && !empleadoData.departamento_id) {
       const departamentos = await db.getDepartamentos();
       const deptoEncontrado = departamentos.find(
@@ -693,7 +746,7 @@ app.put('/api/empleados/:id', requireAuth, async (req, res) => {
       }
     }
 
-    // Validar unicidad de placa y cédula
+    // Validar unicidad de placa y cÃ©dula
     if (empleadoData.placa) {
       const placaExists = await new Promise((resolve, reject) => {
         db.db.get(
@@ -708,7 +761,7 @@ app.put('/api/empleados/:id', requireAuth, async (req, res) => {
       if (placaExists) {
         return res
           .status(409)
-          .json({ success: false, message: 'La placa ya está registrada' });
+          .json({ success: false, message: 'La placa ya estÃ¡ registrada' });
       }
     }
     if (empleadoData.cedula) {
@@ -725,7 +778,7 @@ app.put('/api/empleados/:id', requireAuth, async (req, res) => {
       if (cedulaExists) {
         return res
           .status(409)
-          .json({ success: false, message: 'La cédula ya está registrada' });
+          .json({ success: false, message: 'La cÃ©dula ya estÃ¡ registrada' });
       }
     }
 
@@ -737,7 +790,7 @@ app.put('/api/empleados/:id', requireAuth, async (req, res) => {
     res.json({ success: true, message: 'Empleado actualizado exitosamente' });
   } catch (error) {
     await db.rollbackTransaction();
-    console.error('❌ Error actualizando empleado:', error);
+    console.error('âŒ Error actualizando empleado:', error);
     res.status(500).json({
       success: false,
       message: 'Error actualizando empleado',
@@ -755,7 +808,7 @@ app.delete('/api/empleados/:id', requireAuth, async (req, res) => {
     broadcast('employees-changed');
     res.json({ success: true, message: 'Empleado eliminado exitosamente' });
   } catch (error) {
-    console.error('❌ Error eliminando empleado:', error);
+    console.error('âŒ Error eliminando empleado:', error);
     res
       .status(500)
       .json({ error: 'Error eliminando empleado: ' + error.message });
@@ -765,7 +818,7 @@ app.delete('/api/empleados/:id', requireAuth, async (req, res) => {
 // Limpiar empleados duplicados
 app.post('/api/empleados/limpiar-duplicados', requireAuth, async (req, res) => {
   try {
-    console.log('🧹 Iniciando limpieza de empleados duplicados...');
+    console.log('ðŸ§¹ Iniciando limpieza de empleados duplicados...');
 
     const duplicatesQuery = `
       SELECT nombre, apellido, COUNT(*) as count, GROUP_CONCAT(id) as ids
@@ -785,7 +838,7 @@ app.post('/api/empleados/limpiar-duplicados', requireAuth, async (req, res) => {
 
     for (const duplicate of duplicates) {
       const ids = duplicate.ids.split(',');
-      // Mantener el primero (más antiguo) y eliminar los demás
+      // Mantener el primero (mÃ¡s antiguo) y eliminar los demÃ¡s
       const toDelete = ids.slice(1);
 
       for (const idToDelete of toDelete) {
@@ -797,7 +850,7 @@ app.post('/api/empleados/limpiar-duplicados', requireAuth, async (req, res) => {
               if (err) reject(err);
               else {
                 console.log(
-                  `🗑️ Eliminado duplicado: ${duplicate.nombre} ${duplicate.apellido} (ID: ${idToDelete})`
+                  `ðŸ—‘ï¸ Eliminado duplicado: ${duplicate.nombre} ${duplicate.apellido} (ID: ${idToDelete})`
                 );
                 eliminados++;
                 resolve();
@@ -808,7 +861,7 @@ app.post('/api/empleados/limpiar-duplicados', requireAuth, async (req, res) => {
       }
     }
 
-    console.log(`✅ Limpieza completada. Eliminados ${eliminados} duplicados`);
+    console.log(`âœ… Limpieza completada. Eliminados ${eliminados} duplicados`);
 
     res.json({
       success: true,
@@ -816,7 +869,7 @@ app.post('/api/empleados/limpiar-duplicados', requireAuth, async (req, res) => {
       eliminados: eliminados,
     });
   } catch (error) {
-    console.error('❌ Error limpiando duplicados:', error);
+    console.error('âŒ Error limpiando duplicados:', error);
     res.status(500).json({
       success: false,
       message: 'Error limpiando duplicados: ' + error.message,
@@ -825,12 +878,15 @@ app.post('/api/empleados/limpiar-duplicados', requireAuth, async (req, res) => {
 });
 
 // Obtener inventario principal completo
-app.get('/api/inventario-principal', requireAuth, async (req, res) => {
+// Endpoints de inventario eliminados para preparar nueva estructura
+// Los nuevos endpoints se implementarÃ¡n con la nueva estructura mejorada
+
+app.get('/api/inventario-principal-deprecado', requireAuth, async (req, res) => {
   try {
     const inventario = await db.getInventarioPrincipal();
     res.json({ success: true, inventario });
   } catch (error) {
-    console.error('❌ Error obteniendo inventario principal:', error);
+    console.error('âŒ Error obteniendo inventario principal:', error);
     res.status(500).json({
       success: false,
       message: 'Error obteniendo inventario principal',
@@ -838,139 +894,552 @@ app.get('/api/inventario-principal', requireAuth, async (req, res) => {
   }
 });
 
-// Obtener inventario periférico completo
+app.get('/api/inventario_periferico', requireAuth, async (req, res) => {
+  try {
+    const inventario = await db.getInventarioPeriferico();
+    res.json({ success: true, inventario });
+  } catch (error) {
+    console.error('âŒ Error obteniendo inventario de perifÃ©ricos:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo inventario de perifÃ©ricos',
+    });
+  }
+});
+
+// Obtener inventario perifÃ©rico completo
 app.get('/api/inventario-periferico', requireAuth, async (req, res) => {
   try {
     const inventario = await db.getInventarioPeriferico();
     res.json({ success: true, inventario });
   } catch (error) {
-    console.error('❌ Error obteniendo inventario periférico:', error);
+    console.error('âœ– Error obteniendo inventario perifÃ©rico:', error);
     res.status(500).json({
       success: false,
-      message: 'Error obteniendo inventario periférico',
+      message: 'Error obteniendo inventario perifÃ©rico',
     });
   }
 });
 
-// Obtener inventario completo con periféricos asociados
-app.get('/api/inventario-completo', requireAuth, async (req, res) => {
-  try {
-    const inventario = await db.getInventarioCompleto();
-    res.json({ success: true, inventario });
-  } catch (error) {
-    console.error('❌ Error obteniendo inventario completo:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error obteniendo inventario completo',
-    });
-  }
-});
-
-// Crear equipo principal
-app.post('/api/inventario-principal', requireAuth, async (req, res) => {
-  try {
-    await db.beginTransaction();
-    const result = await db.createEquipoPrincipal(req.body);
-    await db.commitTransaction();
-    res.status(201).json({
-      success: true,
-      message: 'Equipo principal creado',
-      equipoId: result.id,
-    });
-  } catch (error) {
-    await db.rollbackTransaction();
-    console.error('❌ Error creando equipo principal:', error);
-    res.status(500).json({ success: false, message: 'Error creando equipo principal' });
-  }
-});
-
-// Actualizar equipo principal
-app.put('/api/inventario-principal/:id', requireAuth, async (req, res) => {
-  try {
-    await db.beginTransaction();
-    const result = await db.updateEquipoPrincipal(req.params.id, req.body);
-    await db.commitTransaction();
-    if (result.changes === 0) {
-      return res.status(404).json({ success: false, message: 'Equipo principal no encontrado' });
-    }
-    res.json({ success: true, message: 'Equipo principal actualizado' });
-  } catch (error) {
-    await db.rollbackTransaction();
-    console.error('❌ Error actualizando equipo principal:', error);
-    res.status(500).json({ success: false, message: 'Error actualizando equipo principal' });
-  }
-});
-
-// Eliminar equipo principal
-app.delete('/api/inventario-principal/:id', requireAuth, async (req, res) => {
-  try {
-    const result = await db.deleteEquipoPrincipal(req.params.id);
-    if (result.changes === 0) {
-      return res.status(404).json({ success: false, message: 'Equipo principal no encontrado' });
-    }
-    res.json({ success: true, message: 'Equipo principal eliminado' });
-  } catch (error) {
-    console.error('❌ Error eliminando equipo principal:', error);
-    res.status(500).json({ success: false, message: 'Error eliminando equipo principal' });
-  }
-});
-
-// Crear periférico
-app.post('/api/inventario-periferico', requireAuth, async (req, res) => {
-  try {
-    await db.beginTransaction();
-    const result = await db.createPeriferico(req.body);
-    await db.commitTransaction();
-    res.status(201).json({ success: true, message: 'Periférico creado', perifericoId: result.id });
-  } catch (error) {
-    await db.rollbackTransaction();
-    console.error('❌ Error creando periférico:', error);
-    res.status(500).json({ success: false, message: 'Error creando periférico' });
-  }
-});
-
-// Actualizar periférico
-app.put('/api/inventario-periferico/:id', requireAuth, async (req, res) => {
-  try {
-    await db.beginTransaction();
-    const result = await db.updatePeriferico(req.params.id, req.body);
-    await db.commitTransaction();
-    if (result.changes === 0) {
-      return res.status(404).json({ success: false, message: 'Periférico no encontrado' });
-    }
-    res.json({ success: true, message: 'Periférico actualizado' });
-  } catch (error) {
-    await db.rollbackTransaction();
-    console.error('❌ Error actualizando periférico:', error);
-    res.status(500).json({ success: false, message: 'Error actualizando periférico' });
-  }
-});
-
-// Eliminar periférico
-app.delete('/api/inventario-periferico/:id', requireAuth, async (req, res) => {
-  try {
-    const result = await db.deletePeriferico(req.params.id);
-    if (result.changes === 0) {
-      return res.status(404).json({ success: false, message: 'Periférico no encontrado' });
-    }
-    res.json({ success: true, message: 'Periférico eliminado' });
-  } catch (error) {
-    console.error('❌ Error eliminando periférico:', error);
-    res.status(500).json({ success: false, message: 'Error eliminando periférico' });
-  }
-});
+// Endpoints de inventario eliminados para preparar nueva estructura
+// Los nuevos endpoints se implementarÃ¡n con la nueva estructura mejorada
 
 // Obtener departamentos
-app.get('/api/departamentos', requireAuth, async (req, res) => {
+app.get('/api/departamentos', async (req, res) => {
   try {
     const departamentos = await db.getDepartamentos();
     res.json({ success: true, departamentos });
   } catch (error) {
-    console.error('❌ Error obteniendo departamentos:', error);
+    console.error('âŒ Error obteniendo departamentos:', error);
     res
       .status(500)
       .json({ success: false, message: 'Error obteniendo departamentos' });
   }
+});
+
+// Obtener usuarios
+app.get('/api/usuarios', requireAuth, requireRole('administrador'), async (req, res) => {
+  try {
+    const query = `
+      SELECT id, usuario, rol, nombre, apellido, email, telefono, activo, fecha_creacion, ultimo_acceso, intentos_fallidos, bloqueado_hasta
+      FROM usuarios
+      ORDER BY fecha_creacion DESC
+    `;
+    
+    const usuarios = await new Promise((resolve, reject) => {
+      db.db.all(query, [], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows || []);
+      });
+    });
+    
+    res.json({ success: true, usuarios });
+  } catch (error) {
+    console.error('❌ Error obteniendo usuarios:', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo usuarios' });
+  }
+});
+
+// Obtener un usuario específico por ID
+app.get('/api/usuarios/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const query = `
+      SELECT id, usuario, rol, nombre, apellido, email, telefono, activo, fecha_creacion, ultimo_acceso, intentos_fallidos, bloqueado_hasta
+      FROM usuarios
+      WHERE id = ?
+    `;
+    
+    const usuario = await new Promise((resolve, reject) => {
+      db.db.get(query, [id], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+    
+    if (!usuario) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    }
+    
+    res.json({ success: true, usuario });
+  } catch (error) {
+    console.error('❌ Error obteniendo usuario:', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo usuario' });
+  }
+});
+
+// Obtener empleados
+app.get('/api/empleados', async (req, res) => {
+  try {
+    const empleados = await db.getEmpleadosCompletos();
+    res.json({ success: true, empleados });
+  } catch (error) {
+    console.error('âŒ Error obteniendo empleados:', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo empleados' });
+  }
+});
+
+// Endpoint de inventario principal eliminado para preparar nueva estructura
+// Los nuevos endpoints se implementarÃ¡n con la nueva estructura mejorada
+
+// Obtener rangos por departamento para el dashboard
+app.get('/api/dashboard/rangos-por-departamento', async (req, res) => {
+  try {
+    const query = `
+      SELECT e.rango AS rango_nombre, d.nombre AS departamento_nombre, COUNT(*) AS cantidad
+      FROM empleados e
+      LEFT JOIN departamentos d ON e.departamento_id = d.id
+      WHERE e.rango IS NOT NULL AND e.rango != ''
+      GROUP BY e.rango, d.nombre
+      ORDER BY cantidad DESC, rango_nombre, departamento_nombre
+    `;
+    
+    const rangos = await new Promise((resolve, reject) => {
+      db.db.all(query, [], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows || []);
+      });
+    });
+    
+    // El frontend espera un array directamente, no un objeto con success
+    res.json(rangos);
+  } catch (error) {
+    console.error('âŒ Error obteniendo rangos por departamento:', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo rangos por departamento' });
+  }
+});
+
+// Obtener cantidad de rangos para el dashboard
+app.get('/api/dashboard/cantidad-rangos', async (req, res) => {
+  try {
+    const query = `
+      SELECT rango as rango_nombre, COUNT(*) as cantidad
+      FROM empleados
+      GROUP BY rango
+      ORDER BY COUNT(*) DESC
+    `;
+    
+    const rangos = await new Promise((resolve, reject) => {
+      db.db.all(query, [], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows || []);
+      });
+    });
+    
+    // El frontend espera un array directamente
+    res.json(rangos);
+  } catch (error) {
+    console.error('âŒ Error obteniendo cantidad de rangos:', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo cantidad de rangos' });
+  }
+});
+
+// Obtener total de departamentos para el dashboard
+app.get('/api/dashboard/total-departamentos', async (req, res) => {
+  try {
+    const query = `
+      SELECT COUNT(DISTINCT departamento) as total
+      FROM empleados
+    `;
+    
+    const resultado = await new Promise((resolve, reject) => {
+      db.db.get(query, [], (err, row) => {
+        if (err) reject(err);
+        else resolve(row || { total: 0 });
+      });
+    });
+    
+    res.json(resultado);
+  } catch (error) {
+    console.error('âŒ Error obteniendo total de departamentos:', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo total de departamentos' });
+  }
+});
+
+// Obtener configuraciÃ³n del sistema
+app.get('/api/configuracion', async (req, res) => {
+  try {
+    const query = `
+      SELECT * FROM configuracion
+    `;
+    
+    const configuracion = await new Promise((resolve, reject) => {
+      db.db.all(query, [], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows || []);
+      });
+    });
+    
+    res.json({ success: true, configuracion });
+  } catch (error) {
+    console.error('âŒ Error obteniendo configuraciÃ³n:', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo configuraciÃ³n' });
+  }
+});
+
+// Obtener logs de acceso
+app.get('/api/logs_acceso', requireAuth, requireRole('administrador'), async (req, res) => {
+  try {
+    const query = `
+      SELECT l.*, u.usuario as usuario_nombre
+      FROM logs_acceso l
+      LEFT JOIN usuarios u ON l.usuario_id = u.id
+      ORDER BY l.fecha DESC
+      LIMIT 1000
+    `;
+    
+    const logs = await new Promise((resolve, reject) => {
+      db.db.all(query, [], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows || []);
+      });
+    });
+    
+    res.json({ success: true, logs });
+  } catch (error) {
+    console.error('âŒ Error obteniendo logs de acceso:', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo logs de acceso' });
+  }
+});
+
+// Obtener historial de asignaciones (temporalmente devuelve array vacÃ­o)
+app.get('/api/historial_asignaciones', requireAuth, async (req, res) => {
+  try {
+    // Por ahora devolvemos un array vacÃ­o ya que esta funcionalidad no estÃ¡ implementada
+    console.log('âš ï¸ Endpoint historial_asignaciones: devolviendo array vacÃ­o temporal');
+    res.json({ success: true, historial: [] });
+  } catch (error) {
+    console.error('âŒ Error obteniendo historial de asignaciones:', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo historial de asignaciones' });
+  }
+});
+
+// ===== ENDPOINTS PARA DEPARTAMENTOS =====
+
+// Obtener todos los departamentos
+app.get('/api/departamentos', requireAuth, async (req, res) => {
+  try {
+    const departamentos = await db.all('SELECT * FROM departamentos ORDER BY nombre');
+    res.json({ success: true, departamentos });
+  } catch (error) {
+    console.error('❌ Error obteniendo departamentos:', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo departamentos' });
+  }
+});
+
+// Obtener un departamento por ID
+app.get('/api/departamentos/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const departamento = await db.get('SELECT * FROM departamentos WHERE id = ?', [id]);
+    if (!departamento) {
+      return res.status(404).json({ success: false, message: 'Departamento no encontrado' });
+    }
+    res.json({ success: true, departamento });
+  } catch (error) {
+    console.error('❌ Error obteniendo departamento:', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo departamento' });
+  }
+});
+
+// Crear un nuevo departamento
+app.post('/api/departamentos', requireAuth, async (req, res) => {
+  try {
+    const { nombre } = req.body;
+    if (!nombre) {
+      return res.status(400).json({ success: false, message: 'El nombre del departamento es requerido' });
+    }
+    const result = await db.run('INSERT INTO departamentos (nombre) VALUES (?)', [nombre]);
+    res.json({ success: true, id: result.lastID });
+  } catch (error) {
+    console.error('❌ Error creando departamento:', error);
+    res.status(500).json({ success: false, message: 'Error creando departamento' });
+  }
+});
+
+// Actualizar un departamento
+app.put('/api/departamentos/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre } = req.body;
+    if (!nombre) {
+      return res.status(400).json({ success: false, message: 'El nombre del departamento es requerido' });
+    }
+    await db.run('UPDATE departamentos SET nombre = ? WHERE id = ?', [nombre, id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Error actualizando departamento:', error);
+    res.status(500).json({ success: false, message: 'Error actualizando departamento' });
+  }
+});
+
+// Eliminar un departamento
+app.delete('/api/departamentos/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.run('DELETE FROM departamentos WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Error eliminando departamento:', error);
+    res.status(500).json({ success: false, message: 'Error eliminando departamento' });
+  }
+});
+
+// ===== NUEVOS ENDPOINTS PARA INVENTARIO GENERAL DE ACTIVOS =====
+
+// Obtener todos los activos del inventario general
+app.get('/api/inventario_general_activos', requireAuth, async (req, res) => {
+  try {
+    const inventario = await db.getInventarioGeneralActivos();
+    res.json({ success: true, inventario });
+  } catch (error) {
+    console.error('❌ Error obteniendo inventario general de activos:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo inventario general de activos',
+    });
+  }
+});
+
+// Obtener un activo por su ID
+app.get('/api/inventario_general_activos/:id', requireAuth, async (req, res) => {
+  try {
+    const activo = await db.getActivoPorId(req.params.id);
+    if (!activo) {
+      return res.status(404).json({ success: false, message: 'Activo no encontrado' });
+    }
+    res.json({ success: true, activo });
+  } catch (error) {
+    console.error('❌ Error obteniendo activo por ID:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo activo por ID',
+    });
+  }
+});
+
+// Crear un nuevo activo
+app.post('/api/inventario_general_activos', requireAuth, async (req, res) => {
+  try {
+    await db.beginTransaction();
+    const result = await db.crearActivo(req.body);
+    await db.commitTransaction();
+    res.status(201).json({
+      success: true,
+      message: 'Activo creado exitosamente',
+      activoId: result.id,
+    });
+  } catch (error) {
+    await db.rollbackTransaction();
+    console.error('❌ Error creando activo:', error);
+    res.status(500).json({ success: false, message: 'Error creando activo' });
+  }
+});
+
+// Actualizar un activo existente
+app.put('/api/inventario_general_activos/:id', requireAuth, async (req, res) => {
+  try {
+    await db.beginTransaction();
+    const result = await db.actualizarActivo(req.params.id, req.body);
+    await db.commitTransaction();
+    if (result.changes === 0) {
+      return res.status(404).json({ success: false, message: 'Activo no encontrado' });
+    }
+    res.json({ success: true, message: 'Activo actualizado exitosamente' });
+  } catch (error) {
+    await db.rollbackTransaction();
+    console.error('❌ Error actualizando activo:', error);
+    res.status(500).json({ success: false, message: 'Error actualizando activo' });
+  }
+});
+
+// Eliminar un activo
+app.delete('/api/inventario_general_activos/:id', requireAuth, async (req, res) => {
+  try {
+    const result = await db.eliminarActivo(req.params.id);
+    if (result.changes === 0) {
+      return res.status(404).json({ success: false, message: 'Activo no encontrado' });
+    }
+    res.json({ success: true, message: 'Activo eliminado exitosamente' });
+  } catch (error) {
+    console.error('❌ Error eliminando activo:', error);
+    res.status(500).json({ success: false, message: 'Error eliminando activo' });
+  }
+});
+
+// API para Dashboard - Estadísticas
+
+// Total de empleados
+app.get('/api/dashboard/total-empleados', requireAuth, async (req, res) => {
+  try {
+    const result = await db.db.get('SELECT COUNT(*) as total FROM empleados');
+    res.json({ total: result ? result.total : 0 });
+  } catch (error) {
+    console.error('âŒ Error obteniendo total de empleados:', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo total de empleados', total: 0 });
+  }
+});
+
+// Rangos por departamento
+app.get('/api/dashboard/rangos-por-departamento', requireAuth, async (req, res) => {
+  try {
+    const query = `
+      SELECT e.rango as rango_nombre, COUNT(*) as cantidad
+      FROM empleados e
+      WHERE e.rango IS NOT NULL AND e.rango != ''
+      GROUP BY e.rango
+      ORDER BY cantidad DESC
+      LIMIT 10
+    `;
+    
+    const result = await new Promise((resolve, reject) => {
+      db.db.all(query, [], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows || []);
+      });
+    });
+    
+    res.json(result);
+  } catch (error) {
+    console.error('âŒ Error obteniendo rangos por departamento:', error);
+    res.status(500).json([]);
+  }
+});
+
+// Cantidad de rangos
+app.get('/api/dashboard/cantidad-rangos', requireAuth, async (req, res) => {
+  try {
+    const query = `
+      SELECT rango as rango_nombre, COUNT(*) as cantidad
+      FROM empleados
+      WHERE rango IS NOT NULL AND rango != ''
+      GROUP BY rango
+      ORDER BY cantidad DESC
+      LIMIT 10
+    `;
+    
+    const result = await new Promise((resolve, reject) => {
+      db.db.all(query, [], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows || []);
+      });
+    });
+    
+    res.json(result);
+  } catch (error) {
+    console.error('âŒ Error obteniendo cantidad de rangos:', error);
+    res.status(500).json([]);
+  }
+});
+
+// Total de departamentos
+app.get('/api/dashboard/total-departamentos', requireAuth, async (req, res) => {
+  try {
+    const result = await db.db.get('SELECT COUNT(*) as total FROM departamentos');
+    res.json({ total: result ? result.total : 0 });
+  } catch (error) {
+    console.error('âŒ Error obteniendo total de departamentos:', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo total de departamentos', total: 0 });
+  }
+});
+
+// Datos incompletos
+app.get('/api/dashboard/datos-incompletos', requireAuth, async (req, res) => {
+  try {
+    // Contar empleados con datos incompletos (sin nombre, apellido, rango o departamento)
+    const query = `
+      SELECT COUNT(*) as total
+      FROM empleados
+      WHERE nombre IS NULL OR nombre = '' OR
+            apellido IS NULL OR apellido = '' OR
+            rango IS NULL OR rango = '' OR
+            departamento_id IS NULL
+    `;
+    
+    const result = await db.db.get(query);
+    res.json({ total: result ? result.total : 0 });
+  } catch (error) {
+    console.error('âŒ Error obteniendo datos incompletos:', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo datos incompletos', total: 0 });
+  }
+});
+
+// Detalles de datos incompletos
+app.get('/api/dashboard/detalles-incompletos', requireAuth, async (req, res) => {
+  try {
+    // Obtener IDs de empleados con datos incompletos
+    const query = `
+      SELECT id
+      FROM empleados
+      WHERE nombre IS NULL OR nombre = '' OR
+            apellido IS NULL OR apellido = '' OR
+            rango IS NULL OR rango = '' OR
+            departamento_id IS NULL
+      LIMIT 20
+    `;
+    
+    const rows = await new Promise((resolve, reject) => {
+      db.db.all(query, [], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows || []);
+      });
+    });
+    
+    // Contar el total de registros incompletos
+    const countQuery = `
+      SELECT COUNT(*) as count
+      FROM empleados
+      WHERE nombre IS NULL OR nombre = '' OR
+            apellido IS NULL OR apellido = '' OR
+            rango IS NULL OR rango = '' OR
+            departamento_id IS NULL
+    `;
+    
+    const countResult = await db.db.get(countQuery);
+    const ids = rows.map(row => row.id);
+    
+    res.json({ 
+      count: countResult ? countResult.count : 0,
+      ids: ids
+    });
+  } catch (error) {
+    console.error('âŒ Error obteniendo detalles de datos incompletos:', error);
+    res.status(500).json({ count: 0, ids: [] });
+  }
+});
+
+// Endpoint para obtener rangos Ãºnicos
+app.get('/api/rangos', requireAuth, (req, res) => {
+  db.all('SELECT DISTINCT rango FROM empleados WHERE rango IS NOT NULL AND rango != "" ORDER BY rango', [], (err, rows) => {
+    if (err) {
+      console.error('Error fetching rangos:', err);
+      res.status(500).json({ success: false, message: 'Error interno del servidor' });
+      return;
+    }
+    const rangos = rows.map(row => row.rango);
+    res.json({ success: true, rangos });
+  });
 });
 
 // Crear departamento
@@ -1013,7 +1482,7 @@ app.post('/api/departamentos', requireAuth, async (req, res) => {
     });
   } catch (error) {
     await db.rollbackTransaction();
-    console.error('❌ Error creando departamento:', error);
+    console.error('âŒ Error creando departamento:', error);
     res.status(500).json({
       success: false,
       message: 'Error creando departamento',
@@ -1063,7 +1532,7 @@ app.put('/api/departamentos/:id', requireAuth, async (req, res) => {
     res.json({ success: true, message: 'Departamento actualizado' });
   } catch (error) {
     await db.rollbackTransaction();
-    console.error('❌ Error actualizando departamento:', error);
+    console.error('âŒ Error actualizando departamento:', error);
     res.status(500).json({
       success: false,
       message: 'Error actualizando departamento',
@@ -1085,7 +1554,7 @@ app.delete('/api/departamentos/:id', requireAuth, async (req, res) => {
     }
     res.json({ success: true, message: 'Departamento eliminado' });
   } catch (error) {
-    console.error('❌ Error eliminando departamento:', error);
+    console.error('âŒ Error eliminando departamento:', error);
     res
       .status(500)
       .json({ success: false, message: 'Error eliminando departamento' });
@@ -1096,7 +1565,7 @@ app.delete('/api/departamentos/:id', requireAuth, async (req, res) => {
 app.get('/api/configuracion', requireAuth, (req, res) => {
   db.db.all('SELECT * FROM configuracion', [], (err, rows) => {
     if (err) {
-      console.error('❌ Error obteniendo configuracion:', err);
+      console.error('âŒ Error obteniendo configuracion:', err);
       return res
         .status(500)
         .json({ success: false, message: 'Error obteniendo configuracion' });
@@ -1111,7 +1580,7 @@ app.get('/api/logs_acceso', requireAuth, (req, res) => {
     [],
     (err, rows) => {
       if (err) {
-        console.error('❌ Error obteniendo logs:', err);
+        console.error('âŒ Error obteniendo logs:', err);
         return res
           .status(500)
           .json({ success: false, message: 'Error obteniendo logs' });
@@ -1127,7 +1596,7 @@ app.get('/api/historial_asignaciones', requireAuth, (req, res) => {
     [],
     (err, rows) => {
       if (err) {
-        console.error('❌ Error obteniendo historial asignaciones:', err);
+        console.error('âŒ Error obteniendo historial asignaciones:', err);
         return res.status(500).json({
           success: false,
           message: 'Error obteniendo historial asignaciones',
@@ -1138,29 +1607,9 @@ app.get('/api/historial_asignaciones', requireAuth, (req, res) => {
   );
 });
 
-// === Endpoints para panel de analytics (DuckDB) ===
-app.get('/api/analytics-panel/tables', requireAuth, async (req, res) => {
-  try {
-    const tables = await analyticsDB.listTables();
-    res.json({ tables });
-  } catch (err) {
-    console.error('❌ Error listando tablas DuckDB:', err);
-    res.status(500).json({ error: 'Error listando tablas' });
-  }
-});
 
-app.get('/api/analytics-panel/table/:name', requireAuth, async (req, res) => {
-  const { name } = req.params;
-  try {
-    const data = await analyticsDB.getTablePreview(name);
-    res.json(data);
-  } catch (err) {
-    console.error('❌ Error obteniendo datos de tabla:', err);
-    res.status(500).json({ error: 'Error obteniendo datos' });
-  }
-});
 
-// Registrar préstamo de equipo
+// Registrar prÃ©stamo de equipo
 app.post('/api/prestamo', requireAuth, async (req, res) => {
   const { equipoId, tipoEquipo, empleadoId, observaciones } = req.body;
 
@@ -1182,15 +1631,15 @@ app.post('/api/prestamo', requireAuth, async (req, res) => {
 
     res.json(resultado);
   } catch (error) {
-    console.error('❌ Error registrando préstamo:', error);
+    console.error('âŒ Error registrando prÃ©stamo:', error);
     res.status(400).json({
       success: false,
-      message: error.message || 'Error registrando préstamo',
+      message: error.message || 'Error registrando prÃ©stamo',
     });
   }
 });
 
-// Registrar devolución de equipo
+// Registrar devoluciÃ³n de equipo
 app.post('/api/devolucion', requireAuth, async (req, res) => {
   const { equipoId, tipoEquipo, empleadoActual, observaciones } = req.body;
 
@@ -1212,10 +1661,10 @@ app.post('/api/devolucion', requireAuth, async (req, res) => {
 
     res.json(resultado);
   } catch (error) {
-    console.error('❌ Error registrando devolución:', error);
+    console.error('âŒ Error registrando devoluciÃ³n:', error);
     res.status(400).json({
       success: false,
-      message: error.message || 'Error registrando devolución',
+      message: error.message || 'Error registrando devoluciÃ³n',
     });
   }
 });
@@ -1238,7 +1687,7 @@ app.get('/api/reporte-semanal', requireAuth, async (req, res) => {
     );
     res.json({ success: true, movimientos });
   } catch (error) {
-    console.error('❌ Error generando reporte:', error);
+    console.error('âŒ Error generando reporte:', error);
     res.status(500).json({
       success: false,
       message: 'Error generando reporte semanal',
@@ -1246,7 +1695,7 @@ app.get('/api/reporte-semanal', requireAuth, async (req, res) => {
   }
 });
 
-// === APIS PARA GESTIÓN DE USUARIOS ===
+// === APIS PARA GESTIÃ“N DE USUARIOS ===
 
 // Obtener todos los usuarios
 app.get('/api/usuarios', requireAuth, async (req, res) => {
@@ -1267,7 +1716,7 @@ app.get('/api/usuarios', requireAuth, async (req, res) => {
 
     res.json({ success: true, usuarios });
   } catch (error) {
-    console.error('❌ Error obteniendo usuarios:', error);
+    console.error('âŒ Error obteniendo usuarios:', error);
     res.status(500).json({
       success: false,
       message: 'Error obteniendo usuarios',
@@ -1293,7 +1742,7 @@ app.post(
     ) {
       return res.status(400).json({
         success: false,
-        message: 'Usuario, contraseña y rol son requeridos y deben ser texto',
+        message: 'Usuario, contraseÃ±a y rol son requeridos y deben ser texto',
       });
     }
     if (nombre && typeof nombre !== 'string') {
@@ -1322,17 +1771,17 @@ app.post(
 
       if (existingUser) {
         console.log(
-          `⚠️ Usuario ${usuario} ya existe. ID: ${existingUser.id}, Activo: ${existingUser.activo}`
+          `âš ï¸ Usuario ${usuario} ya existe. ID: ${existingUser.id}, Activo: ${existingUser.activo}`
         );
         return res.status(409).json({
           success: false,
-          message: `El usuario '${usuario}' ya está registrado en el sistema. Por favor, elija otro nombre de usuario.`,
+          message: `El usuario '${usuario}' ya estÃ¡ registrado en el sistema. Por favor, elija otro nombre de usuario.`,
         });
       }
 
       await db.beginTransaction();
 
-      // Hash de la contraseña antes de insertar
+      // Hash de la contraseÃ±a antes de insertar
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const newUserId = await new Promise((resolve, reject) => {
@@ -1352,7 +1801,7 @@ app.post(
         );
       });
 
-      // Log de creación
+      // Log de creaciÃ³n
       await db.logAccess(
         req.session.user.id,
         'USER_CREATED',
@@ -1371,9 +1820,9 @@ app.post(
       });
     } catch (error) {
       await db.rollbackTransaction();
-      console.error('❌ Error creando usuario:', error);
+      console.error('âŒ Error creando usuario:', error);
 
-      // Manejar errores específicos
+      // Manejar errores especÃ­ficos
       if (error.message === 'El usuario ya existe') {
         return res.status(409).json({
           success: false,
@@ -1409,7 +1858,7 @@ app.put('/api/usuarios/:id', requireAuth, async (req, res) => {
   if (password && typeof password !== 'string') {
     return res
       .status(400)
-      .json({ success: false, message: 'La contraseña debe ser texto' });
+      .json({ success: false, message: 'La contraseÃ±a debe ser texto' });
   }
   if (nombre && typeof nombre !== 'string') {
     return res
@@ -1438,18 +1887,18 @@ app.put('/api/usuarios/:id', requireAuth, async (req, res) => {
       });
     }
 
-    // Verificar si el nombre de usuario está en uso por otro usuario
+    // Verificar si el nombre de usuario estÃ¡ en uso por otro usuario
     if (usuario !== existingUser.usuario) {
       const duplicateUser = await db.getUser(usuario);
       if (duplicateUser && duplicateUser.id !== parseInt(id)) {
         return res.status(409).json({
           success: false,
-          message: 'El nombre de usuario ya está en uso',
+          message: 'El nombre de usuario ya estÃ¡ en uso',
         });
       }
     }
 
-    // Preparar datos de actualización
+    // Preparar datos de actualizaciÃ³n
     let updateFields = [];
     let updateValues = [];
 
@@ -1469,7 +1918,7 @@ app.put('/api/usuarios/:id', requireAuth, async (req, res) => {
       updateValues.push(email || null);
     }
 
-    // Si se proporciona nueva contraseña
+    // Si se proporciona nueva contraseÃ±a
     if (password && password.trim() !== '') {
       const hashed = await bcrypt.hash(password, 10);
       updateFields.push('contrasena = ?');
@@ -1495,7 +1944,7 @@ app.put('/api/usuarios/:id', requireAuth, async (req, res) => {
       );
     });
 
-    // Log de actualización
+    // Log de actualizaciÃ³n
     await db.logAccess(
       req.session.user.id,
       'USER_UPDATED',
@@ -1513,7 +1962,7 @@ app.put('/api/usuarios/:id', requireAuth, async (req, res) => {
     });
   } catch (error) {
     await db.rollbackTransaction();
-    console.error('❌ Error actualizando usuario:', error);
+    console.error('âŒ Error actualizando usuario:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno al actualizar usuario',
@@ -1548,11 +1997,11 @@ app.post(
       const fila = i + 2; // +2 porque el array empieza en 0 y la fila 1 son headers
 
       try {
-        // Validaciones básicas
+        // Validaciones bÃ¡sicas
         if (!usuario.usuario || !usuario.password || !usuario.rol) {
           resultados.errores++;
           resultados.detalles.push(
-            `Fila ${fila}: Usuario, contraseña y rol son requeridos`
+            `Fila ${fila}: Usuario, contraseÃ±a y rol son requeridos`
           );
           continue;
         }
@@ -1610,7 +2059,7 @@ app.post(
     }
 
     console.log(
-      `📊 Carga masiva completada: ${resultados.exitosos} exitosos, ${resultados.errores} errores`
+      `ðŸ“Š Carga masiva completada: ${resultados.exitosos} exitosos, ${resultados.errores} errores`
     );
 
     res.json({
@@ -1645,7 +2094,7 @@ app.delete(
         });
       }
 
-      // No permitir que el usuario se elimine a sí mismo
+      // No permitir que el usuario se elimine a sÃ­ mismo
       if (parseInt(id) === req.session.user.id) {
         return res.status(400).json({
           success: false,
@@ -1653,15 +2102,15 @@ app.delete(
         });
       }
 
-      // Eliminar completamente de la base de datos con verificación
+      // Eliminar completamente de la base de datos con verificaciÃ³n
       const deletedRows = await new Promise((resolve, reject) => {
         db.db.run('DELETE FROM usuarios WHERE id = ?', [id], function (err) {
           if (err) {
-            console.error('❌ Error SQL eliminando usuario:', err);
+            console.error('âŒ Error SQL eliminando usuario:', err);
             reject(err);
           } else {
             console.log(
-              `🗑️ Filas eliminadas: ${this.changes} para usuario ID: ${id}`
+              `ðŸ—‘ï¸ Filas eliminadas: ${this.changes} para usuario ID: ${id}`
             );
             resolve(this.changes);
           }
@@ -1676,7 +2125,7 @@ app.delete(
         });
       }
 
-      // Verificar que realmente se eliminó
+      // Verificar que realmente se eliminÃ³
       const verification = await new Promise((resolve, reject) => {
         db.db.get('SELECT * FROM usuarios WHERE id = ?', [id], (err, row) => {
           if (err) reject(err);
@@ -1686,15 +2135,15 @@ app.delete(
 
       if (verification) {
         console.error(
-          `⚠️ ADVERTENCIA: Usuario ${id} aún existe después de la eliminación`
+          `âš ï¸ ADVERTENCIA: Usuario ${id} aÃºn existe despuÃ©s de la eliminaciÃ³n`
         );
         return res.status(500).json({
           success: false,
-          message: 'Error: El usuario no se eliminó correctamente',
+          message: 'Error: El usuario no se eliminÃ³ correctamente',
         });
       }
 
-      // Log de eliminación
+      // Log de eliminaciÃ³n
       await db.logAccess(
         req.session.user.id,
         'USER_DELETED',
@@ -1705,7 +2154,7 @@ app.delete(
       );
 
       console.log(
-        `✅ Usuario eliminado y verificado: ${existingUser.usuario} (ID: ${id})`
+        `âœ… Usuario eliminado y verificado: ${existingUser.usuario} (ID: ${id})`
       );
 
       broadcast('users-changed');
@@ -1716,7 +2165,7 @@ app.delete(
         verificado: true,
       });
     } catch (error) {
-      console.error('❌ Error eliminando usuario:', error);
+      console.error('âŒ Error eliminando usuario:', error);
       res.status(500).json({
         success: false,
         message: 'Error interno al eliminar usuario: ' + error.message,
@@ -1728,7 +2177,7 @@ app.delete(
 // Ruta protegida de ejemplo
 app.get('/profile', requireAuth, (req, res) => {
   res.json({
-    message: 'Página protegida',
+    message: 'PÃ¡gina protegida',
     user: req.session.user,
   });
 });
@@ -1744,19 +2193,19 @@ let vacacionesManager;
 async function initializeVacacionesSystem() {
   try {
     vacacionesManager = new VacacionesManager(db);
-    console.log('🎯 Sistema de vacaciones inicializado correctamente');
+    console.log('ðŸŽ¯ Sistema de vacaciones inicializado correctamente');
 
     // Actualizar estados de vacaciones al iniciar
     await vacacionesManager.actualizarEstadosVacaciones();
-    console.log('✅ Estados de vacaciones actualizados');
+    console.log('âœ… Estados de vacaciones actualizados');
   } catch (error) {
-    console.error('❌ Error inicializando sistema de vacaciones:', error);
+    console.error('âŒ Error inicializando sistema de vacaciones:', error);
   }
 }
 
-// === APIS PARA GESTIÓN DE VACACIONES ===
+// === APIS PARA GESTIÃ“N DE VACACIONES ===
 
-// Obtener información detallada de vacaciones de un empleado
+// Obtener informaciÃ³n detallada de vacaciones de un empleado
 app.get('/api/empleado/:id/vacaciones', requireAuth, async (req, res) => {
   const { id } = req.params;
 
@@ -1767,15 +2216,15 @@ app.get('/api/empleado/:id/vacaciones', requireAuth, async (req, res) => {
     const vacaciones = await vacacionesManager.calcularInfoVacaciones(id);
     res.json({ success: true, vacaciones });
   } catch (error) {
-    console.error('❌ Error obteniendo vacaciones del empleado:', error);
+    console.error('âŒ Error obteniendo vacaciones del empleado:', error);
     res.status(500).json({
       success: false,
-      message: 'Error obteniendo información de vacaciones',
+      message: 'Error obteniendo informaciÃ³n de vacaciones',
     });
   }
 });
 
-// Crear nuevo período de vacaciones
+// Crear nuevo perÃ­odo de vacaciones
 app.post('/api/vacaciones', requireAuth, async (req, res) => {
   const datosVacaciones = req.body;
 
@@ -1799,14 +2248,14 @@ app.post('/api/vacaciones', requireAuth, async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Período de vacaciones creado exitosamente',
+      message: 'PerÃ­odo de vacaciones creado exitosamente',
       vacaciones: resultado,
     });
   } catch (error) {
-    console.error('❌ Error creando período de vacaciones:', error);
+    console.error('âŒ Error creando perÃ­odo de vacaciones:', error);
     res.status(500).json({
       success: false,
-      message: 'Error creando período de vacaciones: ' + error.message,
+      message: 'Error creando perÃ­odo de vacaciones: ' + error.message,
     });
   }
 });
@@ -1829,7 +2278,7 @@ app.get(
       );
       res.json({ success: true, historial });
     } catch (error) {
-      console.error('❌ Error obteniendo historial de vacaciones:', error);
+      console.error('âŒ Error obteniendo historial de vacaciones:', error);
       res.status(500).json({
         success: false,
         message: 'Error obteniendo historial de vacaciones',
@@ -1870,7 +2319,7 @@ app.post('/api/vacaciones/limpiar-antiguos', requireAuth, async (req, res) => {
       registrosArchivados: resultado.registrosArchivados,
     });
   } catch (error) {
-    console.error('❌ Error limpiando registros antiguos:', error);
+    console.error('âŒ Error limpiando registros antiguos:', error);
     res.status(500).json({
       success: false,
       message: 'Error limpiando registros antiguos: ' + error.message,
@@ -1882,7 +2331,7 @@ app.post('/api/vacaciones/limpiar-antiguos', requireAuth, async (req, res) => {
 app.put('/api/vacaciones/actualizar', requireAuth, async (req, res) => {
   const { empleado_id, fecha_inicio, fecha_fin, observaciones } = req.body;
 
-  console.log('📝 Actualizando vacaciones para empleado ID:', empleado_id);
+  console.log('ðŸ“ Actualizando vacaciones para empleado ID:', empleado_id);
 
   if (!empleado_id || !fecha_inicio || !fecha_fin) {
     return res.status(400).json({
@@ -1912,7 +2361,7 @@ app.put('/api/vacaciones/actualizar', requireAuth, async (req, res) => {
     });
 
     if (result.changes > 0) {
-      console.log('✅ Vacaciones actualizadas correctamente');
+      console.log('âœ… Vacaciones actualizadas correctamente');
       res.json({
         success: true,
         message: 'Vacaciones actualizadas correctamente',
@@ -1925,7 +2374,7 @@ app.put('/api/vacaciones/actualizar', requireAuth, async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('❌ Error actualizando vacaciones:', error);
+    console.error('âŒ Error actualizando vacaciones:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor: ' + error.message,
@@ -1939,7 +2388,7 @@ app.delete(
   async (req, res) => {
     const empleadoId = req.params.empleadoId;
 
-    console.log('🗑️ Eliminando vacaciones para empleado ID:', empleadoId);
+    console.log('ðŸ—‘ï¸ Eliminando vacaciones para empleado ID:', empleadoId);
 
     try {
       const query = `
@@ -1959,7 +2408,7 @@ app.delete(
       });
 
       if (result.changes > 0) {
-        console.log('✅ Vacaciones eliminadas correctamente');
+        console.log('âœ… Vacaciones eliminadas correctamente');
         res.json({
           success: true,
           message: 'Vacaciones eliminadas correctamente',
@@ -1972,7 +2421,7 @@ app.delete(
         });
       }
     } catch (error) {
-      console.error('❌ Error eliminando vacaciones:', error);
+      console.error('âŒ Error eliminando vacaciones:', error);
       res.status(500).json({
         success: false,
         message: 'Error interno del servidor: ' + error.message,
@@ -1982,15 +2431,14 @@ app.delete(
 );
 
 // === RUTAS DE EMPLEADOS ===
-// Obtener empleados completos con información de departamentos
+// Obtener empleados completos con informaciÃ³n de departamentos
 app.get('/api/empleados-completos', requireAuth, async (req, res) => {
   try {
     const query = `
             SELECT 
                 e.*,
-                d.nombre as departamento_nombre
+                'Sin Departamento' as departamento_nombre
             FROM empleados e
-            LEFT JOIN departamentos d ON e.departamento_id = d.id
             ORDER BY e.id ASC
         `;
 
@@ -1999,7 +2447,7 @@ app.get('/api/empleados-completos', requireAuth, async (req, res) => {
         if (err) {
           reject(err);
         } else {
-          // Añadir ID numérico a cada empleado
+          // AÃ±adir ID numÃ©rico a cada empleado
           const empleadosConIdNumerico = rows.map((empleado) => ({
             ...empleado,
             id_numerico: parseInt(empleado.id) || empleado.id,
@@ -2010,14 +2458,14 @@ app.get('/api/empleados-completos', requireAuth, async (req, res) => {
     });
 
     console.log(
-      `📊 Enviando ${empleados.length} empleados completos con IDs numéricos`
+      `ðŸ“Š Enviando ${empleados.length} empleados completos con IDs numÃ©ricos`
     );
     res.json({
       success: true,
       empleados: empleados,
     });
   } catch (error) {
-    console.error('❌ Error obteniendo empleados completos:', error);
+    console.error('âŒ Error obteniendo empleados completos:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor: ' + error.message,
@@ -2025,11 +2473,11 @@ app.get('/api/empleados-completos', requireAuth, async (req, res) => {
   }
 });
 
-// Obtener empleado específico por ID
+// Obtener empleado especÃ­fico por ID
 app.get('/api/empleado/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
 
-  console.log('🔍 Buscando empleado con ID:', id);
+  console.log('ðŸ” Buscando empleado con ID:', id);
 
   try {
     const query = `
@@ -2053,7 +2501,7 @@ app.get('/api/empleado/:id', requireAuth, async (req, res) => {
 
     if (empleado) {
       console.log(
-        '✅ Empleado encontrado:',
+        'âœ… Empleado encontrado:',
         empleado.nombre,
         empleado.apellido
       );
@@ -2062,14 +2510,14 @@ app.get('/api/empleado/:id', requireAuth, async (req, res) => {
         empleado: empleado,
       });
     } else {
-      console.log('❌ Empleado no encontrado para ID:', id);
+      console.log('âŒ Empleado no encontrado para ID:', id);
       res.status(404).json({
         success: false,
         message: 'Empleado no encontrado',
       });
     }
   } catch (error) {
-    console.error('❌ Error obteniendo empleado:', error);
+    console.error('âŒ Error obteniendo empleado:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor: ' + error.message,
@@ -2082,20 +2530,15 @@ app.get('/api/empleado/:id', requireAuth, async (req, res) => {
 if (require.main === module) {
   db.connect()
     .then(() => {
-      console.log('🎯 Sistema de base de datos inicializado correctamente');
+      console.log('ðŸŽ¯ Sistema de base de datos inicializado correctamente');
       return prestamos.conectar();
     })
     .then(() => {
-      console.log('📦 Sistema de préstamos inicializado');
+      console.log('ðŸ“¦ Sistema de prÃ©stamos inicializado');
       return initializeVacacionesSystem();
     })
-    .then(() => {
-      return initializeDuckDB().then(() => {
-        console.log('🦆 DuckDB inicializado');
-      });
-    })
     .catch((err) => {
-      console.error('❌ Error inicializando el sistema:', err);
+      console.error('âŒ Error inicializando el sistema:', err);
     });
 
   // Iniciar servidor HTTP y WebSocket
@@ -2104,12 +2547,13 @@ if (require.main === module) {
   app.set('wss', wss);
 
   server.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Servidor Express ejecutándose en http://0.0.0.0:${PORT}`);
-    console.log('✅ Sesiones configuradas');
-    console.log('✅ Autenticación lista');
-    console.log('✅ Archivos estáticos en /public');
-    console.log('📣 WebSocket listo');
+    console.log(`ðŸš€ Servidor Express ejecutÃ¡ndose en http://0.0.0.0:${PORT}`);
+    console.log('âœ… Sesiones configuradas');
+    console.log('âœ… AutenticaciÃ³n lista');
+    console.log('âœ… Archivos estÃ¡ticos en /public');
+    console.log('ðŸ“£ WebSocket listo');
   });
 }
 
 module.exports = app;
+

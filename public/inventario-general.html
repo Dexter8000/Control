@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario General de Activos</title>
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/datatables.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <style>
+    .editable:hover {
+      background-color: #f8f9fa;
+      cursor: pointer;
+    }
+    .editing {
+      background-color: #e9ecef;
+    }
+    .btn-action {
+      margin-right: 5px;
+    }
+    .filter-row {
+      margin-bottom: 15px;
+    }
+    .status-badge {
+      font-size: 0.8rem;
+      padding: 0.25rem 0.5rem;
+    }
+    .table-responsive {
+      max-height: 70vh;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container-fluid mt-4">
+    <div class="row">
+      <div class="col-12">
+        <h2><i class="bi bi-box-seam"></i> Inventario General de Activos</h2>
+        <p class="text-muted">Gestión completa del inventario de activos</p>
+        
+        <div class="card shadow-sm">
+          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <span>Listado de Activos</span>
+            <button id="btnNuevoActivo" class="btn btn-sm btn-light">
+              <i class="bi bi-plus-circle"></i> Nuevo Activo
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="row filter-row">
+              <div class="col-md-3">
+                <div class="input-group">
+                  <span class="input-group-text">Categoría</span>
+                  <select id="filtroCategoria" class="form-select">
+                    <option value="">Todas</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="input-group">
+                  <span class="input-group-text">Estado</span>
+                  <select id="filtroEstado" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
+                    <option value="En reparación">En reparación</option>
+                    <option value="Dado de baja">Dado de baja</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="input-group">
+                  <span class="input-group-text">Departamento</span>
+                  <select id="filtroDepartamento" class="form-select">
+                    <option value="">Todos</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="input-group">
+                  <input type="text" id="busquedaGeneral" class="form-control" placeholder="Buscar...">
+                  <button class="btn btn-outline-secondary" type="button">
+                    <i class="bi bi-search"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="table-responsive">
+              <table id="tablaInventario" class="table table-striped table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Marca</th>
+                    <th>Modelo</th>
+                    <th>Serie</th>
+                    <th>Categoría</th>
+                    <th>Estado</th>
+                    <th>Departamento</th>
+                    <th>Responsable</th>
+                    <th>Fecha Adquisición</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Los datos se cargarán dinámicamente -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Nuevo/Editar Activo -->
+  <div class="modal fade" id="modalActivo" tabindex="-1" aria-labelledby="modalActivoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalActivoLabel">Nuevo Activo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formActivo">
+            <input type="hidden" id="activoId">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="nombre" class="form-label">Nombre*</label>
+                  <input type="text" class="form-control" id="nombre" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="categoria" class="form-label">Categoría*</label>
+                  <select class="form-select" id="categoria" required>
+                    <option value="">Seleccionar...</option>
+                    <option value="Equipo de cómputo">Equipo de cómputo</option>
+                    <option value="Periférico">Periférico</option>
+                    <option value="Mobiliario">Mobiliario</option>
+                    <option value="Vehículo">Vehículo</option>
+                    <option value="Comunicación">Comunicación</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label for="marca" class="form-label">Marca</label>
+                  <input type="text" class="form-control" id="marca">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label for="modelo" class="form-label">Modelo</label>
+                  <input type="text" class="form-control" id="modelo">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label for="serie" class="form-label">No. Serie</label>
+                  <input type="text" class="form-control" id="serie">
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label for="subcategoria" class="form-label">Subcategoría</label>
+                  <input type="text" class="form-control" id="subcategoria">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label for="estado" class="form-label">Estado</label>
+                  <select class="form-select" id="estado">
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
+                    <option value="En reparación">En reparación</option>
+                    <option value="Dado de baja">Dado de baja</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label for="condicion" class="form-label">Condición</label>
+                  <select class="form-select" id="condicion">
+                    <option value="Nuevo">Nuevo</option>
+                    <option value="Excelente">Excelente</option>
+                    <option value="Bueno">Bueno</option>
+                    <option value="Regular">Regular</option>
+                    <option value="Malo">Malo</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="departamento_asignado" class="form-label">Departamento Asignado</label>
+                  <select class="form-select" id="departamento_asignado">
+                    <option value="">Seleccionar...</option>
+                    <!-- Se cargará dinámicamente -->
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="responsable_actual" class="form-label">Responsable</label>
+                  <input type="text" class="form-control" id="responsable_actual">
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="ubicacion_especifica" class="form-label">Ubicación Específica</label>
+                  <input type="text" class="form-control" id="ubicacion_especifica">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="tipo_adquisicion" class="form-label">Tipo de Adquisición</label>
+                  <select class="form-select" id="tipo_adquisicion">
+                    <option value="">Seleccionar...</option>
+                    <option value="Compra">Compra</option>
+                    <option value="Donación">Donación</option>
+                    <option value="Préstamo">Préstamo</option>
+                    <option value="Arrendamiento">Arrendamiento</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label for="fecha_adquisicion" class="form-label">Fecha de Adquisición</label>
+                  <input type="date" class="form-control" id="fecha_adquisicion">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label for="garantia_hasta" class="form-label">Garantía Hasta</label>
+                  <input type="date" class="form-control" id="garantia_hasta">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label for="fecha_asignacion" class="form-label">Fecha de Asignación</label>
+                  <input type="date" class="form-control" id="fecha_asignacion">
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="detalles" class="form-label">Detalles/Observaciones</label>
+              <textarea class="form-control" id="detalles" rows="3"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="btnGuardarActivo">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmación para Eliminar -->
+  <div class="modal fade" id="modalConfirmarEliminar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Confirmar Eliminación</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Está seguro que desea eliminar este activo? Esta acción no se puede deshacer.</p>
+          <p><strong>Activo:</strong> <span id="nombreActivoEliminar"></span></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/jquery-3.6.0.min.js"></script>
+  <script src="js/bootstrap.bundle.min.js"></script>
+  <script src="js/datatables.min.js"></script>
+  <script src="js/inventario-general.js"></script>
+</body>
+</html>

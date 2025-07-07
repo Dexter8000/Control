@@ -34,7 +34,58 @@
   margin-bottom: 0.5rem;
 }
 .table-wrapper {
-  padding: 1rem;
+  padding: 1rem 0; /* Eliminamos padding horizontal para que la barra llegue al borde */
+  width: 100%;
+  position: relative; /* Para posicionamiento correcto */
+}
+
+/* Contenedor con desplazamiento horizontal */
+.dataTables_wrapper {
+  overflow-x: auto; /* Movemos el desplazamiento al wrapper de DataTables */
+  width: 100%;
+  padding: 0; /* Eliminamos padding para que la barra llegue al borde */
+  margin: 0 1rem; /* Usamos margin en su lugar para mantener espacio interno */
+  max-width: calc(100% - 2rem); /* Aseguramos que no exceda el ancho disponible */
+}
+
+.table-container {
+  position: relative;
+}
+
+.table-container.loading .loading-indicator {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 10;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+}
+
+.loading-indicator i {
+  margin-right: 0.5rem;
+  color: var(--accent-color);
+}
+
+.error-message {
+  margin-bottom: 1rem;
+}
+
+.alert {
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
 }
 
 .pc-actions {

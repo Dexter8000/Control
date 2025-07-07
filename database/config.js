@@ -20,12 +20,23 @@ class Database {
     return new Promise((resolve, reject) => {
       this.db = new sqlite3.Database(this.dbPath, (err) => {
         if (err) {
-          console.error(' Error conectando a la base de datos:', err.message);
-          reject(err);
-        } else {
-          console.log(' Conectado a la base de datos SQLite');
-          this.initializeTables().then(resolve).catch(reject);
+          console.error('❌ Error conectando a la base de datos:', err.message);
+          return reject(err);
         }
+        console.log('✅ Conectado a la base de datos SQLite');
+        this.initializeTables()
+          .then(() => {
+            // Cargar datos iniciales del inventario general de activos
+            return this.loadInventarioGeneralActivos();
+          })
+          .then(() => {
+            console.log('✅ Tablas y datos inicializados correctamente.');
+            resolve();
+          })
+          .catch((initErr) => {
+            console.error('❌ Error inicializando las tablas:', initErr);
+            reject(initErr);
+          });
       });
     });
   }
@@ -81,53 +92,36 @@ class Database {
                     FOREIGN KEY (responsable_actual) REFERENCES empleados(id)
                 );
 
-                -- Tabla de inventario periférico (actualizada)
-                CREATE TABLE IF NOT EXISTS inventario_periferico (
-                    id_periferico TEXT PRIMARY KEY,
-                    nombre_periferico TEXT,
-                    marca_periferico TEXT,
-                    modelo_periferico TEXT,
-                    serie_periferico TEXT,
-                    estado_periferico TEXT DEFAULT 'operativo',
-                    condicion_periferico TEXT DEFAULT 'nuevo',
-                    tipo_adquisicion_periferico TEXT,
-                    id_departamento_asignado_periferico TEXT,
-                    ubicacion_especifica_periferico TEXT,
-                    responsable_actual_periferico TEXT,
-                    fecha_creacion_periferico TEXT,
-                    fecha_adquisicion_periferico TEXT,
-                    detalles_periferico TEXT,
-                    id_inventario_principal TEXT,
-                    fecha_asignacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (id_departamento_asignado_periferico) REFERENCES departamentos(id),
-                    FOREIGN KEY (responsable_actual_periferico) REFERENCES empleados(id),
-                    FOREIGN KEY (id_inventario_principal) REFERENCES inventario_principal(id)
-                );
+                -- Tabla de inventario periférico eliminada para preparar nueva estructura
+                -- La nueva tabla se implementará con una estructura mejorada
 
-                -- Tabla de inventario principal (actualizada)
-                CREATE TABLE IF NOT EXISTS inventario_principal (
-                    id TEXT PRIMARY KEY,
-                    nombre TEXT,
+                -- Tabla de inventario principal eliminada para preparar nueva estructura
+                -- La nueva tabla se implementará con una estructura mejorada
+
+                -- Nueva tabla de inventario general de activos
+                CREATE TABLE IF NOT EXISTS inventario_general_activos (
+                    id INTEGER PRIMARY KEY,
+                    nombre TEXT NOT NULL,
                     marca TEXT,
                     modelo TEXT,
-                    serie TEXT,
-                    categoria TEXT,
+                    serie TEXT UNIQUE,
+                    categoria TEXT NOT NULL,
                     subcategoria TEXT,
-                    estado TEXT DEFAULT 'operativo',
-                    condicion TEXT DEFAULT 'nuevo',
+                    estado TEXT,
+                    condicion TEXT,
                     tipo_adquisicion TEXT,
-                    id_departamento_asignado TEXT,
+                    departamento_asignado TEXT,
                     ubicacion_especifica TEXT,
                     responsable_actual TEXT,
                     fecha_creacion TEXT,
                     fecha_adquisicion TEXT,
                     detalles TEXT,
-                    ubicacion TEXT,
-                    valor_compra DECIMAL(10,2),
-                    proveedor TEXT,
                     garantia_hasta DATE,
-                    FOREIGN KEY (id_departamento_asignado) REFERENCES departamentos(id),
-                    FOREIGN KEY (responsable_actual) REFERENCES empleados(id)
+                    id_inventario_principal INTEGER NULL,
+                    fecha_asignacion DATETIME,
+                    FOREIGN KEY (id_inventario_principal) REFERENCES inventario_general_activos(id)
+                        ON DELETE SET NULL
+                        ON UPDATE CASCADE
                 );
 
                 -- Tabla de sesiones (para el sistema de login)
@@ -420,6 +414,168 @@ class Database {
     });
   }
 
+  // Método para cargar datos iniciales del inventario general de activos
+  async loadInventarioGeneralActivos() {
+    try {
+      // Verificar si ya hay datos en la tabla
+      const existingData = await this.getInventarioGeneralActivos();
+      if (existingData && existingData.length > 0) {
+        console.log('✅ La tabla inventario_general_activos ya tiene datos, no se cargarán datos iniciales.');
+        return;
+      }
+
+      // Cargar datos desde el archivo JSON
+      const fs = require('fs');
+      const path = require('path');
+      const filePath = path.join(__dirname, '..', 'tablas', 'inventario_general_activos.json');
+      
+      if (!fs.existsSync(filePath)) {
+        console.log('⚠ No se encontró el archivo de datos iniciales para inventario_general_activos.');
+        return;
+      }
+      
+      const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      
+      // Insertar datos en la tabla
+      await this.beginTransaction();
+      
+      for (const activo of data) {
+        await this.crearActivo(activo);
+      }
+      
+      await this.commitTransaction();
+      console.log(`✅ Se cargaron ${data.length} registros iniciales en inventario_general_activos.`);
+    } catch (error) {
+      await this.rollbackTransaction();
+      console.error('❌ Error cargando datos iniciales de inventario_general_activos:', error);
+    }
+  }
+
+  // Métodos para gestionar el inventario general de activos
+  getInventarioGeneralActivos() {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT * FROM inventario_general_activos ORDER BY id DESC`;
+      this.db.all(query, [], (err, rows) => {
+        if (err) {
+          console.error('✖ Error obteniendo inventario general de activos:', err);
+          reject(err);
+        } else {
+          resolve(rows || []);
+        }
+      });
+    });
+  }
+
+  getActivoPorId(id) {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT * FROM inventario_general_activos WHERE id = ?`;
+      this.db.get(query, [id], (err, row) => {
+        if (err) {
+          console.error('✖ Error obteniendo activo por ID:', err);
+          reject(err);
+        } else {
+          resolve(row);
+        }
+      });
+    });
+  }
+
+  crearActivo(activoData) {
+    return new Promise((resolve, reject) => {
+      const {
+        nombre, marca, modelo, serie, categoria, subcategoria, estado,
+        condicion, tipo_adquisicion, departamento_asignado, ubicacion_especifica,
+        responsable_actual, fecha_creacion, fecha_adquisicion, detalles, garantia_hasta,
+        id_inventario_principal, fecha_asignacion
+      } = activoData;
+
+      const query = `
+        INSERT INTO inventario_general_activos (
+          nombre, marca, modelo, serie, categoria, subcategoria, estado,
+          condicion, tipo_adquisicion, departamento_asignado, ubicacion_especifica,
+          responsable_actual, fecha_creacion, fecha_adquisicion, detalles, garantia_hasta,
+          id_inventario_principal, fecha_asignacion
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      const params = [
+        nombre, marca, modelo, serie, categoria, subcategoria, estado,
+        condicion, tipo_adquisicion, departamento_asignado, ubicacion_especifica,
+        responsable_actual, fecha_creacion, fecha_adquisicion, detalles, garantia_hasta,
+        id_inventario_principal, fecha_asignacion
+      ];
+
+      this.db.run(query, params, function(err) {
+        if (err) {
+          console.error('✖ Error creando activo:', err);
+          reject(err);
+        } else {
+          resolve({ id: this.lastID });
+        }
+      });
+    });
+  }
+
+  actualizarActivo(id, activoData) {
+    return new Promise((resolve, reject) => {
+      // Primero verificamos que el activo exista
+      this.getActivoPorId(id)
+        .then(activo => {
+          if (!activo) {
+            reject(new Error('Activo no encontrado'));
+            return;
+          }
+
+          // Construimos la consulta dinámicamente basada en los campos proporcionados
+          const fields = [];
+          const values = [];
+
+          Object.keys(activoData).forEach(key => {
+            if (activoData[key] !== undefined) {
+              fields.push(`${key} = ?`);
+              values.push(activoData[key]);
+            }
+          });
+
+          // Agregamos el ID al final de los valores
+          values.push(id);
+
+          const query = `
+            UPDATE inventario_general_activos
+            SET ${fields.join(', ')}
+            WHERE id = ?
+          `;
+
+          this.db.run(query, values, function(err) {
+            if (err) {
+              console.error('✖ Error actualizando activo:', err);
+              reject(err);
+            } else {
+              resolve({ changes: this.changes });
+            }
+          });
+        })
+        .catch(err => {
+          console.error('✖ Error verificando activo:', err);
+          reject(err);
+        });
+    });
+  }
+
+  eliminarActivo(id) {
+    return new Promise((resolve, reject) => {
+      const query = `DELETE FROM inventario_general_activos WHERE id = ?`;
+      this.db.run(query, [id], function(err) {
+        if (err) {
+          console.error('✖ Error eliminando activo:', err);
+          reject(err);
+        } else {
+          resolve({ changes: this.changes });
+        }
+      });
+    });
+  }
+
   // Métodos para obtener datos del inventario
   getDepartamentos() {
     return new Promise((resolve, reject) => {
@@ -430,6 +586,26 @@ class Database {
           else resolve(rows);
         }
       );
+    });
+  }
+  
+  // Obtener empleados con información de departamento
+  getEmpleadosCompletos() {
+    return new Promise((resolve, reject) => {
+      const query = `
+        SELECT
+            e.*
+        FROM empleados e
+        ORDER BY e.nombre, e.apellido
+      `;
+      this.db.all(query, [], (err, rows) => {
+        if (err) {
+          console.error('Error al obtener empleados completos:', err);
+          reject(err);
+        } else {
+          resolve(rows);
+        }
+      });
     });
   }
 
@@ -476,433 +652,80 @@ class Database {
     });
   }
 
-  // Obtener inventario principal completo (estructura real)
-  getInventarioPrincipal() {
+  // Métodos para obtener datos para tablas y filtros
+  getRangos() {
     return new Promise((resolve, reject) => {
-      const query = `
-                SELECT ip.*, 
-                       CASE 
-                           WHEN ip.responsable_actual IS NOT NULL AND ip.responsable_actual != '' 
-                           THEN e.nombre || ' ' || e.apellido 
-                           ELSE 'Sin asignar' 
-                       END as empleado_asignado,
-                       CASE 
-                           WHEN ip.estado IS NULL OR ip.estado = '' 
-                           THEN 'Disponible' 
-                           ELSE ip.estado 
-                       END as estado
-                FROM inventario_principal ip
-                LEFT JOIN empleados e ON ip.responsable_actual = e.id
-                ORDER BY ip.fecha_adquisicion DESC, ip.nombre
-            `;
-
-      try {
-        this.db.all(query, (err, rows) => {
-          if (err) {
-            console.error(
-              'Error ejecutando getInventarioPrincipal:',
-              err.message
-            );
-            console.error('SQL =>', query);
-            reject(err);
-          } else {
-            resolve(rows);
-          }
-        });
-      } catch (error) {
-        console.error('Excepción en getInventarioPrincipal:', error.message);
-        reject(error);
-      }
-    });
-  }
-
-  // Obtener inventario periférico completo (estructura real)
-  getInventarioPeriferico() {
-    return new Promise((resolve, reject) => {
-      const query = `
-                SELECT iph.*, 
-                       ip.nombre as equipo_principal_nombre,
-                       ip.marca as equipo_principal_marca,
-                       ip.modelo as equipo_principal_modelo,
-                       ip.serie as equipo_principal_serie,
-                       CASE
-                           WHEN iph.responsable_actual_periferico IS NOT NULL AND iph.responsable_actual_periferico != ''
-                           THEN e.nombre || ' ' || e.apellido
-                           ELSE 'Sin asignar'
-                       END as responsable_nombre,
-                       COALESCE(d2.nombre, d.nombre) as departamento_nombre
-                FROM inventario_periferico iph
-                LEFT JOIN inventario_principal ip ON iph.id_inventario_principal = ip.id
-                LEFT JOIN empleados e ON iph.responsable_actual_periferico = e.id
-                LEFT JOIN departamentos d ON e.departamento_id = d.id
-                LEFT JOIN departamentos d2 ON iph.id_departamento_asignado_periferico = d2.id
-                ORDER BY iph.fecha_adquisicion_periferico DESC, iph.nombre_periferico
-            `;
-
-      try {
-        this.db.all(query, (err, rows) => {
-          if (err) {
-            console.error(
-              'Error ejecutando getInventarioPeriferico:',
-              err.message
-            );
-            console.error('SQL =>', query);
-            reject(err);
-          } else {
-            resolve(rows);
-          }
-        });
-      } catch (error) {
-        console.error('Excepción en getInventarioPeriferico:', error.message);
-        reject(error);
-      }
-    });
-  }
-
-  // Obtener inventario principal junto con periféricos asociados
-  getInventarioCompleto() {
-    return new Promise((resolve, reject) => {
-      const query = `
-                SELECT ip.*,
-                       COALESCE(json_group_array(
-                           json_object(
-                               'id_periferico', iph.id_periferico,
-                               'nombre_periferico', iph.nombre_periferico,
-                               'marca_periferico', iph.marca_periferico,
-                               'modelo_periferico', iph.modelo_periferico,
-                               'serie_periferico', iph.serie_periferico,
-                               'estado_periferico', iph.estado_periferico,
-                               'condicion_periferico', iph.condicion_periferico,
-                               'tipo_adquisicion_periferico', iph.tipo_adquisicion_periferico,
-                               'id_departamento_asignado_periferico', iph.id_departamento_asignado_periferico,
-                               'ubicacion_especifica_periferico', iph.ubicacion_especifica_periferico,
-                               'responsable_actual_periferico', iph.responsable_actual_periferico,
-                               'fecha_creacion_periferico', iph.fecha_creacion_periferico,
-                               'fecha_adquisicion_periferico', iph.fecha_adquisicion_periferico,
-                               'detalles_periferico', iph.detalles_periferico
-                           )
-                       ), '[]') AS perifericos
-                FROM inventario_principal ip
-                LEFT JOIN inventario_periferico iph ON iph.id_inventario_principal = ip.id
-                GROUP BY ip.id
-                ORDER BY ip.fecha_adquisicion DESC, ip.nombre
-            `;
-
-      try {
-        this.db.all(query, (err, rows) => {
-          if (err) {
-            console.error(
-              'Error ejecutando getInventarioCompleto:',
-              err.message
-            );
-            console.error('SQL =>', query);
-            reject(err);
-          } else {
-            const formatted = rows.map((row) => ({
-              ...row,
-              perifericos: row.perifericos ? JSON.parse(row.perifericos) : [],
-            }));
-            resolve(formatted);
-          }
-        });
-      } catch (error) {
-        console.error('Excepción en getInventarioCompleto:', error.message);
-        reject(error);
-      }
-    });
-  }
-
-  // Crear equipo principal
-  createEquipoPrincipal(data) {
-    return new Promise((resolve, reject) => {
-      const id = crypto.randomUUID();
-      const query = `
-                INSERT INTO inventario_principal (
-                    id, nombre, marca, modelo, serie, categoria, subcategoria,
-                    estado, condicion, tipo_adquisicion, id_departamento_asignado,
-                    ubicacion_especifica, responsable_actual, fecha_creacion,
-                    fecha_adquisicion, detalles
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `;
-      const values = [
-        id,
-        data.nombre,
-        data.marca,
-        data.modelo,
-        data.serie || null,
-        data.categoria,
-        data.subcategoria || null,
-        data.estado,
-        data.condicion,
-        data.tipoAdquisicion,
-        data.departamento,
-        data.ubicacion,
-        data.responsable,
-        new Date().toISOString(),
-        data.fechaAdquisicion || null,
-        data.detalles || null,
-      ];
-
-      this.db.run(query, values, function (err) {
+      this.db.all("SELECT DISTINCT rango FROM empleados WHERE rango IS NOT NULL AND rango != '' ORDER BY rango", (err, rows) => {
         if (err) {
+          console.error('Error al obtener rangos:', err);
           reject(err);
         } else {
-          resolve({ id });
+          resolve(rows.map(r => r.rango));
         }
       });
     });
   }
 
-  // Actualizar equipo principal
-  updateEquipoPrincipal(id, data) {
-    return new Promise((resolve, reject) => {
-      const query = `
-                UPDATE inventario_principal SET
-                    nombre = ?, marca = ?, modelo = ?, serie = ?,
-                    categoria = ?, subcategoria = ?, estado = ?, condicion = ?,
-                    tipo_adquisicion = ?, id_departamento_asignado = ?,
-                    ubicacion_especifica = ?, responsable_actual = ?,
-                    fecha_adquisicion = ?, detalles = ?
-                WHERE id = ?
-            `;
-
-      const values = [
-        data.nombre,
-        data.marca,
-        data.modelo,
-        data.serie || null,
-        data.categoria,
-        data.subcategoria || null,
-        data.estado,
-        data.condicion,
-        data.tipoAdquisicion,
-        data.departamento,
-        data.ubicacion,
-        data.responsable,
-        data.fechaAdquisicion || null,
-        data.detalles || null,
-        id,
-      ];
-
-      this.db.run(query, values, function (err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ changes: this.changes });
-        }
-      });
-    });
-  }
-
-  // Eliminar equipo principal
-  deleteEquipoPrincipal(id) {
-    return new Promise((resolve, reject) => {
-      const query = 'DELETE FROM inventario_principal WHERE id = ?';
-      this.db.run(query, [id], function (err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ changes: this.changes });
-        }
-      });
-    });
-  }
-
-  // Crear periférico
-  createPeriferico(data) {
-    return new Promise((resolve, reject) => {
-      const id = crypto.randomUUID();
-      const query = `
-                INSERT INTO inventario_periferico (
-                    id_periferico, nombre_periferico, marca_periferico,
-                    modelo_periferico, serie_periferico, estado_periferico,
-                    condicion_periferico, tipo_adquisicion_periferico,
-                    id_departamento_asignado_periferico,
-                    ubicacion_especifica_periferico,
-                    responsable_actual_periferico,
-                    fecha_creacion_periferico, fecha_adquisicion_periferico,
-                    detalles_periferico, id_inventario_principal
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `;
-
-      const values = [
-        id,
-        data.nombre,
-        data.marca,
-        data.modelo,
-        data.serie || null,
-        data.estado,
-        data.condicion,
-        data.tipoAdquisicion,
-        data.departamento,
-        data.ubicacion,
-        data.responsable,
-        new Date().toISOString(),
-        data.fechaAdquisicion || null,
-        data.detalles || null,
-        data.equipoPrincipalId,
-      ];
-
-      this.db.run(query, values, function (err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ id });
-        }
-      });
-    });
-  }
-
-  // Actualizar periférico
-  updatePeriferico(id, data) {
-    return new Promise((resolve, reject) => {
-      const query = `
-                UPDATE inventario_periferico SET
-                    nombre_periferico = ?, marca_periferico = ?,
-                    modelo_periferico = ?, serie_periferico = ?,
-                    estado_periferico = ?, condicion_periferico = ?,
-                    tipo_adquisicion_periferico = ?,
-                    id_departamento_asignado_periferico = ?,
-                    ubicacion_especifica_periferico = ?,
-                    responsable_actual_periferico = ?,
-                    fecha_adquisicion_periferico = ?,
-                    detalles_periferico = ?,
-                    id_inventario_principal = ?
-                WHERE id_periferico = ?
-            `;
-
-      const values = [
-        data.nombre,
-        data.marca,
-        data.modelo,
-        data.serie || null,
-        data.estado,
-        data.condicion,
-        data.tipoAdquisicion,
-        data.departamento,
-        data.ubicacion,
-        data.responsable,
-        data.fechaAdquisicion || null,
-        data.detalles || null,
-        data.equipoPrincipalId,
-        id,
-      ];
-
-      this.db.run(query, values, function (err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ changes: this.changes });
-        }
-      });
-    });
-  }
-
-  // Eliminar periférico
-  deletePeriferico(id) {
-    return new Promise((resolve, reject) => {
-      const query = 'DELETE FROM inventario_periferico WHERE id_periferico = ?';
-      this.db.run(query, [id], function (err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ changes: this.changes });
-        }
-      });
-    });
-  }
-
-  getEmpleados() {
-    return new Promise((resolve, reject) => {
-      const query = `
-                SELECT e.*, d.nombre as departamento_nombre 
-                FROM empleados e 
-                LEFT JOIN departamentos d ON e.departamento_id = d.id 
-                WHERE e.activo = 1
-                ORDER BY e.nombre, e.apellido
-            `;
-      try {
-        this.db.all(query, (err, rows) => {
-          if (err) {
-            console.error('Error ejecutando getEmpleados:', err.message);
-            console.error('SQL =>', query);
-            reject(err);
-          } else {
-            resolve(rows);
-          }
-        });
-      } catch (error) {
-        console.error('Excepción en getEmpleados:', error.message);
-        reject(error);
-      }
-    });
-  }
-
-  // Obtener empleados completos con todas las columnas
   getEmpleadosCompletos() {
     return new Promise((resolve, reject) => {
       const query = `
-                SELECT e.*, d.nombre AS departamento_nombre
-                FROM empleados e
-                LEFT JOIN departamentos d ON e.departamento_id = d.id
-                ORDER BY e.id ASC
-            `;
-
-      try {
-        this.db.all(query, [], (err, rows) => {
-          if (err) {
-            console.error('Error obteniendo empleados completos:', err.message);
-            console.error('SQL =>', query);
-            reject(err);
-          } else {
-            console.log(` Obtenidos ${rows.length} empleados completos`);
-            resolve(rows);
-          }
-        });
-      } catch (error) {
-        console.error('Excepción en getEmpleadosCompletos:', error.message);
-        reject(error);
-      }
+        SELECT
+            e.id, e.placa, e.rango, e.nombre, e.apellido, e.departamento, 
+            e.correo_electronico, e.cedula, e.telefono, e.jefe_inmediato, 
+            e.tel_jefe, e.fecha_creacion
+        FROM empleados e
+        ORDER BY e.nombre, e.apellido
+      `;
+      this.db.all(query, [], (err, rows) => {
+        if (err) {
+          console.error('Error al obtener empleados completos:', err);
+          reject(err);
+        } else {
+          resolve(rows);
+        }
+      });
     });
   }
+
+  // Método getInventarioPrincipal eliminado para preparar nueva estructura
+  // Los nuevos métodos se implementarán con la nueva estructura mejorada
+
+  // Método getInventarioPeriferico eliminado para preparar nueva estructura
+  // Los nuevos métodos se implementarán con la nueva estructura mejorada
+
+  // Método getInventarioCompleto eliminado para preparar nueva estructura
+  // Los nuevos métodos se implementarán con la nueva estructura mejorada
 
   // Crear nuevo empleado
   createEmpleado(empleadoData) {
     return new Promise((resolve, reject) => {
-      // Generar ID único utilizando UUID
       const id = crypto.randomUUID();
-
       const query = `
-                INSERT INTO empleados (
-                    id, placa, rango, nombre, apellido, departamento_id, 
-                    correo_electronico, cedula, telefono, fecha_creacion, fecha_ingreso
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `;
-
-      const values = [
+        INSERT INTO empleados (
+          id, placa, rango, nombre, apellido, departamento_id, 
+          correo_electronico, cedula, telefono, fecha_nacimiento, fecha_ingreso, activo
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+      `;
+      const params = [
         id,
-        empleadoData.placa || null,
-        empleadoData.rango || null,
+        empleadoData.placa,
+        empleadoData.rango,
         empleadoData.nombre,
         empleadoData.apellido,
-        empleadoData.departamento_id || null,
-        empleadoData.correo_electronico || null,
-        empleadoData.cedula || null,
-        empleadoData.telefono || null,
-        new Date().toISOString(),
-        null, // fecha_ingreso se establece como NULL por defecto
+        empleadoData.departamento_id,
+        empleadoData.correo_electronico,
+        empleadoData.cedula,
+        empleadoData.telefono,
+        empleadoData.fecha_nacimiento,
+        empleadoData.fecha_ingreso
       ];
 
-      console.log(' Creando empleado con datos:', empleadoData);
-      console.log(' Valores SQL:', values);
-
-      this.db.run(query, values, function (err) {
+      this.db.run(query, params, function (err) {
         if (err) {
-          console.error(' Error creando empleado:', err);
+          console.error('Error en createEmpleado:', err.message);
           reject(err);
         } else {
-          console.log(' Empleado creado exitosamente con ID:', id);
-          resolve({ id: id });
+          resolve({ id });
         }
       });
     });
@@ -911,65 +734,19 @@ class Database {
   // Actualizar empleado existente
   updateEmpleado(id, empleadoData) {
     return new Promise((resolve, reject) => {
-      // Verificar que el empleado existe antes de actualizar
-      const checkQuery =
-        'SELECT id, nombre, apellido FROM empleados WHERE id = ?';
+      const fields = Object.keys(empleadoData).map(k => `${k} = ?`).join(', ');
+      if (!fields) {
+          return resolve({ changes: 0 });
+      }
+      const values = [...Object.values(empleadoData), id];
+      const query = `UPDATE empleados SET ${fields} WHERE id = ?`;
 
-      this.db.get(checkQuery, [id], (err, existingEmpleado) => {
+      this.db.run(query, values, function (err) {
         if (err) {
-          console.error(' Error verificando empleado:', err);
-          return reject(err);
+          reject(err);
+        } else {
+          resolve({ changes: this.changes });
         }
-
-        if (!existingEmpleado) {
-          console.error(' Empleado no encontrado para actualizar:', id);
-          return reject(new Error(`Empleado con ID ${id} no encontrado`));
-        }
-
-        console.log(
-          ' Empleado encontrado para actualizar:',
-          existingEmpleado.nombre,
-          existingEmpleado.apellido
-        );
-
-        const query = `
-                    UPDATE empleados SET 
-                        placa = ?, rango = ?, nombre = ?, apellido = ?, 
-                        departamento_id = ?, correo_electronico = ?, cedula = ?, 
-                        telefono = ?
-                    WHERE id = ?
-                `;
-
-        const values = [
-          empleadoData.placa || null,
-          empleadoData.rango || null,
-          empleadoData.nombre,
-          empleadoData.apellido,
-          empleadoData.departamento_id || null,
-          empleadoData.correo_electronico || null,
-          empleadoData.cedula || null,
-          empleadoData.telefono || null,
-          id,
-        ];
-
-        console.log(' Actualizando empleado ID:', id);
-        console.log(' Nuevos datos:', empleadoData);
-
-        this.db.run(query, values, function (err) {
-          if (err) {
-            console.error(' Error SQL actualizando empleado:', err);
-            reject(err);
-          } else {
-            console.log(
-              ' Empleado actualizado exitosamente. Filas afectadas:',
-              this.changes
-            );
-            if (this.changes === 0) {
-              console.warn(' No se actualizó ninguna fila - verificar ID');
-            }
-            resolve({ changes: this.changes, id: id });
-          }
-        });
       });
     });
   }
@@ -978,7 +755,6 @@ class Database {
   deleteEmpleado(id) {
     return new Promise((resolve, reject) => {
       const query = 'UPDATE empleados SET activo = 0 WHERE id = ?';
-
       this.db.run(query, [id], function (err) {
         if (err) {
           reject(err);

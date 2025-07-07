@@ -1,87 +1,109 @@
 <div id="user-modal" class="modal" style="display: none">
   <div class="modal-content">
     <div class="modal-header">
-      <h2 id="user-modal-title">Nuevo Usuario</h2>
-      <span class="close" onclick="closeUserModal(event)">&times;</span>
+      <div class="modal-title">
+        <i data-feather="user-plus"></i>
+        <span id="user-modal-title">Detalles de Usuario</span>
+      </div>
+      <button class="modal-close" id="btn-close-user-modal">
+        <i data-feather="x"></i>
+      </button>
     </div>
     <div class="modal-body">
-      <form id="user-form" onsubmit="saveUser(event)">
-        <!-- Campos Obligatorios -->
+      <div id="user-details" class="user-details">
+        <!-- Información del Usuario -->
         <div class="form-section">
-          <h3 class="section-title">Datos Obligatorios</h3>
-          <div class="form-group">
-            <label for="user-username">Usuario</label>
-            <input
-              type="text"
-              id="user-username"
-              name="username"
-              required
-              placeholder="Ingrese nombre de usuario"
-              pattern="[a-zA-Z0-9_]+"
-              title="Solo letras, números y guiones bajos"
-            />
+          <div class="form-section-title">
+            <i data-feather="user"></i>
+            Información de Cuenta
           </div>
-
-          <div class="form-group">
-            <label for="user-password">Contraseña</label>
-            <input
-              type="password"
-              id="user-password"
-              name="password"
-              required
-              placeholder="Ingrese contraseña"
-              minlength="6"
-            />
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">ID</label>
+              <div class="form-value" id="user-id-display"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Usuario</label>
+              <div class="form-value" id="user-username-display"></div>
+            </div>
           </div>
-
-          <div class="form-group">
-            <label for="user-role">Rol</label>
-            <select id="user-role" name="role" required>
-              <option value="">Seleccione un rol</option>
-              <option value="administrador">Administrador</option>
-              <option value="no administrador">No Administrador</option>
-            </select>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Rol</label>
+              <div class="form-value" id="user-rol-display"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Estado</label>
+              <div class="form-value" id="user-activo-display"></div>
+            </div>
           </div>
         </div>
 
-        <!-- Campos Opcionales -->
+        <!-- Información Personal -->
         <div class="form-section">
-          <h3 class="section-title">Información Adicional</h3>
-          <div class="form-group">
-            <label for="user-name">Nombre Completo</label>
-            <input
-              type="text"
-              id="user-name"
-              name="name"
-              placeholder="Nombre completo"
-            />
+          <div class="form-section-title">
+            <i data-feather="info"></i>
+            Información Personal
           </div>
-
-          <div class="form-group">
-            <label for="user-email">Correo Electrónico</label>
-            <input
-              type="email"
-              id="user-email"
-              name="email"
-              placeholder="correo@ejemplo.com"
-            />
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Nombre</label>
+              <div class="form-value" id="user-nombre-display"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Apellido</label>
+              <div class="form-value" id="user-apellido-display"></div>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <div class="form-value" id="user-email-display"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Teléfono</label>
+              <div class="form-value" id="user-telefono-display"></div>
+            </div>
           </div>
         </div>
 
-        <input type="hidden" id="user-id" name="id" />
-      </form>
+        <!-- Información de Seguridad -->
+        <div class="form-section">
+          <div class="form-section-title">
+            <i data-feather="shield"></i>
+            Información de Seguridad
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Fecha de Creación</label>
+              <div class="form-value" id="user-fecha-creacion-display"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Último Acceso</label>
+              <div class="form-value" id="user-ultimo-acceso-display"></div>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Intentos Fallidos</label>
+              <div class="form-value" id="user-intentos-fallidos-display"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Bloqueado Hasta</label>
+              <div class="form-value" id="user-bloqueado-hasta-display"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="modal-footer">
-      <button
-        type="button"
-        class="btn-secondary"
-        onclick="closeUserModal(event)"
-      >
-        Cancelar
-      </button>
-      <button type="submit" form="user-form" class="btn-primary">
-        <i class="fas fa-save"></i> Guardar
+      <button type="button" class="btn-modern btn-cancel" id="btn-close-user-details">
+        <i data-feather="x"></i>
+        Cerrar
       </button>
     </div>
   </div>

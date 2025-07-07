@@ -1,13 +1,26 @@
-// Esperar a que el DOM esté completamente cargado
+// ARCHIVO OBSOLETO - SERÁ REEMPLAZADO CON LA NUEVA ESTRUCTURA DE INVENTARIO
+
 document.addEventListener('DOMContentLoaded', function () {
-  // Variables globales
+  // Mostrar mensaje de módulo en desarrollo
+  document.body.innerHTML = `
+    <div style="text-align: center; margin-top: 100px; font-family: Arial, sans-serif;">
+      <h1>Módulo de Inventario en Desarrollo</h1>
+      <p>El módulo de inventario está siendo rediseñado con una nueva estructura mejorada.</p>
+      <p>Por favor, vuelva más tarde cuando la nueva versión esté disponible.</p>
+      <button onclick="window.location.href='/panel-control.html'" 
+              style="padding: 10px 20px; background-color: #4CAF50; color: white; 
+                     border: none; border-radius: 4px; cursor: pointer; margin-top: 20px;">
+        Volver al Panel de Control
+      </button>
+    </div>
+  `;
+  
+  // Variables obsoletas - se mantendrán para referencia
+  // pero no se utilizarán en la nueva implementación
   let equipos = [];
   let perifericos = [];
-  // Endpoints CRUD de inventario
-  const API_INVENTARIO_PRINCIPAL = '/api/inventario-principal';
-  const API_INVENTARIO_PERIFERICO = '/api/inventario-periferico';
-  let currentView = 'principal';
-  let equipoPrincipalSeleccionado = null;
+  const API_INVENTARIO_PRINCIPAL = '/api/inventario-principal'; // Endpoint eliminado
+  const API_INVENTARIO_PERIFERICO = '/api/inventario-periferico'; // Endpoint eliminado
 
   // Elementos del DOM
   const navButtons = document.querySelectorAll('.nav-btn');

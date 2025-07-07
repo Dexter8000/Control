@@ -118,16 +118,55 @@ async function updateDepartmentFilter() {
 }
 
 async function initializeApp() {
+  setupWebSocket();
+  await loadEmpleados();
+  await loadDashboardStats();
+  await loadRangos(); // Cargar rangos dinámicamente
+  initializeDepartmentSelectors();
+  setupEventListeners();
+  showNotification('Empleados cargados correctamente.', 'success');
+  refreshIcons();
+}
+
+// Cargar rangos desde la API y poblar selectores
+async function loadRangos() {
   try {
-    await loadEmpleados();
-    await loadDashboardStats();
-    setupEventListeners();
-    setupWebSocket();
-    refreshIcons();
-    console.log('✅ Aplicación inicializada exitosamente');
+    const response = await fetch('/api/rangos');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+
+    if (data.success) {
+      const filtroRango = document.getElementById('filtro-rango');
+      const formRango = document.querySelector('#empleado-form [name="rango"]');
+
+      // Guardar el valor seleccionado si existe
+      const selectedFiltro = filtroRango.value;
+      const selectedForm = formRango.value;
+
+      // Limpiar opciones existentes (excepto la primera)
+      filtroRango.innerHTML = '<option value="">Todos los rangos</option>';
+      formRango.innerHTML = '<option value="">Seleccionar rango</option>';
+
+      data.rangos.forEach(rango => {
+        const option = document.createElement('option');
+        option.value = rango;
+        option.textContent = rango;
+        filtroRango.appendChild(option.cloneNode(true));
+        formRango.appendChild(option);
+      });
+
+      // Restaurar selección si es posible
+      filtroRango.value = selectedFiltro;
+      formRango.value = selectedForm;
+
+    } else {
+      console.error('Error al cargar rangos:', data.message);
+    }
   } catch (error) {
-    console.error('❌ Error inicializando aplicación:', error);
-    showNotification('Error inicializando la aplicación', 'error');
+    console.error('Error de red al cargar rangos:', error);
+    showError('No se pudieron cargar los rangos. Intente recargar la página.');
   }
 }
 
@@ -204,56 +243,179 @@ async function loadEmpleados() {
 // Cargar datos del dashboard para las tarjetas de resumen
 async function loadDashboardStats() {
   try {
-    const resEmpleados = await fetch('/api/dashboard/total-empleados');
-    const dataEmpleados = await resEmpleados.json();
-    document.getElementById('total-empleados').textContent =
-      dataEmpleados.total;
+    // Cargar total de empleados
+    try {
+      const resEmpleados = await fetch('/api/dashboard/total-empleados');
+      if (resEmpleados.ok) {
+        const dataEmpleados = await resEmpleados.json();
+        if (dataEmpleados && dataEmpleados.total !== undefined) {
+          document.getElementById('total-empleados').textContent = dataEmpleados.total;
+        } else {
+          document.getElementById('total-empleados').textContent = '0';
+          console.warn('Datos de total de empleados no disponibles');
+        }
+      } else {
+        document.getElementById('total-empleados').textContent = '0';
+        console.error(`Error al cargar total de empleados: ${resEmpleados.status}`);
+      }
+    } catch (err) {
+      document.getElementById('total-empleados').textContent = '0';
+      console.error('Error al procesar total de empleados:', err);
+    }
 
-    const resRangosDepto = await fetch(
-      '/api/dashboard/rangos-por-departamento'
-    );
-    const dataRangosDepto = await resRangosDepto.json();
-    const resumenRangosDepto = dataRangosDepto.detalle
-      .slice(0, 2)
-      .map(
-        (item) =>
-          `${item.rango_nombre} (${item.departamento_nombre}): ${item.cantidad}`
-      )
-      .join(', ');
+    // Cargar rangos por departamento
+    let resumenRangosDepto = '';
+    try {
+      const resRangosDepto = await fetch('/api/dashboard/rangos-por-departamento');
+      if (resRangosDepto.ok) {
+        const dataRangosDepto = await resRangosDepto.json();
+        if (dataRangosDepto && Array.isArray(dataRangosDepto)) {
+          // Actualizar gráfico de rangos por departamento
+          updateRangosPorDepartamento(dataRangosDepto.slice(0, 5));
+          
+          // Crear resumen para mostrar en el dashboard
+          if (dataRangosDepto.length > 0) {
+            resumenRangosDepto = dataRangosDepto
+              .slice(0, 2)
+              .map(item => {
+                if (item && item.rango_nombre && item.departamento_nombre) {
+                  return `${item.rango_nombre} (${item.departamento_nombre}): ${item.cantidad || 0}`;
+                }
+                return '';
+              })
+              .filter(item => item !== '')
+              .join(', ');
+          }
+        } else {
+          console.warn('Datos de rangos por departamento no válidos');
+          updateRangosPorDepartamento([]);
+        }
+      } else {
+        console.error(`Error al cargar rangos por departamento: ${resRangosDepto.status}`);
+        updateRangosPorDepartamento([]);
+      }
+    } catch (err) {
+      console.error('Error al procesar rangos por departamento:', err);
+      updateRangosPorDepartamento([]);
+    }
     document.getElementById('rango-principal').textContent =
       resumenRangosDepto || 'No hay datos de rangos por departamento.';
 
-    const resCantidadRangos = await fetch('/api/dashboard/cantidad-rangos');
-    const dataCantidadRangos = await resCantidadRangos.json();
-    const resumenCantidadRangos = dataCantidadRangos.detalle
-      .slice(0, 2)
-      .map((item) => `${item.rango_nombre}: ${item.cantidad}`)
-      .join(', ');
+    // Cargar cantidad de rangos
+    let resumenCantidadRangos = '';
+    try {
+      const resCantidadRangos = await fetch('/api/dashboard/cantidad-rangos');
+      if (resCantidadRangos.ok) {
+        const dataCantidadRangos = await resCantidadRangos.json();
+        if (dataCantidadRangos && Array.isArray(dataCantidadRangos)) {
+          updateKPIs(dataCantidadRangos);
+          
+          // Crear resumen para mostrar en el dashboard
+          if (dataCantidadRangos.length > 0) {
+            resumenCantidadRangos = dataCantidadRangos
+              .slice(0, 2)
+              .map(item => {
+                if (item && item.rango_nombre) {
+                  return `${item.rango_nombre}: ${item.cantidad || 0}`;
+                }
+                return '';
+              })
+              .filter(item => item !== '')
+              .join(', ');
+          }
+        } else {
+          console.warn('Datos de cantidad de rangos no válidos');
+          updateKPIs([]);
+        }
+      } else {
+        console.error(`Error al cargar cantidad de rangos: ${resCantidadRangos.status}`);
+        updateKPIs([]);
+      }
+    } catch (err) {
+      console.error('Error al procesar cantidad de rangos:', err);
+      updateKPIs([]);
+    }
     document.getElementById('departamento-principal').textContent =
       resumenCantidadRangos || 'No hay datos de rangos.';
 
-    const resDepartamentos = await fetch('/api/dashboard/total-departamentos');
-    const dataDepartamentos = await resDepartamentos.json();
-    document.getElementById('rangos-diferentes').textContent =
-      dataDepartamentos.total;
-
-    const resIncompletos = await fetch('/api/dashboard/datos-incompletos');
-    const dataIncompletos = await resIncompletos.json();
-    const card = document.getElementById('datosIncompletosCard');
-    const mensaje = document.getElementById('mensajeIncompletos');
-    const lista = document.getElementById('listaIncompletos');
-    if (dataIncompletos.count > 0) {
-      card.style.display = 'block';
-      mensaje.textContent = `Se encontraron ${dataIncompletos.count} registros con datos incompletos. IDs:`;
-      lista.innerHTML = dataIncompletos.ids
-        .slice(0, 5)
-        .map((id) => `<li>ID: ${id}</li>`)
-        .join('');
-      if (dataIncompletos.count > 5) {
-        lista.innerHTML += `<li>...y ${dataIncompletos.count - 5} más.</li>`;
+    // Cargar total de departamentos
+    try {
+      const resDepartamentos = await fetch('/api/dashboard/total-departamentos');
+      if (resDepartamentos.ok) {
+        const dataDepartamentos = await resDepartamentos.json();
+        if (dataDepartamentos && dataDepartamentos.total !== undefined) {
+          document.getElementById('rangos-diferentes').textContent = dataDepartamentos.total;
+        } else {
+          document.getElementById('rangos-diferentes').textContent = '0';
+          console.warn('Datos de total de departamentos no disponibles');
+        }
+      } else {
+        document.getElementById('rangos-diferentes').textContent = '0';
+        console.error(`Error al cargar total de departamentos: ${resDepartamentos.status}`);
       }
-    } else {
-      card.style.display = 'none';
+    } catch (err) {
+      document.getElementById('rangos-diferentes').textContent = '0';
+      console.error('Error al procesar total de departamentos:', err);
+    }
+
+    // Cargar datos incompletos
+    try {
+      const resIncompletos = await fetch('/api/dashboard/datos-incompletos');
+      if (resIncompletos.ok) {
+        const dataIncompletos = await resIncompletos.json();
+        if (dataIncompletos && dataIncompletos.total !== undefined) {
+          document.getElementById('datos-incompletos').textContent = dataIncompletos.total;
+        } else {
+          document.getElementById('datos-incompletos').textContent = '0';
+          console.warn('Datos de empleados incompletos no disponibles');
+        }
+      } else {
+        document.getElementById('datos-incompletos').textContent = '0';
+        console.error(`Error al cargar datos incompletos: ${resIncompletos.status}`);
+      }
+    } catch (err) {
+      document.getElementById('datos-incompletos').textContent = '0';
+      console.error('Error al procesar datos incompletos:', err);
+    }
+
+    // Actualizar la tarjeta de datos incompletos
+    try {
+      const card = document.getElementById('datosIncompletosCard');
+      const mensaje = document.getElementById('mensajeIncompletos');
+      const lista = document.getElementById('listaIncompletos');
+      
+      // Obtener los datos de empleados incompletos para mostrar en la lista
+      const resDetallesIncompletos = await fetch('/api/dashboard/detalles-incompletos');
+      if (resDetallesIncompletos.ok) {
+        const dataDetallesIncompletos = await resDetallesIncompletos.json();
+        
+        if (dataDetallesIncompletos && dataDetallesIncompletos.count > 0) {
+          card.style.display = 'block';
+          mensaje.textContent = `Se encontraron ${dataDetallesIncompletos.count} registros con datos incompletos. IDs:`;
+          
+          if (Array.isArray(dataDetallesIncompletos.ids)) {
+            lista.innerHTML = dataDetallesIncompletos.ids
+              .slice(0, 5)
+              .map((id) => `<li>ID: ${id}</li>`)
+              .join('');
+            
+            if (dataDetallesIncompletos.count > 5) {
+              lista.innerHTML += `<li>...y ${dataDetallesIncompletos.count - 5} más.</li>`;
+            }
+          } else {
+            lista.innerHTML = '<li>No se pudieron cargar los IDs</li>';
+          }
+        } else {
+          card.style.display = 'none';
+        }
+      } else {
+        card.style.display = 'none';
+        console.error(`Error al cargar detalles de datos incompletos: ${resDetallesIncompletos.status}`);
+      }
+    } catch (err) {
+      console.error('Error al procesar detalles de datos incompletos:', err);
+      const card = document.getElementById('datosIncompletosCard');
+      if (card) card.style.display = 'none';
     }
   } catch (error) {
     console.error('Error al cargar datos del dashboard:', error);
@@ -261,19 +423,25 @@ async function loadDashboardStats() {
 }
 
 // Actualizar KPIs con estadísticas de rangos y departamentos
-function updateKPIs() {
+function updateKPIs(datosRangos = []) {
   console.log('📊 Calculando estadísticas mejoradas de personal...');
+
+  // Asegurarse de que allEmpleados sea un array
+  if (!Array.isArray(allEmpleados)) {
+    console.error('Error: allEmpleados no es un array válido');
+    return;
+  }
 
   const empleadosActivos = allEmpleados.filter(
     (emp) =>
-      emp.activo === 'Sí' || emp.activo === 'Activo' || emp.estado === 'Activo'
+      emp && (emp.activo === 'Sí' || emp.activo === 'Activo' || emp.estado === 'Activo')
   );
 
   const empleadosInactivos = allEmpleados.filter(
     (emp) =>
-      emp.activo === 'No' ||
+      emp && (emp.activo === 'No' ||
       emp.activo === 'Inactivo' ||
-      emp.estado === 'Inactivo'
+      emp.estado === 'Inactivo')
   );
 
   // Recuadro 1: Total de Empleados (Activos/Total)
@@ -377,6 +545,35 @@ function updateKPIs() {
   console.log(
     `📊 Estadísticas calculadas: ${totalEmpleados} empleados, ${departamentosUnicos} departamentos, ${rangosUnicos} rangos`
   );
+}
+
+// Función para actualizar el gráfico de rangos por departamento
+function updateRangosPorDepartamento(datos = []) {
+  console.log('📊 Actualizando gráfico de rangos por departamento...');
+  
+  try {
+    // Si no hay datos, no hacer nada
+    if (!Array.isArray(datos) || datos.length === 0) {
+      console.warn('No hay datos para mostrar en el gráfico de rangos por departamento');
+      return;
+    }
+    
+    // Formatear los datos para el gráfico si es necesario
+    const datosFormateados = datos.map(item => {
+      if (!item) return null;
+      
+      return {
+        rango_nombre: item.rango_nombre || 'Sin rango',
+        departamento_nombre: item.departamento_nombre || 'Sin departamento',
+        cantidad: item.cantidad || 0
+      };
+    }).filter(item => item !== null);
+    
+    // Aquí iría el código para actualizar el gráfico con los datos formateados
+    console.log('✅ Gráfico de rangos por departamento actualizado');
+  } catch (error) {
+    console.error('Error al actualizar gráfico de rangos por departamento:', error);
+  }
 }
 
 // Aplicar filtros

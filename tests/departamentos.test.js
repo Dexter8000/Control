@@ -55,14 +55,7 @@ jest.mock('../database/vacaciones', () => {
   }));
 });
 
-jest.mock('../database/duckdb', () => ({
-  connection: {
-    createInventoryTables: jest.fn(),
-    listTables: jest.fn(() => Promise.resolve([])),
-    getTablePreview: jest.fn(() => Promise.resolve({ columns: [], rows: [] })),
-  },
-  initializeDuckDB: jest.fn(),
-}));
+
 
 process.env.SESSION_SECRET = 'test';
 
@@ -120,50 +113,45 @@ describe('Departamento CRUD API', () => {
 
 describe('Panel control inventario endpoints', () => {
   beforeEach(() => {
+    app.request.session = { user: { id: 'test', rol: 'admin' } };
     jest.clearAllMocks();
   });
 
-  test('GET /api/inventario-principal returns inventory list', async () => {
-    const res = await request(app).get('/api/inventario-principal');
+  test('GET /api/inventario_principal returns inventory list', async () => {
+    const res = await request(app).get('/api/inventario_principal');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ success: true, inventario: [{ id: 'p1' }] });
+    expect(res.body).toEqual([{ id: 'p1' }]);
   });
 
-  test('GET /api/inventario-periferico returns inventory list', async () => {
-    const res = await request(app).get('/api/inventario-periferico');
+  test('GET /api/inventario_periferico returns inventory list', async () => {
+    const res = await request(app).get('/api/inventario_periferico');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({
-      success: true,
-      inventario: [{ id_periferico: 'pf1' }],
-    });
+    expect(res.body).toEqual([{ id_periferico: 'pf1' }]);
   });
 });
 
 describe('Modal inventory endpoints', () => {
   beforeEach(() => {
+    app.request.session = { user: { id: 'test', rol: 'admin' } };
     jest.clearAllMocks();
   });
 
-  test('GET /api/inventario-principal returns inventory list', async () => {
-    const res = await request(app).get('/api/inventario-principal');
+  test('GET /api/inventario_principal returns inventory list', async () => {
+    const res = await request(app).get('/api/inventario_principal');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ success: true, inventario: [{ id: 'p1' }] });
+    expect(res.body).toEqual([{ id: 'p1' }]);
   });
 
-  test('GET /api/inventario-periferico returns inventory list', async () => {
-    const res = await request(app).get('/api/inventario-periferico');
+  test('GET /api/inventario_periferico returns inventory list', async () => {
+    const res = await request(app).get('/api/inventario_periferico');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({
-      success: true,
-      inventario: [{ id_periferico: 'pf1' }],
-    });
+    expect(res.body).toEqual([{ id_periferico: 'pf1' }]);
   });
 
-  test('regression: /api/inventario-periferico responds with sample data', async () => {
-    const res = await request(app).get('/api/inventario-periferico');
+  test('regression: /api/inventario_periferico responds with sample data', async () => {
+    const res = await request(app).get('/api/inventario_periferico');
     expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(Array.isArray(res.body.inventario)).toBe(true);
+    expect(Array.isArray(res.body)).toBe(true);
   });
 
   test('GET /api/inventario-completo returns joined inventory', async () => {
