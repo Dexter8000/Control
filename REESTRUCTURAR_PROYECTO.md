@@ -81,5 +81,28 @@ Control/
 ├── attached_assets/
 ├── .env, package.json, README.md, etc.
 
+🛑 NOTA ESPECIAL SOBRE LA BASE DE DATOS
+
+❗ Los archivos .sql y .db deben dejarse tal como están.
+
+Por lo tanto:
+
+NO los modifiques automáticamente.
+
+SOLO muévelos a database/ si no están allí.
+
+NO intentes abrir, analizar ni ejecutar .db ni .sql desde el script.
+
+SOLO deja comentarios tipo // REVISAR: si encuentras:
+
+kilo.db
+
+*.sql como schema.sql
+
+setup-db.js, verify-db.js
+
+🔐 Estos archivos serán revisados manualmente luego.
+
 Haz los cambios de forma incremental y deja comentarios // MOVIDO: o // REVISAR: en los archivos que necesiten revisión humana.
 */
+
